@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="ciscoasa-faws-template">CiscoAsa FAWS Template</h1>
+<p>cisco_asa.template - Deploys Cisco ASAv 9.6(2) w/ EIP and autorecovery into existing VPC ### Parameters</p>
+<h4 id="pubsubnet">PubSubnet</h4>
+<ul>
+<li>Type: <code>AWS::EC2::Subnet::Id</code></li>
+<li>Description: <code>Public Subnet</code></li>
+</ul>
+<h4 id="licensemodel">LicenseModel</h4>
+<ul>
+<li>Default: <code>LicenseIncluded</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Choose between BYOL (Bring Your Own License) and License Included license models. Remember to first subscribe the the appropriate Marketplace AMI!</code></li>
+<li>AllowedValues: <code>['LicenseIncluded', 'BYOL']</code></li>
+</ul>
+<h4 id="terminationprotection">TerminationProtection</h4>
+<ul>
+<li>Default: <code>Yes</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable termination protection on the ASAv EC2 instances to avoid accidential ASAv termination?</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h4 id="keyname">KeyName</h4>
+<ul>
+<li>Type: <code>AWS::EC2::KeyPair::KeyName</code></li>
+<li>Description: <code>Name of an existing EC2 KeyPair to enable SSH access to the instances.</code></li>
+</ul>
+<h4 id="asavtype">ASAvType</h4>
+<ul>
+<li>Default: <code>ASAv10-1Gbps-c3.large</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Performance required for ASAv instances.</code></li>
+<li>AllowedValues: <code>['ASAv10-1Gbps-c3.large', 'ASAv10-1Gbps-c4.large', 'ASAv30-2Gbps-c3.xlarge', 'ASAv30-2Gbps-c4.xlarge']</code></li>
+</ul>
+<h4 id="vpc">VPC</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>VPC to launch into.</code></li>
+</ul>
+<h4 id="asavrolemanagedpolicyarns">ASAvRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the ASAvRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="prisubnet">PriSubnet</h4>
+<ul>
+<li>Type: <code>AWS::EC2::Subnet::Id</code></li>
+<li>Description: <code>Private Subnet</code></li>
+</ul>
+<h4 id="tentype">TenType</h4>
+<ul>
+<li>Default: <code>default</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Preferred EC2 tenancy type (default, dedicated instance or full host).</code></li>
+<li>AllowedValues: <code>['default', 'dedicated', 'host']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>URL</code></li>
+<li><code>PubIP</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="asavrecoveryalarm">ASAvRecoveryAlarm</h4>
+<ul>
+<li>Description: Trigger a recovery when ASAv instance status check fails for 15 consecutive minutes.</li>
+<li>Metric: StatusCheckFailed_System</li>
+<li>Threshold: 0</li>
+<li>Actions: <code>{'Fn::Join': ['', ['arn:aws:automate:', {'Ref': 'AWS::Region'}, ':ec2:recover']]}</code></li>
+</ul>
+</body>
+</html>

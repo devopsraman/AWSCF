@@ -1,0 +1,418 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "elasticache_redis.template - AWS Cluster for ElastiCache",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "ElastiCacheSubnets",
+            "VPCSecurityGroupIds"
+          ],
+          "Label": {
+            "default": "VPC Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "SnapshotRetentionLimit",
+            "SnapshotWindow",
+            "PreferredMaintenanceWindow"
+          ],
+          "Label": {
+            "default": "Backup / Maintenance"
+          }
+        },
+        {
+          "Parameters": [
+            "CacheClusterPort",
+            "NotificationTopic",
+            "FailoverEnabled"
+          ],
+          "Label": {
+            "default": "ElastiCache Advanced Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "ClusterName",
+            "ReplicationGroupDescription",
+            "InstanceClass",
+            "ElastiCacheEngineType",
+            "NumberOfNodes"
+          ],
+          "Label": {
+            "default": "ElastiCache Basic Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "InternalRecordName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Record Name for the new Resource Record in the Internal Hosted Zone"
+    },
+    "ElastiCacheSubnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for use with this cache cluster"
+    },
+    "PreferredMaintenanceWindow": {
+      "Default": "Sun:05:00-Sun:07:00",
+      "Type": "String",
+      "Description": "The weekly time range (in UTC) during which system maintenance can occur."
+    },
+    "ClusterName": {
+      "Default": "MyRedisCluster",
+      "AllowedPattern": "^[a-zA-Z][a-zA-Z0-9\\-]{0,19}$",
+      "Type": "String",
+      "Description": "Name of Cluster",
+      "ConstraintDescription": "Must be between 1 and 20 alphanumeric characters and begin with a letter."
+    },
+    "InternalZoneId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Route53 Internal Hosted Zone ID"
+    },
+    "VPCSecurityGroupIds": {
+      "Default": "",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "Existing security group being used by Elasticache cluster."
+    },
+    "CacheClusterPort": {
+      "Default": "6379",
+      "MinValue": "1024",
+      "Type": "Number",
+      "Description": "The port number on which each of the cache nodes will accept connections",
+      "MaxValue": "65535"
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "SnapshotRetentionLimit": {
+      "Description": "The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups. Snapshots are unsupported on cache.t2.* instance classes.",
+      "Default": "7",
+      "Type": "Number",
+      "MaxValue": "35",
+      "MinValue": "0",
+      "ConstraintDescription": "must be between 0 and 35"
+    },
+    "InstanceClass": {
+      "Default": "cache.m3.medium",
+      "Type": "String",
+      "Description": "The compute and memory capacity of the nodes within the ElastiCache cluster",
+      "AllowedValues": [
+        "cache.t2.micro",
+        "cache.t2.small",
+        "cache.t2.medium",
+        "cache.c1.xlarge",
+        "cache.m3.medium",
+        "cache.m3.large",
+        "cache.m3.xlarge",
+        "cache.m3.2xlarge",
+        "cache.m4.large",
+        "cache.m4.xlarge",
+        "cache.m4.2xlarge",
+        "cache.m4.4xlarge",
+        "cache.m4.10xlarge",
+        "cache.r3.large",
+        "cache.r3.xlarge",
+        "cache.r3.2xlarge",
+        "cache.r3.4xlarge",
+        "cache.r3.8xlarge"
+      ]
+    },
+    "ElastiCacheEngineType": {
+      "Default": "redis32",
+      "Type": "String",
+      "Description": "The name of the cache engine to be used for this cache cluster",
+      "AllowedValues": [
+        "redis28",
+        "redis32"
+      ]
+    },
+    "FailoverEnabled": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Enable Multi-AZ Failover.  Failover is unsupported on cache.t2.* instance classes.",
+      "AllowedValues": [
+        "True",
+        "False"
+      ]
+    },
+    "SnapshotWindow": {
+      "Default": "03:00-05:00",
+      "Type": "String",
+      "Description": "The daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your node group. Snapshots are unsupported on cache.t2.* instance classes."
+    },
+    "NotificationTopic": {
+      "Default": "",
+      "Type": "String",
+      "Description": "SNS Topic ARN to notify if there are any ElastiCache notifications. OPTIONAL"
+    },
+    "ReplicationGroupDescription": {
+      "Default": "Elasticache",
+      "Type": "String",
+      "Description": "Description of Replication Group"
+    },
+    "NumberOfNodes": {
+      "Default": "2",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The number of cache nodes within the ElastiCache cluster",
+      "MaxValue": "100"
+    }
+  },
+  "Conditions": {
+    "isInternalHostedZoneIdProvided": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InternalZoneId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetRetentionLimit": {
+      "Fn::Not": [
+        {
+          "Fn::Or": [
+            {
+              "Condition": "isT2Instance"
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "NumberOfNodes"
+                },
+                "1"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "isT2Instance": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "1",
+            {
+              "Fn::Split": [
+                ".",
+                {
+                  "Ref": "InstanceClass"
+                }
+              ]
+            }
+          ]
+        },
+        "t2"
+      ]
+    },
+    "isNotification": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NotificationTopic"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "ElastiCacheEngine": {
+      "redis28": {
+        "Version": "2.8.24",
+        "Name": "redis",
+        "Family": "redis2.8"
+      },
+      "redis32": {
+        "Version": "3.2.4",
+        "Name": "redis",
+        "Family": "redis3.2"
+      }
+    }
+  },
+  "Resources": {
+    "ElastiCacheSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "SubnetIds": {
+          "Ref": "ElastiCacheSubnets"
+        },
+        "Description": "Subnets available for use with the cache cluster"
+      }
+    },
+    "ParameterGroup": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::ElastiCache::ParameterGroup",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${Environment}-ParameterGroup"
+        },
+        "Properties": {
+          "Ref": "AWS::NoValue"
+        },
+        "CacheParameterGroupFamily": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Family"
+          ]
+        }
+      }
+    },
+    "ElastiCacheRepGroup": {
+      "Type": "AWS::ElastiCache::ReplicationGroup",
+      "Properties": {
+        "Engine": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Name"
+          ]
+        },
+        "CacheParameterGroupName": {
+          "Ref": "ParameterGroup"
+        },
+        "CacheSubnetGroupName": {
+          "Ref": "ElastiCacheSubnetGroup"
+        },
+        "PreferredCacheClusterAZs": {
+          "Ref": "AWS::NoValue"
+        },
+        "ReplicationGroupId": {
+          "Ref": "ClusterName"
+        },
+        "SecurityGroupIds": {
+          "Ref": "VPCSecurityGroupIds"
+        },
+        "SnapshotRetentionLimit": {
+          "Fn::If": [
+            "SetRetentionLimit",
+            {
+              "Ref": "SnapshotRetentionLimit"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "AutomaticFailoverEnabled": {
+          "Fn::If": [
+            "isT2Instance",
+            "false",
+            {
+              "Ref": "FailoverEnabled"
+            }
+          ]
+        },
+        "SnapshotWindow": {
+          "Fn::If": [
+            "isT2Instance",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "SnapshotWindow"
+            }
+          ]
+        },
+        "EngineVersion": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Version"
+          ]
+        },
+        "CacheNodeType": {
+          "Ref": "InstanceClass"
+        },
+        "NotificationTopicArn": {
+          "Fn::If": [
+            "isNotification",
+            {
+              "Ref": "NotificationTopic"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ReplicationGroupDescription": {
+          "Ref": "ReplicationGroupDescription"
+        },
+        "Port": {
+          "Ref": "CacheClusterPort"
+        },
+        "PreferredMaintenanceWindow": {
+          "Ref": "PreferredMaintenanceWindow"
+        },
+        "NumCacheClusters": {
+          "Ref": "NumberOfNodes"
+        }
+      }
+    },
+    "InternalRecordSetRedis": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "Internal Record Set for ${InternalRecordName}"
+        },
+        "Name": {
+          "Fn::Sub": "${InternalRecordName}.${InternalZoneName}."
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "ElastiCacheRepGroup",
+              "PrimaryEndPoint.Address"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "HostedZoneId": {
+          "Ref": "InternalZoneId"
+        },
+        "Type": "CNAME"
+      },
+      "Condition": "isInternalHostedZoneIdProvided"
+    }
+  },
+  "Outputs": {
+    "RedisConnection": {
+      "Value": {
+        "Fn::Sub": "${ElastiCacheRepGroup.PrimaryEndPoint.Address}:${ElastiCacheRepGroup.PrimaryEndPoint.Port}"
+      }
+    }
+  }
+}

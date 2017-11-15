@@ -1,0 +1,290 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "efs.template - Create an EFS Filesystem with up to 3 AZs and Mount Points",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "CWBurstCreditThreshold",
+            "CWBurstCreditPeriod"
+          ],
+          "Label": {
+            "default": "Cloudwatch Alarm Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "Subnets",
+            "VolumeName",
+            "EFSSecurityGroupList",
+            "SubnetCount"
+          ],
+          "Label": {
+            "default": "EFS Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Subnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Up to 3 Subnets for EFS Mount Points"
+    },
+    "VolumeName": {
+      "Default": "myEFSvolume",
+      "MinLength": "1",
+      "Type": "String",
+      "Description": "The name to be used for the EFS volume"
+    },
+    "EFSSecurityGroupList": {
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "Security Group List assigned to the EFS FileSystem"
+    },
+    "CWBurstCreditThreshold": {
+      "Default": "1000000000000",
+      "Type": "Number",
+      "Description": "The minimum EFS Burst Credit level before generating an alarm."
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "SubnetCount": {
+      "Default": "2",
+      "Type": "String",
+      "Description": "The number of private subnets selected.",
+      "AllowedValues": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "EnableRackspaceTicket": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether alarms will generate Rackspace tickets",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "CWBurstCreditPeriod": {
+      "Default": "12",
+      "Type": "Number",
+      "Description": "The number of periods over which the EFS Burst Credit level is compared to the specified threshold."
+    }
+  },
+  "Conditions": {
+    "UseAZ2": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SubnetCount"
+            },
+            2
+          ]
+        },
+        {
+          "Condition": "UseAZ3"
+        }
+      ]
+    },
+    "UseAZ3": {
+      "Fn::Equals": [
+        {
+          "Ref": "SubnetCount"
+        },
+        3
+      ]
+    },
+    "UseAZ1": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SubnetCount"
+            },
+            1
+          ]
+        },
+        {
+          "Condition": "UseAZ2"
+        }
+      ]
+    },
+    "RackspaceAlarmsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableRackspaceTicket"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "WebServerFileSystem": {
+      "Type": "AWS::EFS::FileSystem",
+      "Properties": {
+        "FileSystemTags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "VolumeName"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "MountTargetAZ2": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "SubnetId": {
+          "Fn::Select": [
+            1,
+            {
+              "Ref": "Subnets"
+            }
+          ]
+        },
+        "FileSystemId": {
+          "Ref": "WebServerFileSystem"
+        },
+        "SecurityGroups": {
+          "Ref": "EFSSecurityGroupList"
+        }
+      },
+      "Condition": "UseAZ2"
+    },
+    "MountTargetAZ1": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "SubnetId": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "Subnets"
+            }
+          ]
+        },
+        "FileSystemId": {
+          "Ref": "WebServerFileSystem"
+        },
+        "SecurityGroups": {
+          "Ref": "EFSSecurityGroupList"
+        }
+      },
+      "Condition": "UseAZ1"
+    },
+    "MountTargetAZ3": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "SubnetId": {
+          "Fn::Select": [
+            2,
+            {
+              "Ref": "Subnets"
+            }
+          ]
+        },
+        "FileSystemId": {
+          "Ref": "WebServerFileSystem"
+        },
+        "SecurityGroups": {
+          "Ref": "EFSSecurityGroupList"
+        }
+      },
+      "Condition": "UseAZ3"
+    },
+    "EFSBurstCredits": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "CWBurstCreditPeriod"
+        },
+        "Dimensions": [
+          {
+            "Name": "FileSystemId",
+            "Value": {
+              "Ref": "WebServerFileSystem"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "EFS Burst Credits have dropped below ${CWBurstCreditThreshold} for ${CWBurstCreditPeriod} periods."
+        },
+        "Namespace": "AWS/EFS",
+        "Period": "3600",
+        "ComparisonOperator": "LessThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": {
+          "Ref": "CWBurstCreditThreshold"
+        },
+        "OKActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "Unit": "Bytes",
+        "MetricName": "BurstCreditBalance"
+      }
+    }
+  },
+  "Outputs": {
+    "FileSystemID": {
+      "Description": "File system ID",
+      "Value": {
+        "Ref": "WebServerFileSystem"
+      }
+    },
+    "FileSystemDNS": {
+      "Description": "File system DNS Name",
+      "Value": {
+        "Fn::Sub": "${WebServerFileSystem}.efs.${AWS::Region}.amazonaws.com"
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+Dynamodb FAWS Template
+======================
+dynamodb.template - DynamoDB Template. Creates a DynamoDB table.
+### Parameters
+
+#### WriteCapacityUnits
+- Description: `Provisioned write throughput.`
+- Default: `10`
+- ConstraintDescription: `should be between 5 and 10000`
+- MaxValue: `10000`
+- MinValue: `5`
+- Type: `Number`
+
+#### RangeKeyElementType
+- ConstraintDescription: `must be either S (String) or N (Numeric)`
+- Description: `RangeType PrimaryKey Type.`
+- Default: `S`
+- MinLength: `1`
+- AllowedPattern: `[S|N]`
+- MaxLength: `1`
+- Type: `String`
+
+#### TableName
+- Default: ``
+- AllowedPattern: `^[a-zA-Z0-9_.-]{3,255}$||^$`
+- Type: `String`
+- Description: `Desired Table Name. (OPTIONAL) If you specify a name, you cannot perform updates that require replacement of this resource.  You can perform updates that require no or some interruption. If you must replace the resource, specify a new name.`
+- ConstraintDescription: `must contain only alphanumberic characters and be between 3 and 255 characters in length`
+
+#### HaskKeyElementName
+- Description: `HashType PrimaryKey Name.`
+- MinLength: `1`
+- MaxLength: `2048`
+- AllowedPattern: `[a-zA-Z0-9-_.]*`
+- ConstraintDescription: `must contain only alphanumberic characters, dash (-), underscore (_) or dot (.)`
+- Type: `String`
+
+#### ReadCapacityUnits
+- Description: `Provisioned read throughput.`
+- Default: `5`
+- ConstraintDescription: `should be between 5 and 10000`
+- MaxValue: `10000`
+- MinValue: `5`
+- Type: `Number`
+
+#### HaskKeyElementType
+- ConstraintDescription: `must be either S (String) or N (Numeric)`
+- Description: `HashType PrimaryKey Type.`
+- Default: `S`
+- MinLength: `1`
+- AllowedPattern: `[S|N]`
+- MaxLength: `1`
+- Type: `String`
+
+#### RangeKeyElementName
+- Type: `String`
+- Description: `RangeType PrimaryKey Name. (OPTIONAL)`
+- Default: ``
+- MinLength: `0`
+- AllowedPattern: `[a-zA-Z0-9-_.]*`
+- MaxLength: `2048`
+- ConstraintDescription: `must contain only alphanumberic characters, dash (-), underscore (_) or dot (.)`
+
+### Outputs
+- `DynamoDBTable`
+
+### Alarms

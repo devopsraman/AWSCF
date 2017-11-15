@@ -1,0 +1,648 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Rackspace Hosting - Base VPC, Network, and HA NAT instance scaffolding. Please be aware that this template will create resources for which you will be charged.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterLabels" : {
+        "VPCCIDR" : { "default" : "What should VPC CIDR Range be?" }
+      },
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Network Configuration" },
+          "Parameters" : ["AvailabilityZoneCount", "PublicSubnetAZ1", "PublicSubnetAZ2","PublicSubnetAZ3","PrivateSubnetAZ1", "PrivateSubnetAZ2","PrivateSubnetAZ3" ]
+        },
+        {
+          "Label" : { "default":"NAT EC2 Configuration" },
+          "Parameters" : [ "InstanceTenancy", "SSHKeyPair","NATInstanceType" ]
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "VPCCIDR": {
+      "Description": "The IP address space to be used for this VPC, in CIDR notation",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.0.0/16",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "AvailabilityZoneCount": {
+      "Description": "Number of Availability Zones (3 AZs needs a use case)",
+      "Type": "String",
+      "Default": "2 AZs :: 4 Subnets",
+      "AllowedValues": [ "2 AZs :: 4 Subnets", "3 AZs :: 6 Subnets" ],
+      "ConstraintDescription": "Must be either 2 or 3."
+    },
+    "PublicSubnetAZ1": {
+      "Description": "Public IP subnet used for AZ1.  Default 172.18.0.0/22",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.0.0/22",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "PublicSubnetAZ2": {
+      "Description": "Public IP subnet used for AZ2.  Default 172.18.4.0/22",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.4.0/22",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "PublicSubnetAZ3": {
+      "Description": "(Conditional) Public IP subnet used for AZ3.  Default 172.18.8.0/22",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.8.0/22",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "PrivateSubnetAZ1": {
+      "Description": "Private IP subnet used for AZ1.  Default 172.18.32.0/21",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.32.0/21",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "PrivateSubnetAZ2": {
+      "Description": "Private IP subnet used for AZ2.  Default 172.18.40.0/21",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.40.0/21",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "PrivateSubnetAZ3": {
+      "Description": "(Conditional) Private IP subnet used for AZ3.  Default 172.18.48.0/21",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "172.18.48.0/21",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x."
+    },
+    "InstanceTenancy": {
+      "Description": "VPC default for single tenant (dedicated) vs multi-tenant (default) hypervisor. Overrides instance level tenancy option.",
+      "Type": "String",
+      "Default": "default",
+      "AllowedValues": [ "default", "dedicated" ],
+      "ConstraintDescription": "Must be either 'default' for multi-tenant hypervisor or 'dedicated' for single tenant hypervisor."
+    },
+    "Environment": {
+      "Description": "Application environment for which this network is being created. e.g. Development/Production",
+      "Type": "String",
+      "Default": "Development",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "SSHKeyPair": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Select the name of a pre-created SSH Key used for instance OS access.",
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair."
+    },
+    "NATInstanceType": {
+      "Description": "Amazon EC2 instance type for the NAT Instances",
+      "Type": "String",
+      "Default": "t2.small",
+      "AllowedValues": ["t2.small", "t2.medium"],
+      "ConstraintDescription": "Must be either t2.small or t2.medium."
+    }
+  },
+  "Conditions" : {
+    "Create3AZs" : {"Fn::Equals" : [{"Ref" : "AvailabilityZoneCount"}, "3 AZs :: 6 Subnets"]}
+  },
+  "Mappings": {
+    "AWSRegionArchNatAMI"  : {
+      "us-east-1" : {"64": "ami-60b6c60a"},
+      "ap-northeast-1" : {"64": "ami-383c1956"},
+      "eu-west-1" : {"64": "ami-bff32ccc"},
+      "ap-southeast-1" : {"64": "ami-c9b572aa"},
+      "ap-southeast-2" : {"64": "ami-48d38c2b"},
+      "us-west-2" : {"64": "ami-f0091d91"},
+      "us-west-1" : {"64": "ami-d5ea86b5"},
+      "eu-central-1" : {"64": "ami-bc5b48d0"},
+      "sa-east-1" : {"64": "ami-6817af04"}
+    }
+  },
+  "Resources": {
+    "VPCBase": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": { "Ref": "VPCCIDR"},
+        "EnableDnsSupport": "True",
+        "EnableDnsHostnames": "True",
+        "InstanceTenancy": { "Ref": "InstanceTenancy"},
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value":    { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "VPC"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "ElasticIP1": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "VPC"
+      },
+      "DependsOn": [
+        "VPCBase"
+	]
+    },
+    "ElasticIP2": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "VPC"
+      },
+      "DependsOn": [
+        "VPCBase"
+	]
+    },
+    "ElasticIP3": {
+      "Type": "AWS::EC2::EIP",
+      "Condition" : "Create3AZs",
+      "Properties": {
+        "Domain": "VPC"
+      },
+      "DependsOn": [
+        "VPCBase"
+	]
+    },
+    "PublicNetAZ1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select": [ "0", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] },
+        "CidrBlock": { "Ref": "PublicSubnetAZ1"},
+        "MapPublicIpOnLaunch": "True",
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PublicAZ1"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ],
+        "VpcId": { "Ref": "VPCBase" }
+      }
+    },
+    "PublicNetAZ2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select": [ "1", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] },
+        "CidrBlock": { "Ref": "PublicSubnetAZ2"},
+        "MapPublicIpOnLaunch": "True",
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PublicAZ2"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ],
+        "VpcId": { "Ref": "VPCBase" }
+      }
+    },
+    "PublicNetAZ3": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition" : "Create3AZs",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select": [ "2", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] },
+        "CidrBlock": { "Ref": "PublicSubnetAZ3"},
+        "MapPublicIpOnLaunch": "True",
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PublicAZ3"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ],
+        "VpcId": { "Ref": "VPCBase" }
+      }
+    },
+    "PrivateNetAZ1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select": [ "0", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] },
+        "CidrBlock": { "Ref": "PrivateSubnetAZ1"},
+        "MapPublicIpOnLaunch": "False",
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PrivateAZ1"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "network", "Value": "private" }
+        ],
+        "VpcId": { "Ref": "VPCBase" }
+      }
+    },
+    "PrivateNetAZ2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select": [ "1", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] },
+        "CidrBlock": { "Ref": "PrivateSubnetAZ2"},
+        "MapPublicIpOnLaunch": "False",
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PrivateAZ2"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "network", "Value": "private" }
+        ],
+        "VpcId": { "Ref": "VPCBase" }
+      }
+    },
+    "PrivateNetAZ3": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition" : "Create3AZs",
+      "Properties": {
+        "AvailabilityZone": { "Fn::Select": [ "2", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] },
+        "CidrBlock": { "Ref": "PrivateSubnetAZ3"},
+        "MapPublicIpOnLaunch": "False",
+        "Tags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PrivateAZ3"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "network", "Value": "private" }
+        ],
+        "VpcId": { "Ref": "VPCBase" }
+      }
+    },
+    "IGWBase" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "IGW"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "VGAIGWBase" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "Properties" : {
+        "InternetGatewayId" : { "Ref" : "IGWBase" },
+        "VpcId" : { "Ref" : "VPCBase" }
+      }
+    },
+    "RouteTablePublic" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCBase" },
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PublicRT"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "RouteTablePrivateAZ1" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCBase" },
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PrivateAZ1RT"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "RouteTablePrivateAZ2" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCBase" },
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PrivateAZ2RT"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "RouteTablePrivateAZ3" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Condition" : "Create3AZs",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCBase" },
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "PrivateAZ3RT"]] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "RoutePublicDefault" : {
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "RouteTablePublic" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "IGWBase" }
+      }
+    },
+    "RouteAssociationPublicAZ1Default" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicNetAZ1"},
+        "RouteTableId" : { "Ref" : "RouteTablePublic" }
+      }
+    },
+    "RouteAssociationPublicAZ2Default" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicNetAZ2"},
+        "RouteTableId" : { "Ref" : "RouteTablePublic" }
+      }
+    },
+    "RouteAssociationPublicAZ3Default" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "Create3AZs",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicNetAZ3"},
+        "RouteTableId" : { "Ref" : "RouteTablePublic" }
+      }
+    },
+    "RouteAssociationPrivateAZ1Default" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PrivateNetAZ1"},
+        "RouteTableId" : { "Ref" : "RouteTablePrivateAZ1" }
+      }
+    },
+    "RouteAssociationPrivateAZ2Default" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PrivateNetAZ2"},
+        "RouteTableId" : { "Ref" : "RouteTablePrivateAZ2" }
+      }
+    },
+    "RouteAssociationPrivateAZ3Default" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition" : "Create3AZs",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PrivateNetAZ3"},
+        "RouteTableId" : { "Ref" : "RouteTablePrivateAZ3" }
+      }
+    },
+    "IAMRoleNAT": {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version": "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "pcyNAT",
+            "PolicyDocument" : {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect" : "Allow",
+                  "Action" : [
+                    "ec2:DescribeInstances",
+                    "ec2:ModifyInstanceAttribute",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeRouteTables",
+                    "ec2:CreateRoute",
+                    "ec2:ReplaceRoute",
+                    "ec2:AssociateAddress",
+                    "ec2:DescribeAddresses"
+                  ],
+                  "Resource": "*"
+                } ]
+            }
+          }
+        ]
+      }
+    },
+    "InstanceProfileNAT" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [ { "Ref" : "IAMRoleNAT" } ]
+      }
+    },
+
+    "ASGNatAZ1": {
+      "DependsOn" : [ "PublicNetAZ1" ],
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "/opt/aws/ha-nat.sh": {
+                "source": "https://rackspace-prod.s3.amazonaws.com/ha-nat.sh",
+                "mode"  : "000500"
+              }
+            },
+            "commands": {
+              "1runHA-NAT" : {
+                "command" : "/opt/aws/ha-nat.sh",
+                "ignoreErrors" : "False"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "Cooldown" : "30",
+        "AvailabilityZones": [ { "Fn::Select": [ "0", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] } ],
+        "LaunchConfigurationName": {"Ref": "LaunchConfigNATAZ1"},
+        "MinSize": "1",
+        "MaxSize": "1",
+        "VPCZoneIdentifier": [ { "Ref" : "PublicNetAZ1"} ],
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace", "PropagateAtLaunch" : "True" },
+          { "Key": "Environment", "Value": { "Ref": "Environment"}, "PropagateAtLaunch" : "True" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "ASGNatAZ1" ]] }, "PropagateAtLaunch": "True" }
+        ]
+      }
+    },
+
+    "LaunchConfigNATAZ1": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": { "Ref": "SSHKeyPair"},
+        "ImageId": { "Fn::FindInMap" : [ "AWSRegionArchNatAMI", { "Ref" : "AWS::Region" }, "64" ] },
+        "InstanceType": { "Ref": "NATInstanceType"},
+        "SecurityGroups" : [ { "Ref": "SecurityGroupNAT" } ],
+        "IamInstanceProfile" : { "Ref" : "InstanceProfileNAT" },
+        "AssociatePublicIpAddress": "True",
+        "UserData": {
+          "Fn::Base64": { "Fn::Join": [ "", [
+            "#!/bin/bash -x\n",
+            "yum install yum-cron python-pip -y\n",
+            "sed -i 's/apply_updates = no/apply_updates = yes/' /etc/yum/yum-cron.conf\n",
+            "pip install aws-ec2-assign-elastic-ip\n",
+	    "/usr/local/bin/aws-ec2-assign-elastic-ip --valid-ips ",{ "Ref" : "ElasticIP1" },"\n",
+            "/opt/aws/bin/cfn-init -v --stack ",{ "Ref" : "AWS::StackName" }, " --resource ASGNatAZ1 --region ", { "Ref" : "AWS::Region" },"\n"
+          ] ] }
+        }
+      }
+    },
+
+    "ASGNatAZ2": {
+      "DependsOn" : [ "PublicNetAZ2" ],
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "/opt/aws/ha-nat.sh": {
+                "source": "https://rackspace-prod.s3.amazonaws.com/ha-nat.sh",
+                "mode"  : "000500"
+              }
+            },
+            "commands": {
+              "1runHA-NAT" : {
+                "command" : "/opt/aws/ha-nat.sh",
+                "ignoreErrors" : "False"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "Cooldown" : "30",
+        "AvailabilityZones": [ { "Fn::Select": [ "1", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] } ],
+        "LaunchConfigurationName": {"Ref": "LaunchConfigNATAZ2"},
+        "MinSize": "1",
+        "MaxSize": "1",
+        "VPCZoneIdentifier": [ { "Ref" : "PublicNetAZ2"} ],
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace", "PropagateAtLaunch" : "True" },
+          { "Key": "Environment", "Value": { "Ref": "Environment"}, "PropagateAtLaunch" : "True" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "ASGNatAZ2"]] }, "PropagateAtLaunch": "True"  }
+        ]
+      }
+    },
+
+    "LaunchConfigNATAZ2": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": { "Ref": "SSHKeyPair"},
+        "ImageId": { "Fn::FindInMap" : [ "AWSRegionArchNatAMI", { "Ref" : "AWS::Region" }, "64" ] },
+        "InstanceType": { "Ref": "NATInstanceType"},
+        "SecurityGroups" : [ { "Ref": "SecurityGroupNAT" } ],
+        "IamInstanceProfile" : { "Ref" : "InstanceProfileNAT" },
+        "AssociatePublicIpAddress": "True",
+        "UserData": {
+          "Fn::Base64": { "Fn::Join": [ "", [
+            "#!/bin/bash -x\n",
+            "yum install yum-cron python-pip -y\n",
+            "sed -i 's/apply_updates = no/apply_updates = yes/' /etc/yum/yum-cron.conf\n",
+            "pip install aws-ec2-assign-elastic-ip\n",
+	    "/usr/local/bin/aws-ec2-assign-elastic-ip --valid-ips ",{ "Ref" : "ElasticIP2" },"\n",
+            "/opt/aws/bin/cfn-init -v --stack ",{ "Ref" : "AWS::StackName" }, " --resource ASGNatAZ2 --region ", { "Ref" : "AWS::Region" },"\n"
+          ] ] }
+        }
+      }
+    },
+
+    "ASGNatAZ3": {
+      "DependsOn" : [ "PublicNetAZ3" ],
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Condition" : "Create3AZs",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "/opt/aws/ha-nat.sh": {
+                "source": "https://rackspace-prod.s3.amazonaws.com/ha-nat.sh",
+                "mode"  : "000500"
+              }
+            },
+            "commands": {
+              "1runHA-NAT" : {
+                "command" : "/opt/aws/ha-nat.sh",
+                "ignoreErrors" : "False"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "Cooldown" : "30",
+        "AvailabilityZones": [ { "Fn::Select": [ "2", { "Fn::GetAZs": { "Ref": "AWS::Region" } } ] } ],
+        "LaunchConfigurationName": {"Ref": "LaunchConfigNATAZ3"},
+        "MinSize": "1",
+        "MaxSize": "1",
+        "VPCZoneIdentifier": [ { "Ref" : "PublicNetAZ3"} ],
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace", "PropagateAtLaunch" : "True" },
+          { "Key": "Environment", "Value": { "Ref": "Environment"}, "PropagateAtLaunch" : "True" },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "ASGNatAZ3"]] }, "PropagateAtLaunch": "True"  }
+        ]
+      }
+    },
+
+    "LaunchConfigNATAZ3": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Condition" : "Create3AZs",
+      "Properties": {
+        "KeyName": { "Ref": "SSHKeyPair"},
+        "ImageId": { "Fn::FindInMap" : [ "AWSRegionArchNatAMI", { "Ref" : "AWS::Region" }, "64" ] },
+        "InstanceType": { "Ref": "NATInstanceType"},
+        "SecurityGroups" : [ { "Ref": "SecurityGroupNAT" } ],
+        "IamInstanceProfile" : { "Ref" : "InstanceProfileNAT" },
+        "AssociatePublicIpAddress": "True",
+        "UserData": {
+          "Fn::Base64": { "Fn::Join": [ "", [
+            "#!/bin/bash -x\n",
+            "yum install yum-cron python-pip -y\n",
+            "sed -i 's/apply_updates = no/apply_updates = yes/' /etc/yum/yum-cron.conf\n",
+            "pip install aws-ec2-assign-elastic-ip\n",
+	    "/usr/local/bin/aws-ec2-assign-elastic-ip --valid-ips ",{ "Ref" : "ElasticIP3" },"\n",
+            "/opt/aws/bin/cfn-init -v --stack ",{ "Ref" : "AWS::StackName" }, " --resource ASGNatAZ3 --region ", { "Ref" : "AWS::Region" },"\n"
+          ] ] }
+        }
+      }
+    },
+
+    "SecurityGroupNAT" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Security Group for HA NAT instances",
+        "VpcId": { "Ref": "VPCBase" },
+        "Tags" : [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "Name", "Value": { "Fn::Join" : ["", [{ "Ref" : "AWS::StackName" }, "NatSecurityGroup"]] } }
+        ],
+        "SecurityGroupIngress" : [
+          { "IpProtocol": "-1", "FromPort": "1", "ToPort": "65535", "CidrIp": { "Ref": "PrivateSubnetAZ1"} },
+          { "IpProtocol": "-1", "FromPort": "1", "ToPort": "65535", "CidrIp": { "Ref": "PrivateSubnetAZ2"} }
+        ]
+      }
+    },
+    "SecurityGroupNATAZ3": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Condition" : "Create3AZs",
+      "Properties": {
+        "IpProtocol": "-1",
+        "FromPort": "1",
+        "ToPort": "65535",
+        "CidrIp" : { "Ref": "PrivateSubnetAZ3"},
+        "GroupId": {
+          "Fn::GetAtt": [
+            "SecurityGroupNAT",
+            "GroupId"
+          ]
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+    "outputVPCID" : { "Value" : { "Ref" : "VPCBase" } },
+    "outputEnvironment" : { "Value" : { "Ref" : "Environment"} },
+    "outputElasticIP1" : { "Value": { "Ref" : "ElasticIP1" } },
+    "outputElasticIP2" : { "Value": { "Ref" : "ElasticIP2" } },
+    "outputElasticIP3" : { "Value": { "Ref" : "ElasticIP3" }, "Condition" : "Create3AZs" },
+    "outputSubnetPublicAZ1" : { "Value" : { "Ref" : "PublicNetAZ1"} },
+    "outputSubnetPublicAZ2" : { "Value" : { "Ref" : "PublicNetAZ2"} },
+    "outputSubnetPrivateAZ1" : { "Value" : { "Ref" : "PrivateNetAZ1"} },
+    "outputSubnetPrivateAZ2" : { "Value" : { "Ref" : "PrivateNetAZ2"} },
+    "outputSubnetPublicAZ3" : { "Value" : { "Ref" : "PublicNetAZ3"}, "Condition" : "Create3AZs" },
+    "outputSubnetPrivateAZ3" : { "Value" : { "Ref" : "PrivateNetAZ3"}, "Condition" : "Create3AZs" }
+  }
+}

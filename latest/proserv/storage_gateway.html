@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="storagegateway-faws-template">StorageGateway FAWS Template</h1>
+<p>storage_gateway.template - Deploys Storage Gateway w/ EIP and autorecovery into existing VPC ### Parameters</p>
+<h4 id="pubsubnet">PubSubnet</h4>
+<ul>
+<li>Type: <code>AWS::EC2::Subnet::Id</code></li>
+<li>Description: <code>Public Subnet to allow for access to instance for activation.</code></li>
+</ul>
+<h4 id="storagegatewaytype">StorageGatewayType</h4>
+<ul>
+<li>Default: <code>FileGateway</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The type of storage gateway appliance to be built.</code></li>
+<li>AllowedValues: <code>['FileGateway', 'VolumeGateway', 'TapeGateway']</code></li>
+</ul>
+<h4 id="uploadbuffervolumesize">UploadBufferVolumeSize</h4>
+<ul>
+<li>Default: <code>150</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select Storage Gateway Upload Buffer Storage Volume Size in GB.  (Unused with File Gateways)</code></li>
+</ul>
+<h4 id="ebsoptimized">EBSOptimized</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Use EBS Optimized.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="instancerolemanagedpolicyarns">InstanceRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="admincidr">AdminCIDR</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The IP address space that will manage the Storage Gateway, in CIDR notation</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+</ul>
+<h4 id="keyname">KeyName</h4>
+<ul>
+<li>Type: <code>AWS::EC2::KeyPair::KeyName</code></li>
+<li>Description: <code>Name of an existing EC2 KeyPair to enable SSH access to the instances.</code></li>
+</ul>
+<h4 id="detailedmonitoring">DetailedMonitoring</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Detailed Monitoring.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="vpc">VPC</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>VPC to launch into.</code></li>
+</ul>
+<h4 id="ebsvolumetype">EbsVolumeType</h4>
+<ul>
+<li>Default: <code>gp2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select EBS Volume Type.</code></li>
+<li>AllowedValues: <code>['io1', 'standard', 'gp2']</code></li>
+</ul>
+<h4 id="cachevolumesize">CacheVolumeSize</h4>
+<ul>
+<li>Default: <code>150</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select Storage Gateway Cache Storage Volume Size in GB.</code></li>
+</ul>
+<h4 id="eipallocationid">EIPAllocationId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The AllocationId of an existing EIP you want to associate with the instance (optional).</code></li>
+</ul>
+<h4 id="tentype">TenType</h4>
+<ul>
+<li>Default: <code>default</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Preferred EC2 tenancy type (default, dedicated instance or full host).</code></li>
+<li>AllowedValues: <code>['default', 'dedicated', 'host']</code></li>
+</ul>
+<h4 id="iops">Iops</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Iops value required for use with io1 EBS volumes. This value should be 3 times the EBS volume size</code></li>
+</ul>
+<h4 id="instancetype">InstanceType</h4>
+<ul>
+<li>Default: <code>m4.xlarge</code></li>
+<li>ConstraintDescription: <code>Must be a valid EC2 instance type. Default is m4.xlarge</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select instance type</code></li>
+<li>AllowedValues: <code>['m4.xlarge', 'm4.2xlarge', 'm4.4xlarge', 'm4.10xlarge', 'm4.16xlarge', 'm3.xlarge', 'm3.2xlarge', 'c4.xlarge', 'c4.2xlarge', 'c4.4xlarge', 'c4.8xlarge', 'c3.xlarge', 'c3.2xlarge', 'c3.4xlarge', 'c3.8xlarge', 'r3.xlarge', 'r3.2xlarge', 'r3.4xlarge', 'r3.8xlarge', 'd2.xlarge', 'd2.2xlarge', 'd2.4xlarge', 'd2.8xlarge', 'i2.xlarge', 'i2.2xlarge', 'i2.4xlarge', 'i2.8xlarge']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>URL</code></li>
+<li><code>PubIP</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="statuscheckrecoveryalarm">StatusCheckRecoveryAlarm</h4>
+<ul>
+<li>Description: Trigger a recovery when Storage Gateway instance status check fails for 2 consecutive minutes.</li>
+<li>Metric: StatusCheckFailed_System</li>
+<li>Threshold: 0</li>
+<li>Actions: <code>{'Fn::Join': ['', ['arn:aws:automate:', {'Ref': 'AWS::Region'}, ':ec2:recover']]}</code></li>
+</ul>
+</body>
+</html>

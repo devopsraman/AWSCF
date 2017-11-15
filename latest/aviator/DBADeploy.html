@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="dbadeploy-faws-template">Dbadeploy FAWS Template</h1>
+<p>DBADeploy.template - Deploy RDBA workstation to access RDS instances. ### Parameters</p>
+<h4 id="ec2subnets">EC2Subnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Subnet where the instance will be deployed</code></li>
+</ul>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>VPC to deploy EC2 instance.</code></li>
+</ul>
+<h4 id="scalingtimeout">ScalingTimeOut</h4>
+<ul>
+<li>Default: <code>30M</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>#H#M#S where each # is the number of hours or minutes or seconds</code></li>
+<li>Description: <code>Time to wait for the number of signals equal to ScalingMin. H/M/S Hours/Minutes/Seconds</code></li>
+</ul>
+<h4 id="ebsvolumesize">EbsVolumeSize</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Select EBS Volume Size in GB.</code></li>
+<li>MinValue: <code>0</code></li>
+</ul>
+<h4 id="linuxworkstation">LinuxWorkstation</h4>
+<ul>
+<li>Default: <code>None</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Deploy a Linux Workstation</code></li>
+<li>AllowedValues: <code>['Deploy', 'None']</code></li>
+</ul>
+<h4 id="dbconnectlambdarolemanagedpolicyarns">DbConnectLambdaRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the DbConnectLambdaRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="instancerolemanagedpolicyarns">InstanceRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="scalingtermination">ScalingTermination</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The maximum number of instances that are terminated at a given time.</code></li>
+<li>MinValue: <code>1</code></li>
+</ul>
+<h4 id="lambdafunctionname">LambdaFunctionName</h4>
+<ul>
+<li>Default: <code>DBATagSupport</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to assign to the Lambda Function</code></li>
+</ul>
+<h4 id="keyname">KeyName</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be the name of an existing EC2 KeyPair.</code></li>
+<li>Type: <code>AWS::EC2::KeyPair::KeyName</code></li>
+<li>Description: <code>Provides the name of the EC2 key pair.</code></li>
+</ul>
+<h4 id="scalingmin">ScalingMin</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The minimum size of the Auto Scaling group.</code></li>
+<li>MinValue: <code>0</code></li>
+</ul>
+<h4 id="scalingmax">ScalingMax</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The maximum size of the Auto Scaling group.</code></li>
+<li>MinValue: <code>0</code></li>
+</ul>
+<h4 id="instancetype">InstanceType</h4>
+<ul>
+<li>Default: <code>t2.micro</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Must be a valid EC2 instance type. Default is t2.micro</code></li>
+<li>Description: <code>EC2 instance type.</code></li>
+<li>AllowedValues: <code>[u't2.nano', u't2.micro', u't2.small', u't2.medium', u't2.large', u't2.xlarge', u't2.2xlarge', u'm3.medium', u'm3.large', u'm3.xlarge', u'm3.2xlarge', u'm4.large', u'm4.xlarge', u'm4.2xlarge', u'm4.4xlarge', u'm4.10xlarge', u'm4.16xlarge', u'r3.large', u'r3.xlarge', u'r3.2xlarge', u'r3.4xlarge', u'r3.8xlarge', u'r4.large', u'r4.xlarge', u'r4.2xlarge', u'r4.4xlarge', u'r4.8xlarge', u'r4.16xlarge', u'x1.16xlarge', u'x1.32xlarge', u'i2.xlarge', u'i2.2xlarge', u'i2.4xlarge', u'i2.8xlarge', u'i3.large', u'i3.xlarge', u'i3.2xlarge', u'i3.4xlarge', u'i3.8xlarge', u'i3.16xlarge', u'c3.large', u'c3.xlarge', u'c3.2xlarge', u'c3.4xlarge', u'c3.8xlarge', u'c4.large', u'c4.xlarge', u'c4.2xlarge', u'c4.4xlarge', u'c4.8xlarge', u'g2.2xlarge', u'g2.8xlarge', u'g3.4xlarge', u'g3.8xlarge', u'g3.16xlarge', u'p2.xlarge', u'p2.8xlarge', u'p2.16xlarge', u'd2.xlarge', u'd2.2xlarge', u'd2.4xlarge', u'd2.8xlarge', u'f1.2xlarge', u'f1.16xlarge']</code></li>
+</ul>
+<h4 id="windowsworkstation">WindowsWorkstation</h4>
+<ul>
+<li>Default: <code>None</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Deploy a Windows Workstation</code></li>
+<li>AllowedValues: <code>['Deploy', 'None']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

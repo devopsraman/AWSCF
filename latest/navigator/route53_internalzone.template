@@ -1,0 +1,87 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "route53_internalzone.template - Route53 Internal Hosted Zone",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "VPCID"
+          ],
+          "Label": {
+            "default": "Configurations"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID"
+    }
+  },
+  "Resources": {
+    "InternalHostedZone": {
+      "Type": "AWS::Route53::HostedZone",
+      "Properties": {
+        "VPCs": [
+          {
+            "VPCId": {
+              "Ref": "VPCID"
+            },
+            "VPCRegion": {
+              "Ref": "AWS::Region"
+            }
+          }
+        ],
+        "HostedZoneConfig": {
+          "Comment": {
+            "Fn::Sub": "Hosted zone for ${Environment}"
+          }
+        },
+        "HostedZoneTags": [
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "Name": {
+          "Ref": "InternalZoneName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "InternalHostedName": {
+      "Description": "Internal Hosted Zone Name",
+      "Value": {
+        "Ref": "InternalZoneName"
+      }
+    },
+    "InternalHostedZone": {
+      "Description": "Internal Hosted Zone ID",
+      "Value": {
+        "Ref": "InternalHostedZone"
+      }
+    }
+  }
+}

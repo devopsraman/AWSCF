@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="crossaccountvpcpeeriamrole-faws-template">CrossAccountVpcPeerIamRole FAWS Template</h1>
+<p>cross_account_vpc_peer_iam_role.template - Create a IAM role that will allow for cross account VPC peering ### Parameters</p>
+<h4 id="vpcroutingtables">VpcRoutingTables</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>Comma delimited list of VPC routing tables.</code></li>
+</ul>
+<h4 id="vpccidrrange">VPCCIDRRange</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>VPC CIDR Range e.g. 172.19.0.0/16</code></li>
+</ul>
+<h4 id="vpcroutingtablescount">VpcRoutingTablesCount</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of vpc routing tables to update.</code></li>
+<li>AllowedValues: <code>[1, 2, 3, 4, 5]</code></li>
+</ul>
+<h4 id="vpcpeeringconnectionid">VpcPeeringConnectionId</h4>
+<ul>
+<li>AllowedPattern: <code>^(pcx-.*)?</code></li>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the existing Peering Connection.</code></li>
+<li>ConstraintDescription: <code>Must match the pattern pcx-XXXXXXXX</code></li>
+</ul>
+<h4 id="accountnumber">AccountNumber</h4>
+<ul>
+<li>AllowedPattern: <code>^[0-9]*$</code></li>
+<li>ConstraintDescription: <code>Must be a numeric account ID.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Account ID for the VPC requester.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>CrossAccountRoleArn</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

@@ -1,0 +1,398 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Build an AWS User Jumpbox for RDP access.",
+  "Metadata": {
+    "LastUpdated": "2016-06-23",
+    "UpdatedBy": "RSabounds (Alan Bounds) & bran8120 (Brandon Cleary)",
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "VPC Settings" },
+          "Parameters" : ["VPCID","EC2Subnets"]
+        },
+        {
+          "Label" : { "default":"Device Settings" },
+          "Parameters" : [ "ImageId","InstanceType" ]
+        }
+      ]
+    }
+  },
+  "Parameters" : {
+    "Environment": {
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "Type": "String",
+      "Default": "Development",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID" : {
+      "Description" : "VPC to deploy EC2 instance.",
+      "Type" : "AWS::EC2::VPC::Id"
+    },
+    "EC2Subnets" : {
+      "Description": "Subnet where the instance will be deployed",
+      "Type": "List<AWS::EC2::Subnet::Id>"
+    },
+    "InstanceType" : {
+      "Description" : "EC2 instance type.",
+      "Type" : "String",
+      "Default" : "t2.small"
+    },
+    "BastionType" : {
+      "Description" : "EC2 instance type.",
+      "Type" : "String",
+      "Default" : "Rackspace",
+      "AllowedValues" : ["Rackspace","Customer","Custom"]
+    },
+    "StageOrBuild" : {
+      "Description" : "Stage or Build Bastion?",
+      "Type" : "String",
+      "Default" : "Build",
+      "AllowedValues" : ["Stage","Build"]
+    },
+    "TargetSecurityGroupId": {
+      "Description": "Id of the Security Group containing the EC2 instance you want access to.",
+      "Type": "AWS::EC2::SecurityGroup::Id"
+    }
+  },
+  "Conditions" : {
+    "BuildStatus" : { "Fn::Equals": [{ "Ref": "StageOrBuild" }, "Build" ] }
+  },
+  "Mappings" : {
+    "AWSRegionArch2AMI" : {
+      "us-east-1" : {"64": "ami-e0e00f8d"},
+      "ap-northeast-1" : {"64": "ami-447a9d25"},
+      "ap-northeast-2" : {"64": "ami-3e75bd50"},
+      "sa-east-1" : {"64": "ami-588f0734"},
+      "ap-southeast-1" : {"64": "ami-5bf72138"},
+      "ap-southeast-2" : {"64": "ami-4c6d422f"},
+      "us-west-2" : {"64": "ami-8db945ed"},
+      "us-west-1" : {"64": "ami-b8c5bcd8"},
+      "eu-central-1" : {"64": "ami-827d90ed"},
+      "eu-west-1" : {"64": "ami-29eb7e5a"}
+    },
+    "JumpBox" : {
+      "Rackspace" : {
+        "InstancePublicIP"      : "True",
+        "ServerGroupName"       : "JumpBox",
+        "init"                  : ["cfnConfig", "finalize"],
+        "update"                : ["cfnConfig", "finalize"],
+        "ScalingMin"            : "1",
+        "ScalingMax"            : "1",
+        "ScalingTermination"    : "1",
+        "ScalingCreateTimeOut"  : "30M",
+        "ScalingUpdateTimeOut"  : "30M",
+        "WaitOnResourceSignals" : "True",
+        "RootVolumeSize"        : "40",
+        "RootVolumeType"        : "gp2",
+        "RootVolumeDeleteOnTermination" : "True",
+        "EC2IAMPolicyStatement"      : [
+            { "Effect" : "Allow", "Action" : [ "ssm:DescribeAssociation", "ssm:CreateAssociation", "ssm:GetDocument", "ssm:ListAssociations", "ssm:UpdateAssociationStatus", "ssm:UpdateInstanceInformation" ], "Resource" : "*" },
+            { "Effect" : "Allow", "Action" : [ "ec2messages:AcknowledgeMessage", "ec2messages:DeleteMessage", "ec2messages:FailMessage", "ec2messages:GetEndpoint", "ec2messages:GetMessages", "ec2messages:SendReply" ], "Resource" : "*" },
+            { "Effect" : "Allow", "Action" : [ "cloudwatch:PutMetricData" ], "Resource" : "*" },
+            { "Effect" : "Allow", "Action" : [ "route53:*" ], "Resource" : [ "*" ] },
+            { "Effect" : "Allow", "Action" : [ "ec2:DescribeInstanceStatus", "ec2:DescribeInstances", "autoscaling:DescribeAutoScalingGroups", "autoscaling:DescribeAutoScalingInstances" ], "Resource" : "*" },
+            { "Effect" : "Allow", "Action" : [ "ds:CreateComputer", "ds:DescribeDirectories" ], "Resource" : "*" },
+            { "Effect" : "Allow", "Action" : [ "logs:CreateLogGroup", "logs:CreateLogStream", "logs:DescribeLogGroups", "logs:DescribeLogStreams", "logs:PutLogEvents" ], "Resource" : "*" },
+            { "Effect" : "Allow", "Action" : [ "s3:PutObject", "s3:GetObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts", "s3:ListBucketMultipartUploads" ], "Resource" : "*" }
+        ],
+        "JumpBoxSecurityGroupIngress" : [
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "172.99.99.10/32" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "134.213.179.10/32" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "161.47.0.10/32" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "146.20.2.10/32" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "134.213.178.10/32" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "119.9.122.10/32" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "119.9.148.10/32" }
+        ]
+      },
+      "Customer" : {
+        "InstancePublicIP"      : "True",
+        "ServerGroupName"       : "JumpBox",
+        "init"                  : ["cfnConfig", "finalize"],
+        "update"                : ["cfnConfig", "finalize"],
+        "ScalingMin"            : "1",
+        "ScalingMax"            : "1",
+        "ScalingTermination"    : "1",
+        "ScalingCreateTimeOut"  : "30M",
+        "ScalingUpdateTimeOut"  : "30M",
+        "WaitOnResourceSignals" : "True",
+        "RootVolumeSize"        : "40",
+        "RootVolumeType"        : "gp2",
+        "RootVolumeDeleteOnTermination" : "True",
+        "EC2IAMPolicyStatement"      : [
+          { "Effect" : "Allow", "Action" : [ "ssm:DescribeAssociation", "ssm:CreateAssociation", "ssm:GetDocument", "ssm:ListAssociations", "ssm:UpdateAssociationStatus", "ssm:UpdateInstanceInformation" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "ec2messages:AcknowledgeMessage", "ec2messages:DeleteMessage", "ec2messages:FailMessage", "ec2messages:GetEndpoint", "ec2messages:GetMessages", "ec2messages:SendReply" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "cloudwatch:PutMetricData" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "route53:*" ], "Resource" : [ "*" ] },
+          { "Effect" : "Allow", "Action" : [ "ec2:DescribeInstanceStatus", "ec2:DescribeInstances", "autoscaling:DescribeAutoScalingGroups", "autoscaling:DescribeAutoScalingInstances" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "ds:CreateComputer", "ds:DescribeDirectories" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "logs:CreateLogGroup", "logs:CreateLogStream", "logs:DescribeLogGroups", "logs:DescribeLogStreams", "logs:PutLogEvents" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "s3:PutObject", "s3:GetObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts", "s3:ListBucketMultipartUploads" ], "Resource" : "*" }
+        ],
+        "JumpBoxSecurityGroupIngress" : [
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "12.146.25.0/24" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "208.17.91.0/24" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "174.137.37.0/24" },
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "162.253.28.0/22" }
+        ]
+      },
+      "Custom" : {
+        "InstancePublicIP"      : "True",
+        "ServerGroupName"       : "JumpBox",
+        "init"                  : ["cfnConfig", "finalize"],
+        "update"                : ["cfnConfig", "finalize"],
+        "ScalingMin"            : "1",
+        "ScalingMax"            : "1",
+        "ScalingTermination"    : "1",
+        "ScalingCreateTimeOut"  : "30M",
+        "ScalingUpdateTimeOut"  : "30M",
+        "WaitOnResourceSignals" : "True",
+        "RootVolumeSize"        : "40",
+        "RootVolumeType"        : "gp2",
+        "RootVolumeDeleteOnTermination" : "True",
+        "EC2IAMPolicyStatement"      : [
+          { "Effect" : "Allow", "Action" : [ "ssm:DescribeAssociation", "ssm:CreateAssociation", "ssm:GetDocument", "ssm:ListAssociations", "ssm:UpdateAssociationStatus", "ssm:UpdateInstanceInformation" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "ec2messages:AcknowledgeMessage", "ec2messages:DeleteMessage", "ec2messages:FailMessage", "ec2messages:GetEndpoint", "ec2messages:GetMessages", "ec2messages:SendReply" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "cloudwatch:PutMetricData" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "route53:*" ], "Resource" : [ "*" ] },
+          { "Effect" : "Allow", "Action" : [ "ec2:DescribeInstanceStatus", "ec2:DescribeInstances", "autoscaling:DescribeAutoScalingGroups", "autoscaling:DescribeAutoScalingInstances" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "ds:CreateComputer", "ds:DescribeDirectories" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "logs:CreateLogGroup", "logs:CreateLogStream", "logs:DescribeLogGroups", "logs:DescribeLogStreams", "logs:PutLogEvents" ], "Resource" : "*" },
+          { "Effect" : "Allow", "Action" : [ "s3:PutObject", "s3:GetObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts", "s3:ListBucketMultipartUploads" ], "Resource" : "*" }
+        ],
+        "JumpBoxSecurityGroupIngress" : [
+          { "ToPort" : "3389", "IpProtocol" : "tcp", "FromPort" : "3389", "CidrIp" : "127.0.0.1/32" }
+        ]
+      }
+    }
+  },
+  "Resources" : {
+    "AutoScaleGroup"           : {
+      "Condition": "BuildStatus",
+      "Type"      : "AWS::AutoScaling::AutoScalingGroup",
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : { "Fn::Join" : [ "", [ "PT", { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingCreateTimeOut" ] } ] ] },
+          "Count"   : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingMin" ] }
+        }
+      },
+      "UpdatePolicy"   : {
+        "AutoScalingRollingUpdate" : {
+          "MaxBatchSize" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingTermination" ] },
+          "MinInstancesInService" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingMin" ] },
+          "PauseTime" : { "Fn::Join" : [ "", [ "PT", { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingUpdateTimeOut" ] } ] ] },
+          "WaitOnResourceSignals" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "WaitOnResourceSignals" ] }
+        }
+      },
+      "Properties"     : {
+        "VPCZoneIdentifier" : { "Ref" : "EC2Subnets" },
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize"                 : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingMin" ] },
+        "MaxSize"                 : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "ScalingMax" ] },
+        "MetricsCollection"       : [ {
+          "Granularity" : "1Minute",
+          "Metrics"     : [ "GroupMinSize", "GroupMaxSize" ]
+        }],
+        "Tags"                       : [
+          { "Key" : "ServiceProvider", "Value" : "Rackspace", "PropagateAtLaunch" : "True" },
+          { "Key" : "Environment", "Value" : { "Ref" : "Environment" }, "PropagateAtLaunch" : "True" },
+          { "Key" : "Name", "Value" : { "Ref" : "AWS::StackName" }, "PropagateAtLaunch" : "True" }
+        ]
+      }
+    },
+    "LaunchConfig"             : {
+      "Condition": "BuildStatus",
+      "Type"      : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties" : {
+        "AssociatePublicIpAddress": { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "InstancePublicIP" ] },
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : "/dev/sda1",
+            "Ebs"        : {
+              "VolumeSize" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "RootVolumeSize" ] },
+              "VolumeType" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "RootVolumeType" ] },
+              "DeleteOnTermination" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "RootVolumeDeleteOnTermination" ] }
+            }
+          }
+        ],
+        "ImageId"             : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "64" ] },
+        "IamInstanceProfile"  : { "Ref" : "InstanceRoleInstanceProfile" },
+        "SecurityGroups"      : [ { "Ref" : "JumpboxSecurityGroup" } ],
+        "InstanceType"        : { "Ref" : "InstanceType" },
+        "UserData"            : {
+          "Fn::Base64" : {
+            "Fn::Join" : [
+              "",
+              [
+                "<powershell>\n",
+                "cfn-init.exe -v --configsets Init ", "--stack ", { "Ref" : "AWS::StackName" }, " --resource LaunchConfig ", "--region ", { "Ref" : "AWS::Region" },
+                "\n</powershell>",
+                "<persist>true</persist>"
+              ]
+            ]
+          }
+        }
+      },
+      "Metadata"   : {
+        "Comment" : "Server Configuration",
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "Init" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "init" ] },
+            "Update" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "update" ] }
+          },
+          "cfnConfig"  : {
+            "files" : {
+              "c:\\cfn\\cfn-hup.conf" : { "content" : { "Fn::Join" : [ "", [ "[main]\n", "stack=", { "Ref" : "AWS::StackName" }, "\n", "region=", { "Ref" : "AWS::Region" }, "\n", "interval=1\n" ] ] } },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" : { "content" : { "Fn::Join" : [ "", [ "[cfn-auto-reloader-hook]\n", "triggers=post.update\n", "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n", "action=cfn-init.exe --configsets Update --stack ", { "Ref" : "AWS::StackName" }, " --resource LaunchConfig ", " --region ", { "Ref" : "AWS::Region" }, "\n" ] ] } }
+            },
+            "services" : { "windows" : { "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true", "files"         : [ "c:\\cfn\\cfn-hup.conf", "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf" ] } } }
+          },
+          "finalize"   : {
+            "commands" : {
+              "1-signal-success" : { "command" : { "Fn::Join" : [ "", [ "cfn-signal.exe -e 0 ", "--stack ", { "Ref" : "AWS::StackName" }, " --resource AutoScaleGroup ", "--region ", { "Ref" : "AWS::Region" } ] ] }, "waitAfterCompletion" : "0" }
+            }
+          }
+        }
+      }
+    },
+    "JumpboxSecurityGroup"    : {
+      "Condition": "BuildStatus",
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable inbound network access access to EC2 instance.",
+        "VpcId"            : { "Ref" : "VPCID" },
+        "SecurityGroupIngress" : { "Fn::FindInMap" : [ "JumpBox", { "Ref" : "BastionType" }, "JumpBoxSecurityGroupIngress" ] },
+        "Tags"                 : [
+          { "Key" : "ServiceProvider", "Value" : "Rackspace" },
+          { "Key" : "Environment", "Value" : { "Ref" : "Environment" } },
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ "-", [ { "Ref" : "AWS::StackName" }, "Instance", "SecurityGroup" ] ] } }
+        ]
+      }
+    },
+    "ModifyTargetSecurityGroup": {
+      "Condition": "BuildStatus",
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": { "Ref": "TargetSecurityGroupId" },
+        "IpProtocol": "-1",
+        "FromPort": "0",
+        "ToPort": "65535",
+        "SourceSecurityGroupId": { "Ref": "JumpboxSecurityGroup" }
+      }
+    },
+    "InstanceRole"             : {
+      "Condition": "BuildStatus",
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Statement" : [ { "Effect" : "Allow", "Principal" : { "Service" : [ "ec2.amazonaws.com" ] }, "Action"    : [ "sts:AssumeRole" ] } ]
+        },
+        "Path"                     : "/"
+      }
+    },
+    "InstanceRolePolicies"     : {
+      "Condition": "BuildStatus",
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : { "Fn::Join": [ "", [ { "Ref": "AWS::StackName" }, "-", "EC2Policy"] ] },
+        "PolicyDocument" : {
+          "Statement" : { "Fn::FindInMap" : [ "JumpBox", { "Ref": "BastionType" }, "EC2IAMPolicyStatement" ] }
+        },
+        "Roles"          : [ { "Ref" : "InstanceRole" } ]
+      }
+    },
+    "InstanceRoleInstanceProfile" : {
+      "Condition": "BuildStatus",
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [ { "Ref" : "InstanceRole" } ]
+      }
+    },
+    "SSMSetUser" : {
+      "Type": "AWS::SSM::Document",
+      "Properties": {
+        "Content": {
+          "schemaVersion": "1.2",
+          "description": "Add a temporary user account to a Windows EC2 Instance.",
+          "parameters": {
+            "UserName": {
+              "type": "String",
+              "description": "A comma delimited list of users to add.",
+              "default": "rack"
+            },
+            "GroupName": {
+              "type": "String",
+              "description": "A comma delimited list of Groups to add the users specified to. Please note that all users specified above will be added to these groups so please select carefully.",
+              "default": "Administrators"
+            },
+            "ExpiresIn": {
+              "type": "String",
+              "description": "Number of hours to expire each account created. Set to zero if the accounts should never expire.",
+              "default": "1"
+            }
+          },
+          "runtimeConfig": {
+            "aws:runPowerShellScript": {
+              "properties": [
+                {
+                  "id": "0.aws:runPowerShellScript",
+                  "runCommand": [
+                    "function Make-RandomPassword{",
+                    "  $charSet = $NULL",
+                    "  for($a=33;$a -le 126;$a++){",
+                    "    $chars += ,[char][byte]$a",
+                    "    foreach($char in $chars){",
+                    "      if(!([system.net.webutility]::HtmlEncode($char).Contains('&')))",
+                    "      {$charSet += ,[char][byte]$a}",
+                    "    }",
+                    "  }",
+                    "  $length = 13",
+                    "  for($loop=1;$loop -le $length;$loop++){",
+                    "    $tempPass += ($charSet | Get-Random)",
+                    "  }",
+                    "  Return $tempPass",
+                    "}",
+                    "Add-Type -AssemblyName 'System.DirectoryServices.AccountManagement'",
+                    "$Description = 'User account added by an AWS SSM Document'; [DateTime]$Expires = ((Get-Date).AddHours({{ ExpiresIn }}))",
+                    "$principalContext = New-Object System.DirectoryServices.AccountManagement.PrincipalContext -ArgumentList ([System.DirectoryServices.AccountManagement.ContextType]::Machine)",
+                    "$users = \"{{UserName}}\"",
+                    "$groups = \"{{GroupName}}\"",
+                    "foreach($account in $users.split(',')){",
+                    "  $user = [System.DirectoryServices.AccountManagement.UserPrincipal]::FindByIdentity($principalContext, $account);",
+                    "  $Password = Make-RandomPassword",
+                    "  if(-not $user){",
+                    "    $user = New-Object System.DirectoryServices.AccountManagement.UserPrincipal -ArgumentList $principalContext;",
+                    "    $user.Name = $account;",
+                    "    $user.Description = $Description;",
+                    "    Write-Output \"Created local account $account\"",
+                    "  }",
+                    "  $user.SetPassword($Password);",
+                    "  Write-Output \"Set password for $account to $Password\"",
+                    "  if({{ ExpiresIn }} -ne 0){",
+                    "    $user.AccountExpirationDate = $Expires;",
+                    "  }",
+                    "  $user.Save();",
+                    "  $user = [System.DirectoryServices.AccountManagement.UserPrincipal]::FindByIdentity($principalContext, $account);",
+                    "  foreach($localGroup in $groups.split(',')){",
+                    "    $group = [System.DirectoryServices.AccountManagement.GroupPrincipal]::FindByIdentity($principalContext, $localGroup);",
+                    "    if($user -and (-not $user.GetAuthorizationGroups().Name.Contains($localgroup))){",
+                    "      if(-not $error.count -gt 0){$group.Members.Add($user); $group.Save()}",
+                    "      if($error.count -gt 0){$error.clear(); net localgroup $localgroup $account /add}",
+                    "      if(-not $error.count -gt 0){Write-Output \"Added $account to $localGroup\"}",
+                    "    }",
+                    "    else { \"$user is already part of group $localGroup\" }",
+                    "  }",
+                    "}"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "Outputs" : {
+  }
+}

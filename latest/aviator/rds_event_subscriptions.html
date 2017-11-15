@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="rdseventsubscriptions-faws-template">RdsEventSubscriptions FAWS Template</h1>
+<p>rds_event_subscriptions.template - Creates an RDS Event Subscription. ### Parameters</p>
+<h4 id="sourceids">SourceIds</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A list of Source IDs.  Submissions will be made to the provided NotificationTopic for each matching source ID. Acceptable values cary depending on the SourceType selected or omitted for all events.  Parameter ignored if SourceType is set to all. (OPTIONAL)</code></li>
+</ul>
+<h4 id="eventcategories">EventCategories</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A list of RDS event categories.  Submissions will be made to the provided NotificationTopic for each matching event. Acceptable values can be found with the CLI command 'aws rds describe-event-categories' or omitted for all events.  Parameter ignored if SourceType is set to all. (OPTIONAL)</code></li>
+</ul>
+<h4 id="sourcetype">SourceType</h4>
+<ul>
+<li>Default: <code>all</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The type of source for which Amazon RDS provides notification events..</code></li>
+<li>AllowedValues: <code>['all', 'db-instance', 'db-security-group', 'db-parameter-group', 'db-snapshot', 'db-cluster', 'db-cluster-snapshot']</code></li>
+</ul>
+<h4 id="notificationtopic">NotificationTopic</h4>
+<ul>
+<li>AllowedPattern: <code>^arn:aws:sns:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:.+$</code></li>
+<li>ConstraintDescription: <code>Must match the pattern arn:aws:sns:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:.+</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SNS Topic ARN to notify if there are any alarms. (OPTIONAL)</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

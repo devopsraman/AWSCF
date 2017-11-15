@@ -1,0 +1,227 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "route53_healthcheck.template - Route53 HealthCheck Monitors. Must be deployed in us-east-1.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "SearchString",
+            "RequestInterval"
+          ],
+          "Label": {
+            "default": "Advanced Healthcheck Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "MonitoredDomain",
+            "ResourcePath",
+            "DomainProtocol",
+            "Port"
+          ],
+          "Label": {
+            "default": "Basic Healthcheck Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "EnableRackspaceTicket": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether alarms will generate Rackspace tickets",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "MonitoredDomain": {
+      "Type": "String",
+      "Description": "Domain or IP to monitor DO NOT include protocol(HTTP(S)://) "
+    },
+    "ResourcePath": {
+      "Default": "/",
+      "Type": "String",
+      "Description": "Specifies HTTP path to monitor.  The path can be any value which returns an HTTP status code of 2xx or 3xx when the endpoint is healthy.  Ignored for TCP DomainProtocol."
+    },
+    "SearchString": {
+      "Default": "",
+      "Type": "String",
+      "Description": "If the string appears in the response body, Amazon Route 53 considers the resource healthy.  Ignored for TCP domain protocols."
+    },
+    "DomainProtocol": {
+      "Default": "HTTP",
+      "Type": "String",
+      "Description": "Specifies the protocol of the domain.",
+      "AllowedValues": [
+        "HTTP",
+        "HTTPS",
+        "TCP"
+      ]
+    },
+    "RequestInterval": {
+      "Default": "30",
+      "MinValue": "10",
+      "Type": "Number",
+      "Description": "The number of seconds between the finish of one Route 53 health check request and the start of the next.",
+      "MaxValue": "30"
+    },
+    "Port": {
+      "Default": "80",
+      "Type": "Number",
+      "Description": "Specifies the port number to monitor."
+    }
+  },
+  "Conditions": {
+    "RackspaceAlarmsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableRackspaceTicket"
+        },
+        "True"
+      ]
+    },
+    "UseSearchString": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "SearchString"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "DomainProtocol"
+                },
+                "TCP"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "UseResourcePath": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DomainProtocol"
+            },
+            "TCP"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "DomainAlarmAction": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": 10,
+        "Dimensions": [
+          {
+            "Name": "HealthCheckId",
+            "Value": {
+              "Ref": "DomainHealthCheck"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": "Domain has failed, generating ticket.",
+        "Namespace": "AWS/Route53",
+        "Period": 60,
+        "ComparisonOperator": "LessThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": "1",
+        "OKActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "MetricName": "HealthCheckStatus"
+      }
+    },
+    "DomainHealthCheck": {
+      "Type": "AWS::Route53::HealthCheck",
+      "Properties": {
+        "HealthCheckConfig": {
+          "FailureThreshold": 3,
+          "SearchString": {
+            "Fn::If": [
+              "UseSearchString",
+              {
+                "Ref": "SearchString"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "ResourcePath": {
+            "Fn::If": [
+              "UseResourcePath",
+              {
+                "Ref": "ResourcePath"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "MeasureLatency": "true",
+          "RequestInterval": {
+            "Ref": "RequestInterval"
+          },
+          "Type": {
+            "Fn::If": [
+              "UseSearchString",
+              {
+                "Fn::Sub": "${DomainProtocol}_STR_MATCH"
+              },
+              {
+                "Ref": "DomainProtocol"
+              }
+            ]
+          },
+          "Port": {
+            "Ref": "Port"
+          },
+          "FullyQualifiedDomainName": {
+            "Ref": "MonitoredDomain"
+          }
+        }
+      }
+    }
+  }
+}

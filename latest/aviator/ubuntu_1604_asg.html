@@ -1,0 +1,393 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="ubuntu1604asg-faws-template">Ubuntu1604Asg FAWS Template</h1>
+<p>ubuntu_1604_asg.template - Autoscaling EC2 Instances with Rolling Updates and Notifications. <strong>WARNING</strong> This template creates one or more Amazon EC2 instances and an Elastic Load Balancer. You will be billed for the AWS resources used if you create a stack from this template. ### Parameters</p>
+<h4 id="scalingcreatetimeout">ScalingCreateTimeOut</h4>
+<ul>
+<li>Default: <code>20M</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>#H#M#S where each # is the number of hours or minutes or seconds</code></li>
+<li>Description: <code>Time to wait for the number of signals equal to ScalingMin. H/M/S Hours/Minutes/Seconds</code></li>
+</ul>
+<h4 id="loadbalancernames">LoadBalancerNames</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A list of Classic load balancers associated with this Auto Scaling group.</code></li>
+</ul>
+<h4 id="cwlowoperator">CwLowOperator</h4>
+<ul>
+<li>Default: <code>LessThanThreshold</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Math operator used by CloudWatch for alarms and triggers.</code></li>
+<li>AllowedValues: <code>['GreaterThanOrEqualToThreshold', 'GreaterThanThreshold', 'LessThanThreshold', 'LessThanOrEqualToThreshold']</code></li>
+</ul>
+<h4 id="asgsecuritygrouplist">ASGSecurityGroupList</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>A list that contains the EC2 security groups to assign to the Amazon EC2 instances in the Auto Scaling group.</code></li>
+</ul>
+<h4 id="ebs2mountpoint">Ebs2MountPoint</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Filesystem Mount point for 2nd EBS volume. Omit to prevent changes to 2nd volume.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="scalingupdatetimeout">ScalingUpdateTimeOut</h4>
+<ul>
+<li>Default: <code>20M</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>#H#M#S where each # is the number of hours or minutes or seconds</code></li>
+<li>Description: <code>Post update pause before additional Auto Scale resource changes. H/M/S Hours/Minutes/Seconds</code></li>
+</ul>
+<h4 id="cwscalingmetric">CwScalingMetric</h4>
+<ul>
+<li>Default: <code>CPUUtilization</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select the metric to be used for scaling.</code></li>
+<li>AllowedValues: <code>['CPUUtilization', 'NetworkIn', 'NetworkOut']</code></li>
+</ul>
+<h4 id="ebsoptimized">EBSOptimized</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Use EBS Optimized.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="scalingmin">ScalingMin</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The minimum size of the Auto Scaling group.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="cwlogretention">CWLogRetention</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+<li>Description: <code>The number of days to retain Cloudwatch Logs for this Autoscaling Group.</code></li>
+<li>AllowedValues: <code>['1', '3', '5', '7', '14', '30', '60', '90', '120', '150', '180', '365', '400', '545', '731', '1827', '3653']</code></li>
+</ul>
+<h4 id="ebs2volumesize">Ebs2VolumeSize</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select Second EBS Volume Size in GB.</code></li>
+</ul>
+<h4 id="appsubnet">AppSubnet</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Subnets for Application</code></li>
+</ul>
+<h4 id="cwhighperiod">CwHighPeriod</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Time the specified statistic is applied. Must be in seconds that is also a multiple of 60.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="iopsvolume2">IopsVolume2</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Iops value required for use with io1 on secondary EBS volumes. This value should be 3 times the secondary EBS volume size</code></li>
+</ul>
+<h4 id="imageid">ImageId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The image ID to be used to build the Auto Scale group. OPTIONAL</code></li>
+</ul>
+<h4 id="cwlowperiod">CwLowPeriod</h4>
+<ul>
+<li>Default: <code>300</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Time the specified statistic is applied. Must be in seconds that is also a multiple of 60.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="scalingtermination">ScalingTermination</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The maximum number of instances that are terminated at a given time.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="keyname">KeyName</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be the name of an existing EC2 KeyPair.</code></li>
+<li>Type: <code>AWS::EC2::KeyPair::KeyName</code></li>
+<li>Description: <code>Name of an existing EC2 KeyPair to enable SSH access to the instances.</code></li>
+</ul>
+<h4 id="placementtenancy">PlacementTenancy</h4>
+<ul>
+<li>Default: <code>default</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The placement tenancy for EC2 devices</code></li>
+<li>AllowedValues: <code>['dedicated', 'default', 'host']</code></li>
+</ul>
+<h4 id="snapshotid">SnapshotId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Snapshot ID to be used to build the 2nd EBS volume. OPTIONAL</code></li>
+</ul>
+<h4 id="backupsenabled">BackupsEnabled</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Value of the 'Backup' tag, used to assign the EBSSnapper configuration.</code></li>
+</ul>
+<h4 id="ec2scaledowncooldown">EC2ScaleDownCooldown</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Time in seconds before any further trigger-related scaling can occur.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="instancetype">InstanceType</h4>
+<ul>
+<li>Default: <code>t2.micro</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Must be a valid EC2 instance type. Default is t2.micro</code></li>
+<li>Description: <code>Select instance type</code></li>
+<li>AllowedValues: <code>[u't2.nano', u't2.micro', u't2.small', u't2.medium', u't2.large', u't2.xlarge', u't2.2xlarge', u'm3.medium', u'm3.large', u'm3.xlarge', u'm3.2xlarge', u'm4.large', u'm4.xlarge', u'm4.2xlarge', u'm4.4xlarge', u'm4.10xlarge', u'm4.16xlarge', u'r3.large', u'r3.xlarge', u'r3.2xlarge', u'r3.4xlarge', u'r3.8xlarge', u'r4.large', u'r4.xlarge', u'r4.2xlarge', u'r4.4xlarge', u'r4.8xlarge', u'r4.16xlarge', u'x1.16xlarge', u'x1.32xlarge', u'i2.xlarge', u'i2.2xlarge', u'i2.4xlarge', u'i2.8xlarge', u'i3.large', u'i3.xlarge', u'i3.2xlarge', u'i3.4xlarge', u'i3.8xlarge', u'i3.16xlarge', u'c3.large', u'c3.xlarge', u'c3.2xlarge', u'c3.4xlarge', u'c3.8xlarge', u'c4.large', u'c4.xlarge', u'c4.2xlarge', u'c4.4xlarge', u'c4.8xlarge', u'g2.2xlarge', u'g2.8xlarge', u'g3.4xlarge', u'g3.8xlarge', u'g3.16xlarge', u'p2.xlarge', u'p2.8xlarge', u'p2.16xlarge', u'd2.xlarge', u'd2.2xlarge', u'd2.4xlarge', u'd2.8xlarge', u'f1.2xlarge', u'f1.16xlarge']</code></li>
+</ul>
+<h4 id="healthcheckgraceperiod">HealthCheckGracePeriod</h4>
+<ul>
+<li>Default: <code>300</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of seconds grace during which no autoscaling actions will be taken.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="ebs2volumetype">Ebs2VolumeType</h4>
+<ul>
+<li>Default: <code>gp2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select EBS Volume Type.</code></li>
+<li>AllowedValues: <code>['io1', 'standard', 'gp2']</code></li>
+</ul>
+<h4 id="cwhighoperator">CwHighOperator</h4>
+<ul>
+<li>Default: <code>GreaterThanThreshold</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Math operator used by CloudWatch for alarms and triggers.</code></li>
+<li>AllowedValues: <code>['GreaterThanOrEqualToThreshold', 'GreaterThanThreshold', 'LessThanThreshold', 'LessThanOrEqualToThreshold']</code></li>
+</ul>
+<h4 id="targetgrouparns">TargetGroupARNs</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A list of Amazon Resource Names (ARN) of target groups to associate with the Auto Scaling group.</code></li>
+</ul>
+<h4 id="ebsvolumesize">EbsVolumeSize</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select EBS Volume Size in GB.</code></li>
+</ul>
+<h4 id="healthchecktype">HealthCheckType</h4>
+<ul>
+<li>Default: <code>EC2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Define the type of healthcheck for the AutoScaling group.</code></li>
+<li>AllowedValues: <code>['EC2', 'ELB']</code></li>
+</ul>
+<h4 id="ec2scaleupadjustment">EC2ScaleUpAdjustment</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of EC2 instances to scale up by at a time.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="cwhighthreshold">CwHighThreshold</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The value against which the specified statistic is compared.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="scalingnotificationtopic">ScalingNotificationTopic</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SNS Topic ARN to notify if there are any scaling operations. OPTIONAL</code></li>
+</ul>
+<h4 id="instancerolemanagedpolicyarns">InstanceRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="cwlowthreshold">CwLowThreshold</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The value against which the specified statistic is compared.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="patchinggrouptag">PatchingGroupTag</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Group ID to be used by System Manager for Patching (OPTIONAL)</code></li>
+</ul>
+<h4 id="ec2scaledownadjustment">EC2ScaleDownAdjustment</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of EC2 instances to scale down by at a time.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="desiredcapacity">DesiredCapacity</h4>
+<ul>
+<li>Default: <code>2</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the desired capacity for the Auto Scaling group.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="mininstancesinservice">MinInstancesInService</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Specifies the minimum number of instances that must be in service within the Auto Scaling group while AWS CloudFormation updates old instances.</code></li>
+</ul>
+<h4 id="ssminventorytag">SSMInventoryTag</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Determines whether Instance is tracked via System Manager Inventory.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="terminatedinstances">TerminatedInstances</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Specifies the maximum number of instances that can be terminated in a six hour period without generating a Cloudwatch Alarm.</code></li>
+</ul>
+<h4 id="appgroupname">APPGroupName</h4>
+<ul>
+<li>ConstraintDescription: <code>Must follow normal syntax conventions.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>EC2 Server Instance Name</code></li>
+</ul>
+<h4 id="cwlowevaluations">CwLowEvaluations</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of periods over which data is compared to the specified threshold.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="cwhighevaluations">CwHighEvaluations</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of periods over which data is compared to the specified threshold.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="iops">Iops</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Iops value required for use with io1 EBS volumes. This value should be 3 times the EBS volume size</code></li>
+</ul>
+<h4 id="detailedmonitoring">DetailedMonitoring</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Detailed Monitoring.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="ebsvolumetype">EbsVolumeType</h4>
+<ul>
+<li>Default: <code>gp2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select EBS Volume Type.</code></li>
+<li>AllowedValues: <code>['io1', 'standard', 'gp2']</code></li>
+</ul>
+<h4 id="scalingmax">ScalingMax</h4>
+<ul>
+<li>Default: <code>2</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The maximum size of the Auto Scaling group.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="ec2scaleupcooldown">EC2ScaleUpCooldown</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Time in seconds before any further trigger-related scaling can occur.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="encryptebsvolume">EncryptEBSVolume</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether to encrypt the EBS volume.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>GroupName</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="groupterminatinginstances">GroupTerminatingInstances</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Over ${TerminatedInstances} instances terminated in last 6 hours, generating ticket to investigate.'}</code></li>
+<li>Metric: GroupTerminatingInstances</li>
+<li>Threshold: <code>{'Ref': 'TerminatedInstances'}</code></li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="scalealarmhigh">ScaleAlarmHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Scale-up if ${CwScalingMetric} ${CwHighOperator} ${CwHighThreshold}% for ${CwHighPeriod} seconds ${CwHighEvaluations} times.'}</code></li>
+<li>Metric: <code>{'Ref': 'CwScalingMetric'}</code></li>
+<li>Threshold: <code>{'Ref': 'CwHighThreshold'}</code></li>
+<li>Actions: <code>{'Ref': 'EC2ScaleUpPolicy'}</code></li>
+</ul>
+<h4 id="scalealarmlow">ScaleAlarmLow</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Scale-down if ${CwScalingMetric} ${CwLowOperator} ${CwLowThreshold}% for ${CwLowPeriod} seconds ${CwLowEvaluations} times.'}</code></li>
+<li>Metric: <code>{'Ref': 'CwScalingMetric'}</code></li>
+<li>Threshold: <code>{'Ref': 'CwLowThreshold'}</code></li>
+<li>Actions: <code>{'Ref': 'EC2ScaleDownPolicy'}</code></li>
+</ul>
+</body>
+</html>

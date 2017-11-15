@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="aurora-faws-template">Aurora FAWS Template</h1>
+<p>aurora.template - Creates the necessary resources for an RDS instance. Please be aware that this template will create resources for which you will be charged. ### Parameters</p>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="publiclyaccessible">PubliclyAccessible</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates whether the database instance is an Internet-facing instance.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="masterusername">MasterUsername</h4>
+<ul>
+<li>AllowedPattern: <code>^[^\d][a-zA-Z0-9]+?$</code></li>
+<li>MinLength: <code>1</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of master user for the client DB instance.</code></li>
+<li>MaxLength: <code>64</code></li>
+</ul>
+<h4 id="vpcsecuritygroupids">VPCSecurityGroupIds</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>Existing security groups being used by App ec2 instances. If no AppSG, enter the VPC Default.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="cwwriteiopslimit">CWWriteIopsLimit</h4>
+<ul>
+<li>Default: <code>100000</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch Write IOPSLimit Threshold</code></li>
+</ul>
+<h4 id="dbsnapshotarn">DBSnapshotARN</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The identifier for the DB cluster snapshot from which you want to restore.</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="autominorversionupgrade">AutoMinorVersionUpgrade</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="preferredbackupwindow">PreferredBackupWindow</h4>
+<ul>
+<li>Default: <code>05:00-06:00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The daily time range during which automated backups are created if automated backups are enabled.</code></li>
+</ul>
+<h4 id="cwreadiopslimit">CWReadIopsLimit</h4>
+<ul>
+<li>Default: <code>100000</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch Read IOPSLimit Threshold</code></li>
+</ul>
+<h4 id="backupretentionperiod">BackupRetentionPeriod</h4>
+<ul>
+<li>Description: <code>The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups.</code></li>
+<li>Default: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>35</code></li>
+<li>MinValue: <code>0</code></li>
+<li>ConstraintDescription: <code>Must be between 0 and 35</code></li>
+</ul>
+<h4 id="preferredmaintenancewindow">PreferredMaintenanceWindow</h4>
+<ul>
+<li>Default: <code>Sun:07:00-Sun:08:00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The weekly time range (in UTC) during which system maintenance can occur.</code></li>
+</ul>
+<h4 id="multiaz">MultiAZ</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Create a multi-AZ RDS database instance</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="cwcputhreshold">CWCPUThreshold</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch CPUUtilization Threshold</code></li>
+</ul>
+<h4 id="rdssubnets">RDSSubnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Subnets for RDS Instances. Required 2 Subnets even for singleAZ.</code></li>
+</ul>
+<h4 id="notificationtopic">NotificationTopic</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SNS Topic ARN to notify if there are any alarms. OPTIONAL</code></li>
+</ul>
+<h4 id="masteruserpassword">MasterUserPassword</h4>
+<ul>
+<li>Description: <code>Password for the local administrator account. Must be at least 8 characters containing letters, numbers and symbols.</code></li>
+<li>MinLength: <code>8</code></li>
+<li>AllowedPattern: <code>^[\p{ASCII}&amp;&amp;[^@\s\/&quot;]]+$||^$</code></li>
+<li>NoEcho: <code>True</code></li>
+<li>MaxLength: <code>41</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="storageencrypted">StorageEncrypted</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether the DB instance is encrypted.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="dbinstanceclass">DBInstanceClass</h4>
+<ul>
+<li>Default: <code>db.r3.large</code></li>
+<li>ConstraintDescription: <code>Must select a valid database instance type.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The database instance type</code></li>
+<li>AllowedValues: <code>['db.t2.small', 'db.t2.medium', 'db.r3.large', 'db.r3.xlarge', 'db.r3.2xlarge', 'db.r3.4xlarge', 'db.r3.8xlarge']</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h4 id="port">Port</h4>
+<ul>
+<li>Description: <code>The port number on which the database accepts connections.</code></li>
+<li>Default: <code>3306</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>65535</code></li>
+<li>MinValue: <code>1150</code></li>
+<li>ConstraintDescription: <code>Must be between 1150 and 65535</code></li>
+</ul>
+<h4 id="dbinstanceidentifier">DBInstanceIdentifier</h4>
+<ul>
+<li>Default: <code>Aurora</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The DB instance identifier. This parameter is stored as a lowercase string.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>ClusterAddress</code></li>
+<li><code>DBPort</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="writeiohigh">WriteIOHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${RDSCluster} Write IO &gt; ${CWWriteIopsLimit} for 30 minutes'}</code></li>
+<li>Metric: VolumeWriteIOPs</li>
+<li>Threshold: <code>{'Ref': 'CWWriteIopsLimit'}</code></li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="readiohigh">ReadIOHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${RDSCluster} Read IO &gt; ${CWReadIopsLimit} for 30 minutes'}</code></li>
+<li>Metric: VolumeReadIOPs</li>
+<li>Threshold: <code>{'Ref': 'CWReadIopsLimit'}</code></li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="cpualarmhigh02">CPUAlarmHigh02</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${DBInstanceIdentifier} CPU &gt; ${CWCPUThreshold}% for 15 minutes'}</code></li>
+<li>Metric: CPUUtilization</li>
+<li>Threshold: <code>{'Ref': 'CWCPUThreshold'}</code></li>
+<li>Actions: [&quot;<code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-urgent'}, {'Ref': 'AWS::NoValue'}]}</code>&quot;, &quot;<code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code>&quot;]</li>
+</ul>
+<h4 id="cpualarmhigh01">CPUAlarmHigh01</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${DBInstanceIdentifier} CPU &gt; ${CWCPUThreshold}% for 15 minutes'}</code></li>
+<li>Metric: CPUUtilization</li>
+<li>Threshold: <code>{'Ref': 'CWCPUThreshold'}</code></li>
+<li>Actions: [&quot;<code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-urgent'}, {'Ref': 'AWS::NoValue'}]}</code>&quot;, &quot;<code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code>&quot;]</li>
+</ul>
+</body>
+</html>

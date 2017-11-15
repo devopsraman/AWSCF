@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="codecommit-faws-template">Codecommit FAWS Template</h1>
+<p>codecommit.template - Creates an AWS CodeCommit repository. Please be aware that this template will create resources for which you will be charged. ### Parameters</p>
+<h4 id="branches">Branches</h4>
+<ul>
+<li>Default: <code>Master</code></li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>Comma Delimited List of branch names. Maximum length 256</code></li>
+</ul>
+<h4 id="cust.htmlata">CustomData</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Maximum length 1000.</code></li>
+<li>Description: <code>Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.</code></li>
+<li>MaxLength: <code>1000</code></li>
+</ul>
+<h4 id="repositorydescription">RepositoryDescription</h4>
+<ul>
+<li>Default: <code>Created with CloudFormation.</code></li>
+<li>ConstraintDescription: <code>Maximum length 1000.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A detailed description for the AWS CodeCommit repository.</code></li>
+<li>MaxLength: <code>1000</code></li>
+</ul>
+<h4 id="destinationarn">DestinationArn</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ARN of the resource that is the target for a trigger. Full ARN required.</code></li>
+</ul>
+<h4 id="triggername">TriggerName</h4>
+<ul>
+<li>Description: <code>A detailed description for the AWS CodeCommit repository.</code></li>
+<li>Default: <code>TriggerName</code></li>
+<li>Type: <code>String</code></li>
+<li>AllowedPattern: <code>([A-Za-z0-9._-]+)</code></li>
+<li>MaxLength: <code>100</code></li>
+<li>ConstraintDescription: <code>The repo description must contain only letters, numbers,  periods (.), underscores (_), and dashes (-). Maximum length 100.</code></li>
+</ul>
+<h4 id="repositoryname">RepositoryName</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A name for the AWS CodeCommit repository.</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>([A-Za-z0-9._-]+)</code></li>
+<li>MaxLength: <code>100</code></li>
+<li>ConstraintDescription: <code>The repo name must contain only letters, numbers, periods (.), underscores (_), and dashes (-). Maximum length 100</code></li>
+</ul>
+<h4 id="enabletrigger1">EnableTrigger1</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Defines the actions to take in response to events that occur in the repository.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>CloneHTTP</code></li>
+<li><code>CloneSSH</code></li>
+<li><code>RepoName</code></li>
+<li><code>RepoARN</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

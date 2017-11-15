@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="vpcpeer-faws-template">VpcPeer FAWS Template</h1>
+<p>Rackspace Hosting - Create a VPC Peering Template ### Parameters</p>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>Select Virtual Private Cloud ID</code></li>
+</ul>
+<h4 id="vpcroutingtables">VpcRoutingTables</h4>
+<ul>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>Comma delimited list of VPC routing tables</code></li>
+</ul>
+<h4 id="peerroutingtablescount">PeerRoutingTablesCount</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of peer routing tables to update.</code></li>
+<li>AllowedValues: <code>[1, 2, 3, 4, 5]</code></li>
+</ul>
+<h4 id="peervpccidrrange">PeerVPCCIDRRange</h4>
+<ul>
+<li>Default: <code>172.19.0.0/16</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Peer VPC CIDR Range e.g. 172.19.0.0/16</code></li>
+</ul>
+<h4 id="peerownerid">PeerOwnerId</h4>
+<ul>
+<li>AllowedPattern: <code>^[0-9]*$</code></li>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The AWS account ID of the owner of the VPC that you want to peer with</code></li>
+<li>ConstraintDescription: <code>Must be a numeric account ID.</code></li>
+</ul>
+<h4 id="peervpcid">PeerVPCID</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Existing VPC Id to peer to</code></li>
+</ul>
+<h4 id="vpccidrrange">VPCCIDRRange</h4>
+<ul>
+<li>Default: <code>172.18.0.0/16</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>VPC CIDR Range e.g. 172.18.0.0/16</code></li>
+</ul>
+<h4 id="vpcroutingtablescount">VpcRoutingTablesCount</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of vpc routing tables to update.</code></li>
+<li>AllowedValues: <code>[1, 2, 3, 4, 5]</code></li>
+</ul>
+<h4 id="peerroutingtables">PeerRoutingTables</h4>
+<ul>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>Comma delimited list of Peer routing tables</code></li>
+</ul>
+<h4 id="peerrolearn">PeerRoleArn</h4>
+<ul>
+<li>AllowedPattern: <code>^(arn:aws:iam::[0-9]+:role/.+)?$</code></li>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Amazon Resource Name (ARN) of the VPC peer role for the peering connection in another AWS account.</code></li>
+<li>ConstraintDescription: <code>Must match the pattern arn:aws:iam::[0-9]+:role/.+</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

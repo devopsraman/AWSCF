@@ -1,0 +1,58 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "code_deploy_application.template - Create a Code Deploy Application",
+  "Parameters": {
+    "EnableS3Bucket": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether an S3 artifcat bucket should be created.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "Name": {
+      "Type": "String",
+      "Description": "Application Name"
+    }
+  },
+  "Conditions": {
+    "CreateS3Bucket": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableS3Bucket"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "CodeDeployApplication": {
+      "Type": "AWS::CodeDeploy::Application",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "Name"
+        }
+      }
+    },
+    "ArtifactBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Condition": "CreateS3Bucket"
+    }
+  },
+  "Outputs": {
+    "Application": {
+      "Description": "The Code Deploy Application",
+      "Value": {
+        "Ref": "CodeDeployApplication"
+      }
+    },
+    "ArtifactBucket": {
+      "Value": {
+        "Ref": "ArtifactBucket"
+      },
+      "Description": "S3 Bucket",
+      "Condition": "CreateS3Bucket"
+    }
+  }
+}

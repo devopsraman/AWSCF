@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="nlb-faws-template">Nlb FAWS Template</h1>
+<p>NLB.template - Elastic Load Balancer v2 (Network Load Balancer) template. ### Parameters</p>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>The VPC in which your targets are located.</code></li>
+</ul>
+<h4 id="targetgroupport">TargetGroupPort</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port on which the targets receive traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="scheme">Scheme</h4>
+<ul>
+<li>Default: <code>internet-facing</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates whether the load balancer is Internet-facing or internal.</code></li>
+<li>AllowedValues: <code>['internet-facing', 'internal']</code></li>
+</ul>
+<h4 id="subnets">Subnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>A list of at least two IDs of the subnets to associate with the load balancer.</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="healthcheckport">HealthCheckPort</h4>
+<ul>
+<li>Default: <code>traffic-port</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: ``</li>
+</ul>
+<h4 id="targetgrouptype">TargetGroupType</h4>
+<ul>
+<li>Default: <code>ASG</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The type of target. (ASG\ECS or Instance)</code></li>
+<li>AllowedValues: <code>['ASG', 'Instance']</code></li>
+</ul>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="eip1allocation">EIP1Allocation</h4>
+<ul>
+<li>Default: <code>new</code></li>
+<li>AllowedPattern: <code>^new$||^none$||^eipalloc-[a-z0-9]+$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>An EIP Association to apply to the NLB in AZ 1.  Use the value 'new' to create a new EIP, and use the value of 'none' if the AZ is unused.</code></li>
+<li>ConstraintDescription: <code>Must be none, new, or a valid EIP Allocation ID</code></li>
+</ul>
+<h4 id="eip3allocation">EIP3Allocation</h4>
+<ul>
+<li>Default: <code>none</code></li>
+<li>AllowedPattern: <code>^new$||^none$||^eipalloc-[a-z0-9]+$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>An EIP Association to apply to the NLB in AZ 3.  Use the value 'new' to create a new EIP, and use the value of 'none' if the AZ is unused.</code></li>
+<li>ConstraintDescription: <code>Must be none, new, or a valid EIP Allocation ID</code></li>
+</ul>
+<h4 id="targetgrouptargetid1">TargetGroupTargetId1</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the target, such as an EC2 instance ID.</code></li>
+</ul>
+<h4 id="targetgrouptargetid2">TargetGroupTargetId2</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the target, such as an EC2 instance ID.</code></li>
+</ul>
+<h4 id="targetgrouptargetid3">TargetGroupTargetId3</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the target, such as an EC2 instance ID.</code></li>
+</ul>
+<h4 id="listener2port">Listener2Port</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port on which the listener 2 listens for requests</code></li>
+</ul>
+<h4 id="healthcheckintervalseconds">HealthCheckIntervalSeconds</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>MinValue: <code>5</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The approximate number of seconds between health checks for an individual target.</code></li>
+<li>MaxValue: <code>300</code></li>
+</ul>
+<h4 id="attributedelaytimeout">AttributeDelayTimeout</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>MinValue: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused.</code></li>
+<li>MaxValue: <code>3600</code></li>
+</ul>
+<h4 id="listener1port">Listener1Port</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port on which the listener 1 listens for requests</code></li>
+</ul>
+<h4 id="healthcheckprotocol">HealthCheckProtocol</h4>
+<ul>
+<li>Default: <code>TCP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The protocol that the load balancer uses when performing health checks on the targets, such as HTTP or HTTPS.</code></li>
+<li>AllowedValues: <code>['TCP', 'HTTP', 'HTTPS']</code></li>
+</ul>
+<h4 id="loadbalancername">LoadBalancerName</h4>
+<ul>
+<li>Default: <code>NLB-LoadBalancer-Name</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A name for the load balancer, which must be unique within your AWS account.</code></li>
+</ul>
+<h4 id="deletionprotection">DeletionProtection</h4>
+<ul>
+<li>Default: <code>false</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Value must be either lowercase true or false.</code></li>
+<li>Description: <code>Indicates whether deletion protection is enabled.</code></li>
+<li>AllowedValues: <code>['true', 'false']</code></li>
+</ul>
+<h4 id="eip2allocation">EIP2Allocation</h4>
+<ul>
+<li>Default: <code>new</code></li>
+<li>AllowedPattern: <code>^new$||^none$||^eipalloc-[a-z0-9]+$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>An EIP Association to apply to the NLB in AZ 2.  Use the value 'new' to create a new EIP, and use the value of 'none' if the AZ is unused.</code></li>
+<li>ConstraintDescription: <code>Must be none, new, or a valid EIP Allocation ID</code></li>
+</ul>
+<h4 id="targetgrouptargetport2">TargetGroupTargetPort2</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which the target is listening for traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="healthythresholdcount">HealthyThresholdCount</h4>
+<ul>
+<li>Default: <code>5</code></li>
+<li>MinValue: <code>2</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of consecutive successful health checks that are required before an unhealthy target is considered healthy.</code></li>
+<li>MaxValue: <code>10</code></li>
+</ul>
+<h4 id="healthcheckpath">HealthCheckPath</h4>
+<ul>
+<li>Default: <code>/</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ping path destination where Elastic Load Balancing sends health check requests.</code></li>
+<li>MaxLength: <code>1024</code></li>
+</ul>
+<h4 id="loadbalancernameversion">LoadBalancerNameVersion</h4>
+<ul>
+<li>Default: <code>v00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>NOTE: This needs to increment on update with new NLB.</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h4 id="targetgrouptargetport1">TargetGroupTargetPort1</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which the target is listening for traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="targetgroupname">TargetGroupName</h4>
+<ul>
+<li>Default: <code>NLB-TargetGroup</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A name for the Default Target Group.</code></li>
+</ul>
+<h4 id="targetgrouptargetport3">TargetGroupTargetPort3</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which the target is listening for traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>ELBv2TargetGroupInstance</code></li>
+<li><code>NLBListener1</code></li>
+<li><code>NLBListener2</code></li>
+<li><code>NLBFullName</code></li>
+<li><code>ELBv2TargetGroupASG</code></li>
+<li><code>NLB</code></li>
+<li><code>UnHealthyHostCountAlarm</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="unhealthyhostcountalarm">UnHealthyHostCountAlarm</h4>
+<ul>
+<li>Description: Unhealthy Host count is above threshold, creating ticket.</li>
+<li>Metric: UnHealthyHostCount</li>
+<li>Threshold: 1</li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

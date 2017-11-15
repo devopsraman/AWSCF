@@ -1,0 +1,75 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "iam_policy.template - Create Managed IAM policies.",
+  "Parameters": {
+    "PolicyName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for the IAM Policy.  If omitted, a name will be generated for the policy. OPTIONAL"
+    }
+  },
+  "Conditions": {
+    "SetPolicyName": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "PolicyName"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "ManagedPolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "ManagedPolicyName": {
+          "Fn::If": [
+            "SetPolicyName",
+            {
+              "Ref": "PolicyName"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sns:*"
+              ],
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow"
+            },
+            {
+              "NotResource": [
+                "*"
+              ],
+              "Action": [
+                "s3:*"
+              ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Description": "Allows SNS and S3 access."
+      }
+    }
+  },
+  "Outputs": {
+    "ManagedPolicyArn": {
+      "Description": "Managed Policy ARN",
+      "Value": {
+        "Ref": "ManagedPolicy"
+      }
+    }
+  }
+}

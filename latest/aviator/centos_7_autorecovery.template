@@ -1,0 +1,1588 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "centos_7_autorecovery.template - AutoRecovery EC2 Instance. **WARNING** You will be billed for the AWS resources used if you create a stack from this template.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "SSMInventoryTag",
+            "ARInstanceName",
+            "Ebs2MountPoint",
+            "Ebs2VolumeSize",
+            "IopsVolume2",
+            "Iops",
+            "PlacementTenancy",
+            "SnapshotId",
+            "Ebs2VolumeType",
+            "EbsVolumeSize",
+            "PatchingGroupTag",
+            "EBSOptimized",
+            "DetailedMonitoring",
+            "EbsVolumeType",
+            "DisableApiTermination",
+            "EncryptEBSVolume"
+          ],
+          "Label": {
+            "default": "EC2 Instances Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "AppSubnet",
+            "ARInstanceSecurityGroupList"
+          ],
+          "Label": {
+            "default": "Network Configuration"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "PatchingGroupTag": {
+          "default": "SSM Patching Group"
+        },
+        "SSMInventoryTag": {
+          "default": "Perform SSM Inventory?"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "InternalRecordName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Record Name for the new Resource Record in the Internal Hosted Zone"
+    },
+    "ARInstanceSecurityGroupList": {
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "A list that contains the EC2 security groups to assign to the Amazon EC2 instance"
+    },
+    "ARInstanceName": {
+      "Type": "String",
+      "ConstraintDescription": "Must follow normal syntax conventions.",
+      "Description": "EC2 Server Instance Name"
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "CwCpuHighOperator": {
+      "Default": "GreaterThanThreshold",
+      "Type": "String",
+      "Description": "Math operator used by CloudWatch for alarms and triggers.",
+      "AllowedValues": [
+        "GreaterThanOrEqualToThreshold",
+        "GreaterThanThreshold",
+        "LessThanThreshold",
+        "LessThanOrEqualToThreshold"
+      ]
+    },
+    "CwCpuHighThreshold": {
+      "AllowedPattern": "([0-9]+)",
+      "Default": "90",
+      "Type": "String",
+      "Description": "The value against which the specified statistic is compared.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "CWLogRetention": {
+      "Default": "30",
+      "Type": "String",
+      "ConstraintDescription": "Must be a valid integer.",
+      "Description": "The number of days to retain Cloudwatch Logs for this instance.",
+      "AllowedValues": [
+        "1",
+        "3",
+        "5",
+        "7",
+        "14",
+        "30",
+        "60",
+        "90",
+        "120",
+        "150",
+        "180",
+        "365",
+        "400",
+        "545",
+        "731",
+        "1827",
+        "3653"
+      ]
+    },
+    "Ebs2VolumeSize": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Select Second EBS Volume Size in GB."
+    },
+    "ImageId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The image ID to be used to build the EC2 Instance. OPTIONAL"
+    },
+    "IopsVolume2": {
+      "Default": "0",
+      "Type": "Number",
+      "Description": "IOPS value required for use with io1 on secondary EBS volumes. This value should be 3 times the secondary EBS volume size"
+    },
+    "EBSOptimized": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Use EBS Optimized.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "AppSubnet": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Subnets for Application"
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "KeyName": {
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair.",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances."
+    },
+    "EIPAllocationId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The AllocationId of the EIP you want to associate with the instance (optional)."
+    },
+    "CwCpuHighPeriod": {
+      "AllowedPattern": "([0-9]+)",
+      "Default": "60",
+      "Type": "String",
+      "Description": "Time the specified statistic is applied. Must be in seconds that is also a multiple of 60.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "SnapshotId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Snapshot ID to be used to build the 2nd EBS volume. OPTIONAL"
+    },
+    "BackupsEnabled": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Value of the 'Backup' tag, used to assign the EBSSnapper configuration."
+    },
+    "InstanceType": {
+      "Default": "t2.micro",
+      "Type": "String",
+      "ConstraintDescription": "Must be a valid EC2 instance type. Default is t2.micro",
+      "Description": "Select instance type",
+      "AllowedValues": [
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "t2.xlarge",
+        "t2.2xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m4.16xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "r4.large",
+        "r4.xlarge",
+        "r4.2xlarge",
+        "r4.4xlarge",
+        "r4.8xlarge",
+        "r4.16xlarge",
+        "x1.16xlarge",
+        "x1.32xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "i3.large",
+        "i3.xlarge",
+        "i3.2xlarge",
+        "i3.4xlarge",
+        "i3.8xlarge",
+        "i3.16xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "g3.4xlarge",
+        "g3.8xlarge",
+        "g3.16xlarge",
+        "p2.xlarge",
+        "p2.8xlarge",
+        "p2.16xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "f1.2xlarge",
+        "f1.16xlarge"
+      ]
+    },
+    "Ebs2VolumeType": {
+      "Default": "gp2",
+      "Type": "String",
+      "Description": "Select EBS Volume Type.",
+      "AllowedValues": [
+        "io1",
+        "standard",
+        "gp2"
+      ]
+    },
+    "EbsVolumeSize": {
+      "Default": "60",
+      "Type": "String",
+      "Description": "Select EBS Volume Size in GB."
+    },
+    "PlacementTenancy": {
+      "Default": "default",
+      "Type": "String",
+      "Description": "The placement tenancy for EC2 devices",
+      "AllowedValues": [
+        "dedicated",
+        "default",
+        "host"
+      ]
+    },
+    "InstanceRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "NotificationTopic": {
+      "Default": "",
+      "Type": "String",
+      "Description": "SNS Topic ARN to notify if there are any alarms. OPTIONAL"
+    },
+    "Ebs2MountPoint": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Filesystem Mount point for 2nd EBS volume.  Omit to prevent changes to 2nd volume."
+    },
+    "PatchingGroupTag": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Group ID to be used by System Manager for Patching (OPTIONAL)"
+    },
+    "SSMInventoryTag": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Determines whether Instance is tracked via System Manager Inventory.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "CreationPolicyTimeOut": {
+      "Default": "20M",
+      "ConstraintDescription": "#H#M#S where each # is the number of hours or minutes or seconds",
+      "Type": "String",
+      "Description": "Time to wait for the number of signals for the creation policy. H/M/S Hours/Minutes/Seconds"
+    },
+    "Iops": {
+      "Default": "0",
+      "Type": "Number",
+      "Description": "Iops value required for use with io1 EBS volumes. This value should be 3 times the EBS volume size"
+    },
+    "DetailedMonitoring": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Enable Detailed Monitoring.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "CwCpuHighEvaluations": {
+      "AllowedPattern": "([0-9]+)",
+      "Default": "15",
+      "Type": "String",
+      "Description": "The number of periods over which data is compared to the specified threshold.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "EbsVolumeType": {
+      "Default": "gp2",
+      "Type": "String",
+      "Description": "Select EBS Volume Type.",
+      "AllowedValues": [
+        "io1",
+        "standard",
+        "gp2"
+      ]
+    },
+    "DisableApiTermination": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether the instance can be terminated through the API.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "InternalZoneId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Route53 Internal Hosted Zone ID"
+    },
+    "EncryptEBSVolume": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether to encrypt the EBS volume.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    }
+  },
+  "Conditions": {
+    "is2ndEBSVolume": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Ebs2VolumeSize"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isInternalHostedZoneIdProvided": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InternalZoneId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isEBSEncrypted": {
+      "Fn::Equals": [
+        {
+          "Ref": "EncryptEBSVolume"
+        },
+        "True"
+      ]
+    },
+    "AttachEIP": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "EIPAllocationId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "InstanceRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InstanceRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "IopsEnabled2": {
+      "Fn::Equals": [
+        {
+          "Ref": "Ebs2VolumeType"
+        },
+        "io1"
+      ]
+    },
+    "IopsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EbsVolumeType"
+        },
+        "io1"
+      ]
+    },
+    "isNotification": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NotificationTopic"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "DetailedMonitoring": {
+      "Fn::Equals": [
+        {
+          "Ref": "DetailedMonitoring"
+        },
+        "True"
+      ]
+    },
+    "isSnapshotId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SnapshotId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isImageId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ImageId"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "AWSRegionArch2AMI": {
+      "us-east-1": {
+        "64": "ami-db48ada1"
+      },
+      "us-west-1": {
+        "64": "ami-8a6751ea"
+      },
+      "ap-northeast-2": {
+        "64": "ami-ea12c984"
+      },
+      "ap-northeast-1": {
+        "64": "ami-e4599a82"
+      },
+      "sa-east-1": {
+        "64": "ami-afd7a5c3"
+      },
+      "ap-southeast-1": {
+        "64": "ami-1fbad07c"
+      },
+      "ca-central-1": {
+        "64": "ami-cbd069af"
+      },
+      "ap-southeast-2": {
+        "64": "ami-e9c7208b"
+      },
+      "us-west-2": {
+        "64": "ami-e535c59d"
+      },
+      "us-east-2": {
+        "64": "ami-d61133b3"
+      },
+      "ap-south-1": {
+        "64": "ami-ccde99a3"
+      },
+      "eu-central-1": {
+        "64": "ami-2540f74a"
+      },
+      "eu-west-1": {
+        "64": "ami-5f76b626"
+      },
+      "eu-west-2": {
+        "64": "ami-951201f1"
+      }
+    }
+  },
+  "Resources": {
+    "EIP": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "ARInstance"
+        },
+        "AllocationId": {
+          "Ref": "EIPAllocationId"
+        }
+      },
+      "Condition": "AttachEIP"
+    },
+    "InternalRecordSet": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "Internal Record Set for ${InternalRecordName}"
+        },
+        "Name": {
+          "Fn::Sub": "${InternalRecordName}.${InternalZoneName}."
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "ARInstance",
+              "PrivateIp"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "HostedZoneId": {
+          "Ref": "InternalZoneId"
+        },
+        "Type": "A"
+      },
+      "Condition": "isInternalHostedZoneIdProvided"
+    },
+    "InstanceRoleInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
+                  {
+                    "Fn::If": [
+                      "InstanceRolePoliciesSet",
+                      {
+                        "Ref": "InstanceRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ARInstance": {
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": 1,
+          "Timeout": {
+            "Fn::Sub": "PT${CreationPolicyTimeOut}"
+          }
+        }
+      },
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "exec 1> >(logger -s -t $(basename $0)) 2>&1\n",
+                "\n",
+                "# Helper function\n",
+                "function exit_cfn_signal {\n",
+                "  exit_status=$?\n",
+                "  if [ -e /opt/aws/bin/cfn-signal ]; then\n",
+                "    /opt/aws/bin/cfn-signal -e $exit_status --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                " --resource ARInstance --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "  fi\n",
+                "  exit $exit_status\n",
+                "}\n",
+                "trap exit_cfn_signal TERM EXIT\n",
+                "\n",
+                "mkdir -p /opt/aws/bin\n",
+                "cd /opt/aws\n",
+                "curl https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -o /tmp/epel-release-latest-7.noarch.rpm\n",
+                "rpm -qa | grep -q epel-release || yum install -y /tmp/epel-release-latest-7.noarch.rpm\n",
+                "yum install -y python-pip python34\n",
+                "pip install --upgrade awscli pystache argparse python-daemon requests\n",
+                "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz -o /opt/aws/aws-cfn-bootstrap-latest.tar.gz\n",
+                "tar -xvpf aws-cfn-bootstrap-latest.tar.gz && cd aws-cfn-bootstrap-*/ && python setup.py build && python setup.py install\n",
+                "ln -sf /usr/init/redhat/cfn-hup /etc/init.d/cfn-hup\n",
+                "chmod 775 /usr/init/redhat/cfn-hup\n",
+                "ln -sf /usr/bin/cfn-hup /opt/aws/bin/cfn-hup\n",
+                "ln -sf /usr/bin/cfn-init /opt/aws/bin/cfn-init\n",
+                "ln -sf /usr/bin/cfn-signal /opt/aws/bin/cfn-signal\n",
+                "ln -sf /usr/bin/cfn-get-metadata /opt/aws/bin/cfn-get-metadata\n",
+                "ln -sf /usr/bin/cfn-send-cmd-event /opt/aws/bin/cfn-send-cmd-event\n",
+                "ln -sf /usr/bin/cfn-send-cmd-result /opt/aws/bin/cfn-send-cmd-result\n",
+                "/opt/aws/bin/cfn-init -v --configsets Init --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                " --resource ARInstance --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        },
+        "DisableApiTermination": {
+          "Ref": "DisableApiTermination"
+        },
+        "Monitoring": {
+          "Ref": "DetailedMonitoring"
+        },
+        "Tags": [
+          {
+            "Key": "Backup",
+            "Value": {
+              "Ref": "BackupsEnabled"
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "ARInstanceName"
+            }
+          },
+          {
+            "Key": "PatchingGroup",
+            "Value": {
+              "Ref": "PatchingGroupTag"
+            }
+          },
+          {
+            "Key": "SSMInventory",
+            "Value": {
+              "Ref": "SSMInventoryTag"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "Tenancy": {
+          "Ref": "PlacementTenancy"
+        },
+        "ImageId": {
+          "Fn::If": [
+            "isImageId",
+            {
+              "Ref": "ImageId"
+            },
+            {
+              "Fn::FindInMap": [
+                "AWSRegionArch2AMI",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "64"
+              ]
+            }
+          ]
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "Iops": {
+                "Fn::If": [
+                  "IopsEnabled",
+                  {
+                    "Ref": "Iops"
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
+                  }
+                ]
+              },
+              "DeleteOnTermination": "true",
+              "VolumeType": {
+                "Ref": "EbsVolumeType"
+              },
+              "VolumeSize": {
+                "Ref": "EbsVolumeSize"
+              }
+            }
+          }
+        ],
+        "EbsOptimized": {
+          "Ref": "EBSOptimized"
+        },
+        "SecurityGroupIds": {
+          "Ref": "ARInstanceSecurityGroupList"
+        },
+        "SubnetId": {
+          "Ref": "AppSubnet"
+        },
+        "IamInstanceProfile": {
+          "Ref": "InstanceRoleInstanceProfile"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        }
+      },
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "cfnConfig": {
+            "services": {
+              "sysvinit": {
+                "cfn-hup": {
+                  "files": [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            },
+            "files": {
+              "/etc/cfn/cfn-hup.conf": {
+                "owner": "root",
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack={{ StackName }}\n",
+                      "region={{ Region }}\n",
+                      "interval=1\n"
+                    ]
+                  ]
+                },
+                "group": "root",
+                "mode": "000400",
+                "context": {
+                  "StackName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "Region": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.ARInstance.Metadata.AWS::CloudFormation::Init\n",
+                      "action=/opt/aws/bin/cfn-init -v --configsets Update --stack {{ StackName }} --resource ARInstance --region {{ Region }}\n",
+                      "runas=root\n",
+                      "\n",
+                      "[cfn-ebs-hook]\n",
+                      "triggers=post.update,post.add\n",
+                      "path=Resources.Ebs2VolumeAttachment.PhysicalResourceId\n",
+                      "action=/opt/aws/bin/cfn-init -v --configsets Ebsformat --stack {{ StackName }} --resource ARInstance --region {{ Region }}\n",
+                      "runas=root\n"
+                    ]
+                  ]
+                },
+                "context": {
+                  "StackName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "Region": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              }
+            }
+          },
+          "Disablefirewalld": {
+            "commands": {
+              "2-Disablefirewalld": {
+                "ignoreErrors": "true",
+                "command": "systemctl disable firewalld"
+              },
+              "1-Stopfirewalld": {
+                "test": "systemctl status firewalld",
+                "command": "systemctl stop firewalld"
+              },
+              "3-Maskfirewalld": {
+                "ignoreErrors": "true",
+                "command": "systemctl mask firewalld"
+              }
+            }
+          },
+          "webInstall": {
+            "services": {
+              "sysvinit": {
+                "httpd": {
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            },
+            "packages": {
+              "yum": {
+                "httpd": []
+              }
+            }
+          },
+          "scaleft": {
+            "files": {
+              "/etc/logrotate.d/sftd": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "/var/log/sftd.log {\n",
+                      "    missingok\n",
+                      "    weekly\n",
+                      "    copytruncate\n",
+                      "    rotate 4\n",
+                      "    compress\n",
+                      "    postrotate\n",
+                      "      service sftd restart\n",
+                      "    endscript\n",
+                      "}\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "0644"
+              },
+              "/root/scaleft_yum.sh": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "n=0\n",
+                      "while :\n",
+                      "do\n",
+                      "  yum install -y -q scaleft-server-tools\n",
+                      "  [[ $? = 0 ]] && break || ((n++))\n",
+                      "  (( n >= 5 )) && break\n",
+                      "done\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "000400"
+              }
+            },
+            "commands": {
+              "7-ClearLogrotateFileBackup": {
+                "test": "[ -e /etc/logrotate.d/sftd.bak ]",
+                "command": "/bin/rm /etc/logrotate.d/sftd.bak"
+              },
+              "2-TrustKey": {
+                "command": "rpm --import https://dist.scaleft.com/pki/scaleft_rpm_key.asc"
+              },
+              "3-AddRepo": {
+                "test": "[ ! -e /etc/yum.repos.d/scaleft.repo ]",
+                "command": "curl -C - https://pkg.scaleft.com/scaleft_yum.repo | tee /etc/yum.repos.d/scaleft.repo"
+              },
+              "4-InstallScaleFT": {
+                "test": "! rpm -qa | grep -q scaleft-server-tools",
+                "command": "bash /root/scaleft_yum.sh"
+              },
+              "1-InitialUrl": {
+                "test": "[ ! -e /etc/sft/sftd.yaml ]",
+                "command": "mkdir -p /etc/sft && echo -e 'InitialURL: https://scaleft.api.manage.rackspace.com\nLogLevel: WARN' > /etc/sft/sftd.yaml"
+              },
+              "5-RemoveDisableAutoStartIfExist": {
+                "test": "[ -e /etc/sftd/disable-autostart ]",
+                "command": "rm /etc/sftd/disable-autostart"
+              },
+              "6-StartScaleFTService": {
+                "test": "! ps aux | grep [s]ftd",
+                "command": "service sftd start"
+              }
+            }
+          },
+          "mountEBS": {
+            "commands": {
+              "3-MountVolume": {
+                "test": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[ -n '",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "' ] && ! cat /etc/fstab | grep '",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "' && file -sL ",
+                      "/dev/xvdb | grep filesystem\n"
+                    ]
+                  ]
+                },
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "echo \"",
+                      "/dev/xvdb ",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "  ext4    defaults    0   0\" >> /etc/fstab \n",
+                      "mount -a\n"
+                    ]
+                  ]
+                }
+              },
+              "4-MountPartitionVolume": {
+                "test": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[ -n '",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "' ] && ! cat /etc/fstab | grep '",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "' && file -sL ",
+                      "/dev/xvdb1 | grep filesystem\n"
+                    ]
+                  ]
+                },
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "echo \"",
+                      "/dev/xvdb1 ",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "  ext4    defaults,noatime    0   0\" >> /etc/fstab \n",
+                      "mount -a\n"
+                    ]
+                  ]
+                }
+              },
+              "2-MkfsVolume": {
+                "test": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[ -n '",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "' ] && ! file -sL ",
+                      "/dev/xvdb | grep -E filesystem && ! fdisk -l ",
+                      "/dev/xvdb | grep '",
+                      "/dev/xvdb1'\n"
+                    ]
+                  ]
+                },
+                "command": "mkfs -t ext4  /dev/xvdb"
+              },
+              "1-CreateMountPoint": {
+                "test": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[ -n '",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "' ]\n"
+                    ]
+                  ]
+                },
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "mkdir -p ",
+                      {
+                        "Ref": "Ebs2MountPoint"
+                      },
+                      "\n"
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "install_Logs": {
+            "files": {
+              "/etc/awslogs/awslogs.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[general]\n",
+                      "state_file= /var/awslogs/state/agent-state\n",
+                      "\n",
+                      "[/var/log/cloud-init.log]\n",
+                      "file = /var/log/cloud-init.log\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "CloudFormationLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/cloud-init.log\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format =\n",
+                      "\n",
+                      "[/var/log/cloud-init-output.log]\n",
+                      "file = /var/log/cloud-init-output.log\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "CloudFormationLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/cloud-init-output.log\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format =\n",
+                      "\n",
+                      "[/var/log/cfn-init.log]\n",
+                      "file = /var/log/cfn-init.log\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "CloudFormationLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/cfn-init.log\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format =\n",
+                      "\n",
+                      "[/var/log/cfn-hup.log]\n",
+                      "file = /var/log/cfn-hup.log\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "CloudFormationLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/cfn-hup.log\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format =\n",
+                      "\n",
+                      "[/var/log/cfn-wire.log]\n",
+                      "file = /var/log/cfn-wire.log\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "CloudFormationLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/cfn-wire.log\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format =\n",
+                      "\n",
+                      "[/var/log/httpd/access]\n",
+                      "file = /var/log/httpd/access*\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "ApplicationAccessLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/httpd-access\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S\n",
+                      "\n",
+                      "[/var/log/httpd/error]\n",
+                      "file = /var/log/httpd/error*\n",
+                      "log_group_name = ",
+                      {
+                        "Ref": "ApplicationErrorLogs"
+                      },
+                      "\n",
+                      "log_stream_name = {instance_id}/httpd-error\n",
+                      "initial_position = start_of_file\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "0444"
+              },
+              "/etc/awslogs/awscli.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[plugins]\n",
+                      "cwlogs = cwlogs\n",
+                      "[default]\n",
+                      "region = ",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "0444"
+              }
+            },
+            "commands": {
+              "1-CreateStateDirectory": {
+                "test": "if [ ! -d /var/awslogs/state ]; then exit 0 ; else exit 1; fi",
+                "command": "mkdir -p /var/awslogs/state"
+              },
+              "2-CreateConfDirectory": {
+                "ignoreErrors": "false",
+                "command": "mkdir -p /etc/awslogs"
+              },
+              "3-Install": {
+                "ignoreErrors": "false",
+                "command": {
+                  "Fn::Sub": "curl https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O; chmod +x awslogs-agent-setup.py; python3 ./awslogs-agent-setup.py -n -c /etc/awslogs/awslogs.conf --python /usr/bin/python3 --region ${AWS::Region}"
+                }
+              }
+            }
+          },
+          "configSets": {
+            "Init": [
+              "SSMInstall",
+              "SetPermissiveSELinux",
+              "cfnConfig",
+              "install_Logs",
+              "scaleft",
+              "diagnosticTools",
+              "Disablefirewalld"
+            ],
+            "Ebsformat": [
+              "mountEBS"
+            ],
+            "Update": [
+              "cfnConfig",
+              "install_Logs"
+            ]
+          },
+          "SetPermissiveSELinux": {
+            "commands": {
+              "3-SetSysConfigPermissive": {
+                "test": "grep -q 'SELINUX=enforcing' /etc/sysconfig/selinux",
+                "command": "sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/sysconfig/selinux"
+              },
+              "1-SetEnforce": {
+                "test": "getenforce | grep -q Enforcing",
+                "command": "setenforce 0"
+              },
+              "2-SetSELinuxConfigPermissive": {
+                "test": "grep -q 'SELINUX=enforcing' /etc/selinux/config",
+                "command": "sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config"
+              }
+            }
+          },
+          "SSMInstall": {
+            "commands": {
+              "2-InstallSSMAgent": {
+                "test": "! rpm -qa | grep -q amazon-ssm-agent",
+                "command": "yum install -y /opt/aws/amazon-ssm-agent.rpm"
+              },
+              "3-StartSSMAgentService": {
+                "test": "systemctl status amazon-ssm-agent",
+                "command": "service amazon-ssm-agent start"
+              },
+              "1-DownloadSSMAgent": {
+                "test": "[ ! -e /opt/aws/amazon-ssm-agent.rpm ]",
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "curl https://amazon-ssm-",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ".s3.amazonaws.com/latest/linux_amd64/amazon-ssm-agent.rpm -o /opt/aws/amazon-ssm-agent.rpm\n"
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "diagnosticTools": {
+            "packages": {
+              "yum": {
+                "ltrace": [],
+                "strace": [],
+                "tcpdump": [],
+                "sysstat": [],
+                "iotop": [],
+                "iptraf-ng": [],
+                "lsof": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "InstanceRolePolicies": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "InstanceRole",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "cloudformation:Describe*"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "ssm:CreateAssociation"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "cloudwatch:PutMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:ListMetrics"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "ec2:DescribeTags"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "ApplicationErrorLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": {
+          "Ref": "CWLogRetention"
+        }
+      }
+    },
+    "Ebs2Volume": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::GetAtt": [
+            "ARInstance",
+            "AvailabilityZone"
+          ]
+        },
+        "Encrypted": {
+          "Fn::If": [
+            "isEBSEncrypted",
+            "true",
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VolumeType": {
+          "Ref": "Ebs2VolumeType"
+        },
+        "Iops": {
+          "Fn::If": [
+            "IopsEnabled2",
+            {
+              "Ref": "IopsVolume2"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "SnapshotId": {
+          "Fn::If": [
+            "isSnapshotId",
+            {
+              "Ref": "SnapshotId"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Size": {
+          "Ref": "Ebs2VolumeSize"
+        }
+      },
+      "Condition": "is2ndEBSVolume"
+    },
+    "StatusCheckFailedSystemAlarmTicket": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "ARInstance"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+          }
+        ],
+        "AlarmDescription": "Status checks have failed for system, generating ticket.",
+        "Namespace": "AWS/EC2",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": "0",
+        "OKActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+          }
+        ],
+        "Unit": "Count",
+        "MetricName": "StatusCheckFailed_System"
+      }
+    },
+    "ApplicationAccessLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": {
+          "Ref": "CWLogRetention"
+        }
+      }
+    },
+    "CloudFormationLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": {
+          "Ref": "CWLogRetention"
+        }
+      }
+    },
+    "StatusCheckFailedInstanceAlarmReboot": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "ARInstance"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:swf:${AWS::Region}:${AWS::AccountId}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"
+          }
+        ],
+        "AlarmDescription": "Status checks have failed, rebooting system.",
+        "Namespace": "AWS/EC2",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": "0",
+        "Unit": "Count",
+        "MetricName": "StatusCheckFailed_Instance"
+      }
+    },
+    "CPUAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "CwCpuHighEvaluations"
+        },
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "ARInstance"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "isNotification",
+              {
+                "Ref": "NotificationTopic"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "CPU Alarm ${CwCpuHighOperator} ${CwCpuHighThreshold}% for ${CwCpuHighPeriod} seconds ${CwCpuHighEvaluations} times."
+        },
+        "Namespace": "AWS/EC2",
+        "Period": {
+          "Ref": "CwCpuHighPeriod"
+        },
+        "ComparisonOperator": {
+          "Ref": "CwCpuHighOperator"
+        },
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "CwCpuHighThreshold"
+        },
+        "OKActions": [],
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "Ebs2VolumeAttachment": {
+      "Type": "AWS::EC2::VolumeAttachment",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "ARInstance"
+        },
+        "Device": "/dev/sdb",
+        "VolumeId": {
+          "Ref": "Ebs2Volume"
+        }
+      },
+      "Condition": "is2ndEBSVolume"
+    },
+    "StatusCheckFailedInstanceAlarmTicket": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "10",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "ARInstance"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+          }
+        ],
+        "AlarmDescription": "Status checks have failed, generating ticket.",
+        "Namespace": "AWS/EC2",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": "0",
+        "OKActions": [
+          {
+            "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+          }
+        ],
+        "Unit": "Count",
+        "MetricName": "StatusCheckFailed_Instance"
+      }
+    },
+    "StatusCheckFailedSystemAlarmRecover": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "2",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "ARInstance"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::Sub": "arn:aws:automate:${AWS::Region}:ec2:recover"
+          }
+        ],
+        "AlarmDescription": "Status checks have failed for system, recovering instance",
+        "Namespace": "AWS/EC2",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": "0",
+        "Unit": "Count",
+        "MetricName": "StatusCheckFailed_System"
+      }
+    }
+  }
+}

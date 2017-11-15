@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="elasticacheredis-faws-template">ElasticacheRedis FAWS Template</h1>
+<p>elasticache_redis.template - AWS Cluster for ElastiCache ### Parameters</p>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="elasticachesubnets">ElastiCacheSubnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Subnets for use with this cache cluster</code></li>
+</ul>
+<h4 id="clustername">ClusterName</h4>
+<ul>
+<li>Default: <code>MyRedisCluster</code></li>
+<li>AllowedPattern: <code>^[a-zA-Z][a-zA-Z0-9\-]{0,19}$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of Cluster</code></li>
+<li>ConstraintDescription: <code>Must be between 1 and 20 alphanumeric characters and begin with a letter.</code></li>
+</ul>
+<h4 id="replicationgroupdescription">ReplicationGroupDescription</h4>
+<ul>
+<li>Default: <code>Elasticache</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Description of Replication Group</code></li>
+</ul>
+<h4 id="vpcsecuritygroupids">VPCSecurityGroupIds</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>Existing security group being used by Elasticache cluster.</code></li>
+</ul>
+<h4 id="cacheclusterport">CacheClusterPort</h4>
+<ul>
+<li>Default: <code>6379</code></li>
+<li>MinValue: <code>1024</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which each of the cache nodes will accept connections</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="snapshotretentionlimit">SnapshotRetentionLimit</h4>
+<ul>
+<li>Description: <code>The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups. Snapshots are unsupported on cache.t2.* instance classes.</code></li>
+<li>Default: <code>7</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>35</code></li>
+<li>MinValue: <code>0</code></li>
+<li>ConstraintDescription: <code>must be between 0 and 35</code></li>
+</ul>
+<h4 id="instanceclass">InstanceClass</h4>
+<ul>
+<li>Default: <code>cache.m3.medium</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The compute and memory capacity of the nodes within the ElastiCache cluster</code></li>
+<li>AllowedValues: <code>['cache.t2.micro', 'cache.t2.small', 'cache.t2.medium', 'cache.c1.xlarge', 'cache.m3.medium', 'cache.m3.large', 'cache.m3.xlarge', 'cache.m3.2xlarge', 'cache.m4.large', 'cache.m4.xlarge', 'cache.m4.2xlarge', 'cache.m4.4xlarge', 'cache.m4.10xlarge', 'cache.r3.large', 'cache.r3.xlarge', 'cache.r3.2xlarge', 'cache.r3.4xlarge', 'cache.r3.8xlarge']</code></li>
+</ul>
+<h4 id="elasticacheenginetype">ElastiCacheEngineType</h4>
+<ul>
+<li>Default: <code>redis32</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of the cache engine to be used for this cache cluster</code></li>
+<li>AllowedValues: <code>['redis28', 'redis32']</code></li>
+</ul>
+<h4 id="numberofnodes">NumberOfNodes</h4>
+<ul>
+<li>Default: <code>2</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of cache nodes within the ElastiCache cluster</code></li>
+<li>MaxValue: <code>100</code></li>
+</ul>
+<h4 id="snapshotwindow">SnapshotWindow</h4>
+<ul>
+<li>Default: <code>03:00-05:00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your node group. Snapshots are unsupported on cache.t2.* instance classes.</code></li>
+</ul>
+<h4 id="notificationtopic">NotificationTopic</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SNS Topic ARN to notify if there are any ElastiCache notifications. OPTIONAL</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h4 id="failoverenabled">FailoverEnabled</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Multi-AZ Failover.  Failover is unsupported on cache.t2.* instance classes.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="preferredmaintenancewindow">PreferredMaintenanceWindow</h4>
+<ul>
+<li>Default: <code>Sun:05:00-Sun:07:00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The weekly time range (in UTC) during which system maintenance can occur.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>RedisConnection</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

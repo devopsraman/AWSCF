@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="snstopicsubscriptions-faws-template">SnsTopicSubscriptions FAWS Template</h1>
+<p>sns_topic_subscriptions.template - SNS Template. Creates a Topic with up to 3 Subscription. ### Parameters</p>
+<h4 id="subscriptionendpoint1">SubscriptionEndpoint1</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The subscription's endpoint #1.</code></li>
+</ul>
+<h4 id="subscriptionendpoint3">SubscriptionEndpoint3</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The subscription's endpoint #3.</code></li>
+</ul>
+<h4 id="subscriptionendpoint2">SubscriptionEndpoint2</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The subscription's endpoint #2.</code></li>
+</ul>
+<h4 id="subscriptionprotocol1">SubscriptionProtocol1</h4>
+<ul>
+<li>Default: <code>http</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The protocol you want to use in your endpoint #1. Supported protocols include: http, https, email, email-json, sms, sqs, application, lambda.</code></li>
+<li>AllowedValues: <code>['http', 'https', 'email', 'email-json', 'sms', 'sqs', 'application', 'lambda']</code></li>
+</ul>
+<h4 id="subscriptionprotocol2">SubscriptionProtocol2</h4>
+<ul>
+<li>Default: <code>http</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The protocol you want to use in your endpoint #2. Supported protocols include: http, https, email, email-json, sms, sqs, application, lambda.</code></li>
+<li>AllowedValues: <code>['http', 'https', 'email', 'email-json', 'sms', 'sqs', 'application', 'lambda']</code></li>
+</ul>
+<h4 id="subscriptionprotocol3">SubscriptionProtocol3</h4>
+<ul>
+<li>Default: <code>http</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The protocol you want to use in your endpoint #3. Supported protocols include: http, https, email, email-json, sms, sqs, application, lambda.</code></li>
+<li>AllowedValues: <code>['http', 'https', 'email', 'email-json', 'sms', 'sqs', 'application', 'lambda']</code></li>
+</ul>
+<h4 id="displayname">DisplayName</h4>
+<ul>
+<li>Default: <code>MySNSTopic</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A developer-defined string that can be used to identify this SNS topic.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>MySNSTopicTopicARN</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

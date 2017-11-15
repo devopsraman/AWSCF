@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="codedeploydeployment-faws-template">CodeDeployDeployment FAWS Template</h1>
+<p>code_deploy_deployment.template - Create a Code Deploy Deployment ### Parameters</p>
+<h4 id="applicationname">ApplicationName</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application Name</code></li>
+</ul>
+<h4 id="autoscalinggroups">AutoScalingGroups</h4>
+<ul>
+<li>Default: <code>none</code></li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>Autoscaling Groups. Ex: 'asg1, asg2'</code></li>
+</ul>
+<h4 id="ec2tagkey">EC2TagKey</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Tag Key for EC2 Tag Filter (Required when EC2TagValue is Set)</code></li>
+</ul>
+<h4 id="enables3bucket">EnableS3Bucket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether an S3 artifcat bucket should be created.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="servicerolemanagedpolicyarns">ServiceRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the ServiceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="ec2tagvalue">EC2TagValue</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Tag Value for ec2 Tag Filter (Required when EC2TagKey is Set)</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="deploymentconfiguration">DeploymentConfiguration</h4>
+<ul>
+<li>Default: <code>CodeDeployDefault.OneAtATime</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Code Deployment Configuration</code></li>
+<li>AllowedValues: <code>['CodeDeployDefault.HalfAtATime', 'CodeDeployDefault.AllAtOnce', 'CodeDeployDefault.OneAtATime']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>DeploymentGroup</code></li>
+<li><code>ConfigurationBucket</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

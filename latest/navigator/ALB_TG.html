@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="albtg-faws-template">AlbTg FAWS Template</h1>
+<p>ALB_TG.template - Elastic Load Balancer v2 (Target Group) template. ### Parameters</p>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>The VPC in which your targets are located.</code></li>
+</ul>
+<h4 id="targetgroupport">TargetGroupPort</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port on which the targets receive traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="healthythresholdcount">HealthyThresholdCount</h4>
+<ul>
+<li>Default: <code>5</code></li>
+<li>MinValue: <code>2</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of consecutive successful health checks that are required before an unhealthy target is considered healthy.</code></li>
+<li>MaxValue: <code>10</code></li>
+</ul>
+<h4 id="listenerrule1path">ListenerRule1Path</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A host header or a single URI path, as defined by ListenerRule1Condition.</code></li>
+</ul>
+<h4 id="listenerrule2priority">ListenerRule2Priority</h4>
+<ul>
+<li>Default: <code>20</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The priority to use for this rule.</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="cookieduration">CookieDuration</h4>
+<ul>
+<li>Default: <code>86400</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The time period, in seconds, during which requests from a client should be routed to the same target.</code></li>
+<li>MaxValue: <code>604800</code></li>
+</ul>
+<h4 id="listenerrule3path">ListenerRule3Path</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A host header or a single URI path, as defined by ListenerRule3Condition.</code></li>
+</ul>
+<h4 id="healthcheckport">HealthCheckPort</h4>
+<ul>
+<li>Default: <code>traffic-port</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: ``</li>
+</ul>
+<h4 id="targetgrouptype">TargetGroupType</h4>
+<ul>
+<li>Default: <code>ASG</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The type of target. (ASG\ECS or Instance)</code></li>
+<li>AllowedValues: <code>['ASG', 'Instance']</code></li>
+</ul>
+<h4 id="listenerrule1condition">ListenerRule1Condition</h4>
+<ul>
+<li>Default: <code>path-pattern</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Should this rule use host headers, or a URI path.</code></li>
+<li>AllowedValues: <code>['path-pattern', 'host-header']</code></li>
+</ul>
+<h4 id="listenerrule4path">ListenerRule4Path</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A host header or a single URI path, as defined by ListenerRule4Condition.</code></li>
+</ul>
+<h4 id="targetgroupprotocol">TargetGroupProtocol</h4>
+<ul>
+<li>Default: <code>HTTP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The protocol to use for routing traffic to the targets.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS']</code></li>
+</ul>
+<h4 id="healthcheckpath">HealthCheckPath</h4>
+<ul>
+<li>Default: <code>/</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ping path destination where Elastic Load Balancing sends health check requests.</code></li>
+<li>MaxLength: <code>1024</code></li>
+</ul>
+<h4 id="listenerrule2path">ListenerRule2Path</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A host header or a single URI path, as defined by ListenerRule2Condition.</code></li>
+</ul>
+<h4 id="targetgrouptargetid1">TargetGroupTargetId1</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the target, such as an EC2 instance ID.</code></li>
+</ul>
+<h4 id="targetgrouptargetid2">TargetGroupTargetId2</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the target, such as an EC2 instance ID.</code></li>
+</ul>
+<h4 id="targetgrouptargetid3">TargetGroupTargetId3</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the target, such as an EC2 instance ID.</code></li>
+</ul>
+<h4 id="listenerrule3condition">ListenerRule3Condition</h4>
+<ul>
+<li>Default: <code>path-pattern</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Should this rule use host headers, or a URI path.</code></li>
+<li>AllowedValues: <code>['path-pattern', 'host-header']</code></li>
+</ul>
+<h4 id="listenerrule2condition">ListenerRule2Condition</h4>
+<ul>
+<li>Default: <code>path-pattern</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Should this rule use host headers, or a URI path.</code></li>
+<li>AllowedValues: <code>['path-pattern', 'host-header']</code></li>
+</ul>
+<h4 id="healthcheckintervalseconds">HealthCheckIntervalSeconds</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>MinValue: <code>5</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The approximate number of seconds between health checks for an individual target.</code></li>
+<li>MaxValue: <code>300</code></li>
+</ul>
+<h4 id="attributedelaytimeout">AttributeDelayTimeout</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>MinValue: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused.</code></li>
+<li>MaxValue: <code>3600</code></li>
+</ul>
+<h4 id="matchercode">MatcherCode</h4>
+<ul>
+<li>Default: <code>200-299</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The HTTP codes. The default value is 200.</code></li>
+</ul>
+<h4 id="healthcheckprotocol">HealthCheckProtocol</h4>
+<ul>
+<li>Default: <code>HTTP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The protocol that the load balancer uses when performing health checks on the targets, such as HTTP or HTTPS.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS']</code></li>
+</ul>
+<h4 id="listenerrule4priority">ListenerRule4Priority</h4>
+<ul>
+<li>Default: <code>40</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The priority to use for this rule.</code></li>
+</ul>
+<h4 id="healthchecktimeoutseconds">HealthCheckTimeoutSeconds</h4>
+<ul>
+<li>Default: <code>5</code></li>
+<li>MinValue: <code>2</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of seconds to wait for a response before considering that a health check has failed.</code></li>
+<li>MaxValue: <code>60</code></li>
+</ul>
+<h4 id="attributestickinessenabled">AttributeStickinessEnabled</h4>
+<ul>
+<li>Default: <code>true</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Value must be either lowercase true or false.</code></li>
+<li>Description: <code>Indicates whether sticky sessions are enabled.</code></li>
+<li>AllowedValues: <code>['true', 'false']</code></li>
+</ul>
+<h4 id="listenerrule1priority">ListenerRule1Priority</h4>
+<ul>
+<li>Default: <code>10</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The priority to use for this rule.</code></li>
+</ul>
+<h4 id="targetgroupnameversion">TargetGroupNameVersion</h4>
+<ul>
+<li>Default: <code>v00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>NOTE: This needs to increment on update with new Target Group.</code></li>
+</ul>
+<h4 id="listenerrule3priority">ListenerRule3Priority</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The priority to use for this rule.</code></li>
+</ul>
+<h4 id="unhealthythresholdcount">UnhealthyThresholdCount</h4>
+<ul>
+<li>Default: <code>2</code></li>
+<li>MinValue: <code>2</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of consecutive failed health checks that are required before a target is considered unhealthy.</code></li>
+<li>MaxValue: <code>10</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="listener1arn">Listener1Arn</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>ARN of the first ALB listener. (OPTIONAL)</code></li>
+</ul>
+<h4 id="listenerrule4condition">ListenerRule4Condition</h4>
+<ul>
+<li>Default: <code>path-pattern</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Should this rule use host headers, or a URI path.</code></li>
+<li>AllowedValues: <code>['path-pattern', 'host-header']</code></li>
+</ul>
+<h4 id="targetgrouptargetport2">TargetGroupTargetPort2</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which the target is listening for traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="loadbalancername">LoadBalancerName</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The full name for the load balancer.</code></li>
+</ul>
+<h4 id="targetgrouptargetport3">TargetGroupTargetPort3</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which the target is listening for traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="targetgrouptargetport1">TargetGroupTargetPort1</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The port number on which the target is listening for traffic.</code></li>
+<li>MaxValue: <code>65535</code></li>
+</ul>
+<h4 id="targetgroupname">TargetGroupName</h4>
+<ul>
+<li>Default: <code>ALB-TargetGroup</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A name for the Target Group.</code></li>
+</ul>
+<h4 id="listener2arn">Listener2Arn</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>ARN of the second ALB listener. (OPTIONAL)</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>ELBv2TargetGroupInstance</code></li>
+<li><code>UnHealthyHostCountAlarm</code></li>
+<li><code>ELBv2TargetGroupASG</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="unhealthyhostcountalarm">UnHealthyHostCountAlarm</h4>
+<ul>
+<li>Description: Unhealthy Host count is above threshold, creating ticket.</li>
+<li>Metric: UnHealthyHostCount</li>
+<li>Threshold: 1</li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

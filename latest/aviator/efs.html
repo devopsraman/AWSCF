@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="efs-faws-template">Efs FAWS Template</h1>
+<p>efs.template - Create an EFS Filesystem with up to 3 AZs and Mount Points ### Parameters</p>
+<h4 id="subnets">Subnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Up to 3 Subnets for EFS Mount Points</code></li>
+</ul>
+<h4 id="volumename">VolumeName</h4>
+<ul>
+<li>Default: <code>myEFSvolume</code></li>
+<li>MinLength: <code>1</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to be used for the EFS volume</code></li>
+</ul>
+<h4 id="efssecuritygrouplist">EFSSecurityGroupList</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>Security Group List assigned to the EFS FileSystem</code></li>
+</ul>
+<h4 id="cwburstcreditthreshold">CWBurstCreditThreshold</h4>
+<ul>
+<li>Default: <code>1000000000000</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The minimum EFS Burst Credit level before generating an alarm.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="subnetcount">SubnetCount</h4>
+<ul>
+<li>Default: <code>2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of private subnets selected.</code></li>
+<li>AllowedValues: <code>[0, 1, 2, 3]</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="cwburstcreditperiod">CWBurstCreditPeriod</h4>
+<ul>
+<li>Default: <code>12</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of periods over which the EFS Burst Credit level is compared to the specified threshold.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>FileSystemID</code></li>
+<li><code>FileSystemDNS</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="efsburstcredits">EFSBurstCredits</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'EFS Burst Credits have dropped below ${CWBurstCreditThreshold} for ${CWBurstCreditPeriod} periods.'}</code></li>
+<li>Metric: BurstCreditBalance</li>
+<li>Threshold: <code>{'Ref': 'CWBurstCreditThreshold'}</code></li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

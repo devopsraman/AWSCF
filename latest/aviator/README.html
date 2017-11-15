@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="aviator-faws-templates">Aviator FAWS Templates</h1>
+<ul>
+<li><a href="ALB.template">ALB</a> | <a href="ALB.html">Documentation</a></li>
+<li><a href="ALB_ListenerCertificate.template">ALB_ListenerCertificate</a> | <a href="ALB_ListenerCertificate.html">Documentation</a></li>
+<li><a href="ALB_TG.template">ALB_TG</a> | <a href="ALB_TG.html">Documentation</a></li>
+<li><a href="ALB_waf_attachment.template">ALB_waf_attachment</a> | <a href="ALB_waf_attachment.html">Documentation</a></li>
+<li><a href="CLB.template">CLB</a> | <a href="CLB.html">Documentation</a></li>
+<li><a href="DBADeploy.template">DBADeploy</a> | <a href="DBADeploy.html">Documentation</a></li>
+<li><a href="NLB.template">NLB</a> | <a href="NLB.html">Documentation</a></li>
+<li><a href="NLB_TG.template">NLB_TG</a> | <a href="NLB_TG.html">Documentation</a></li>
+<li><a href="amazon_asg.template">amazon_asg</a> | <a href="amazon_asg.html">Documentation</a></li>
+<li><a href="amazon_autorecovery.template">amazon_autorecovery</a> | <a href="amazon_autorecovery.html">Documentation</a></li>
+<li><a href="amazon_ecs_cluster.template">amazon_ecs_cluster</a> | <a href="amazon_ecs_cluster.html">Documentation</a></li>
+<li><a href="amazon_nfs.template">amazon_nfs</a> | <a href="amazon_nfs.html">Documentation</a></li>
+<li><a href="aurora.template">aurora</a> | <a href="aurora.html">Documentation</a></li>
+<li><a href="base_network.template">base_network</a> | <a href="base_network.html">Documentation</a></li>
+<li><a href="centos_6_asg.template">centos_6_asg</a> | <a href="centos_6_asg.html">Documentation</a></li>
+<li><a href="centos_6_autorecovery.template">centos_6_autorecovery</a> | <a href="centos_6_autorecovery.html">Documentation</a></li>
+<li><a href="centos_7_asg.template">centos_7_asg</a> | <a href="centos_7_asg.html">Documentation</a></li>
+<li><a href="centos_7_autorecovery.template">centos_7_autorecovery</a> | <a href="centos_7_autorecovery.html">Documentation</a></li>
+<li><a href="centos_7_nfs.template">centos_7_nfs</a> | <a href="centos_7_nfs.html">Documentation</a></li>
+<li><a href="code_deploy_application.template">code_deploy_application</a> | <a href="code_deploy_application.html">Documentation</a></li>
+<li><a href="code_deploy_deployment.template">code_deploy_deployment</a> | <a href="code_deploy_deployment.html">Documentation</a></li>
+<li><a href="codecommit.template">codecommit</a> | <a href="codecommit.html">Documentation</a></li>
+<li><a href="cross_account_vpc_peer_iam_role.template">cross_account_vpc_peer_iam_role</a> | <a href="cross_account_vpc_peer_iam_role.html">Documentation</a></li>
+<li><a href="dynamodb.template">dynamodb</a> | <a href="dynamodb.html">Documentation</a></li>
+<li><a href="efs.template">efs</a> | <a href="efs.html">Documentation</a></li>
+<li><a href="elasticache_memcached.template">elasticache_memcached</a> | <a href="elasticache_memcached.html">Documentation</a></li>
+<li><a href="elasticache_redis.template">elasticache_redis</a> | <a href="elasticache_redis.html">Documentation</a></li>
+<li><a href="elasticache_redis_multi_shard.template">elasticache_redis_multi_shard</a> | <a href="elasticache_redis_multi_shard.html">Documentation</a></li>
+<li><a href="elasticsearch.template">elasticsearch</a> | <a href="elasticsearch.html">Documentation</a></li>
+<li><a href="iam_policy.template">iam_policy</a> | <a href="iam_policy.html">Documentation</a></li>
+<li><a href="iam_role.template">iam_role</a> | <a href="iam_role.html">Documentation</a></li>
+<li><a href="iam_user_group.template">iam_user_group</a> | <a href="iam_user_group.html">Documentation</a></li>
+<li><a href="microsoft_ad.template">microsoft_ad</a> | <a href="microsoft_ad.html">Documentation</a></li>
+<li><a href="rds_event_subscriptions.template">rds_event_subscriptions</a> | <a href="rds_event_subscriptions.html">Documentation</a></li>
+<li><a href="rds_mariadb.template">rds_mariadb</a> | <a href="rds_mariadb.html">Documentation</a></li>
+<li><a href="rds_mariadb_replica.template">rds_mariadb_replica</a> | <a href="rds_mariadb_replica.html">Documentation</a></li>
+<li><a href="rds_mssql.template">rds_mssql</a> | <a href="rds_mssql.html">Documentation</a></li>
+<li><a href="rds_mysql.template">rds_mysql</a> | <a href="rds_mysql.html">Documentation</a></li>
+<li><a href="rds_mysql_replica.template">rds_mysql_replica</a> | <a href="rds_mysql_replica.html">Documentation</a></li>
+<li><a href="rds_oracle.template">rds_oracle</a> | <a href="rds_oracle.html">Documentation</a></li>
+<li><a href="rds_postgres.template">rds_postgres</a> | <a href="rds_postgres.html">Documentation</a></li>
+<li><a href="rds_postgres_replica.template">rds_postgres_replica</a> | <a href="rds_postgres_replica.html">Documentation</a></li>
+<li><a href="redshift.template">redshift</a> | <a href="redshift.html">Documentation</a></li>
+<li><a href="rhel_6_asg.template">rhel_6_asg</a> | <a href="rhel_6_asg.html">Documentation</a></li>
+<li><a href="rhel_6_autorecovery.template">rhel_6_autorecovery</a> | <a href="rhel_6_autorecovery.html">Documentation</a></li>
+<li><a href="rhel_7_asg.template">rhel_7_asg</a> | <a href="rhel_7_asg.html">Documentation</a></li>
+<li><a href="rhel_7_autorecovery.template">rhel_7_autorecovery</a> | <a href="rhel_7_autorecovery.html">Documentation</a></li>
+<li><a href="rms.template">rms</a> | <a href="rms.html">Documentation</a></li>
+<li><a href="route53_healthcheck.template">route53_healthcheck</a> | <a href="route53_healthcheck.html">Documentation</a></li>
+<li><a href="route53_internalzone.template">route53_internalzone</a> | <a href="route53_internalzone.html">Documentation</a></li>
+<li><a href="s3.template">s3</a> | <a href="s3.html">Documentation</a></li>
+<li><a href="s3fs.template">s3fs</a> | <a href="s3fs.html">Documentation</a></li>
+<li><a href="securitygroup.template">securitygroup</a> | <a href="securitygroup.html">Documentation</a></li>
+<li><a href="sns_topic_subscriptions.template">sns_topic_subscriptions</a> | <a href="sns_topic_subscriptions.html">Documentation</a></li>
+<li><a href="sqs.template">sqs</a> | <a href="sqs.html">Documentation</a></li>
+<li><a href="systems_manager_service_role.template">systems_manager_service_role</a> | <a href="systems_manager_service_role.html">Documentation</a></li>
+<li><a href="ubuntu_1404_asg.template">ubuntu_1404_asg</a> | <a href="ubuntu_1404_asg.html">Documentation</a></li>
+<li><a href="ubuntu_1404_autorecovery.template">ubuntu_1404_autorecovery</a> | <a href="ubuntu_1404_autorecovery.html">Documentation</a></li>
+<li><a href="ubuntu_1604_asg.template">ubuntu_1604_asg</a> | <a href="ubuntu_1604_asg.html">Documentation</a></li>
+<li><a href="ubuntu_1604_autorecovery.template">ubuntu_1604_autorecovery</a> | <a href="ubuntu_1604_autorecovery.html">Documentation</a></li>
+<li><a href="vpc_endpoint.template">vpc_endpoint</a> | <a href="vpc_endpoint.html">Documentation</a></li>
+<li><a href="vpc_flow_logs.template">vpc_flow_logs</a> | <a href="vpc_flow_logs.html">Documentation</a></li>
+<li><a href="vpc_peer.template">vpc_peer</a> | <a href="vpc_peer.html">Documentation</a></li>
+<li><a href="vpn.template">vpn</a> | <a href="vpn.html">Documentation</a></li>
+<li><a href="windowsAD_2008R2_asg.template">windowsAD_2008R2_asg</a> | <a href="windowsAD_2008R2_asg.html">Documentation</a></li>
+<li><a href="windowsAD_2008R2_asg_codedeploy_agent.template">windowsAD_2008R2_asg_codedeploy_agent</a> | <a href="windowsAD_2008R2_asg_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windowsAD_2008R2_autorecovery.template">windowsAD_2008R2_autorecovery</a> | <a href="windowsAD_2008R2_autorecovery.html">Documentation</a></li>
+<li><a href="windowsAD_2008R2_autorecovery_codedeploy_agent.template">windowsAD_2008R2_autorecovery_codedeploy_agent</a> | <a href="windowsAD_2008R2_autorecovery_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windowsAD_2012R2_asg.template">windowsAD_2012R2_asg</a> | <a href="windowsAD_2012R2_asg.html">Documentation</a></li>
+<li><a href="windowsAD_2012R2_asg_codedeploy_agent.template">windowsAD_2012R2_asg_codedeploy_agent</a> | <a href="windowsAD_2012R2_asg_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windowsAD_2012R2_autorecovery.template">windowsAD_2012R2_autorecovery</a> | <a href="windowsAD_2012R2_autorecovery.html">Documentation</a></li>
+<li><a href="windowsAD_2012R2_autorecovery_codedeploy_agent.template">windowsAD_2012R2_autorecovery_codedeploy_agent</a> | <a href="windowsAD_2012R2_autorecovery_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windowsAD_2016_asg.template">windowsAD_2016_asg</a> | <a href="windowsAD_2016_asg.html">Documentation</a></li>
+<li><a href="windowsAD_2016_asg_codedeploy_agent.template">windowsAD_2016_asg_codedeploy_agent</a> | <a href="windowsAD_2016_asg_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windowsAD_2016_autorecovery.template">windowsAD_2016_autorecovery</a> | <a href="windowsAD_2016_autorecovery.html">Documentation</a></li>
+<li><a href="windowsAD_2016_autorecovery_codedeploy_agent.template">windowsAD_2016_autorecovery_codedeploy_agent</a> | <a href="windowsAD_2016_autorecovery_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_2008R2_asg.template">windows_2008R2_asg</a> | <a href="windows_2008R2_asg.html">Documentation</a></li>
+<li><a href="windows_2008R2_asg_codedeploy_agent.template">windows_2008R2_asg_codedeploy_agent</a> | <a href="windows_2008R2_asg_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_2008R2_autorecovery.template">windows_2008R2_autorecovery</a> | <a href="windows_2008R2_autorecovery.html">Documentation</a></li>
+<li><a href="windows_2008R2_autorecovery_codedeploy_agent.template">windows_2008R2_autorecovery_codedeploy_agent</a> | <a href="windows_2008R2_autorecovery_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_2012R2_asg.template">windows_2012R2_asg</a> | <a href="windows_2012R2_asg.html">Documentation</a></li>
+<li><a href="windows_2012R2_asg_codedeploy_agent.template">windows_2012R2_asg_codedeploy_agent</a> | <a href="windows_2012R2_asg_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_2012R2_autorecovery.template">windows_2012R2_autorecovery</a> | <a href="windows_2012R2_autorecovery.html">Documentation</a></li>
+<li><a href="windows_2012R2_autorecovery_codedeploy_agent.template">windows_2012R2_autorecovery_codedeploy_agent</a> | <a href="windows_2012R2_autorecovery_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_2016_asg.template">windows_2016_asg</a> | <a href="windows_2016_asg.html">Documentation</a></li>
+<li><a href="windows_2016_asg_codedeploy_agent.template">windows_2016_asg_codedeploy_agent</a> | <a href="windows_2016_asg_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_2016_autorecovery.template">windows_2016_autorecovery</a> | <a href="windows_2016_autorecovery.html">Documentation</a></li>
+<li><a href="windows_2016_autorecovery_codedeploy_agent.template">windows_2016_autorecovery_codedeploy_agent</a> | <a href="windows_2016_autorecovery_codedeploy_agent.html">Documentation</a></li>
+<li><a href="windows_bastion.template">windows_bastion</a> | <a href="windows_bastion.html">Documentation</a></li>
+</ul>
+</body>
+</html>

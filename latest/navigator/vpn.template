@@ -1,0 +1,536 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "vpn.template - VPN Setup Template. http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html",
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID"
+    },
+    "VPNRoutingType": {
+      "Default": "Static",
+      "Type": "String",
+      "Description": "Should Static or Dynamic routing be used for this VPN.",
+      "AllowedValues": [
+        "Static",
+        "Dynamic"
+      ]
+    },
+    "PropagateRoutesTo": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma separated list of route tables you would like to propagate the VPN Route to."
+    },
+    "StaticRoutesCount": {
+      "Default": "0",
+      "Type": "String",
+      "Description": "The number of CIDR ranges supplied in the StaticRoutes parameter.",
+      "AllowedValues": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "CustomerIP": {
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x",
+      "Description": "The IP address of the Customer Endpoint",
+      "Default": "0.0.0.0",
+      "MinLength": "7",
+      "AllowedPattern": "^([0-9]+\\.){3}[0-9]+",
+      "MaxLength": "18",
+      "Type": "String"
+    },
+    "ExistingCGWId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Leave blank unless you already have an existing CGW attached in the VPC you're creating this VPN Connection in."
+    },
+    "VpnEvaluations": {
+      "AllowedPattern": "([0-9]+)",
+      "Default": "10",
+      "Type": "String",
+      "Description": "The number of periods over which data is compared to the specified threshold.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "StaticRoutes": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma separated list of internal subnets on the customer side. The subnets must be in valid CIDR notation(x.x.x.x/x). Ignored if Dynamic routing is used."
+    },
+    "ExistingVGWId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Leave blank unless you already have an existing VGW attached in the VPC you're creating this VPN Connection in."
+    },
+    "NotificationTopic": {
+      "Default": "",
+      "Type": "String",
+      "Description": "SNS Topic ARN to notify if there are any alarms. OPTIONAL"
+    },
+    "VpnPeriod": {
+      "AllowedPattern": "([0-9]+)",
+      "Default": "60",
+      "Type": "String",
+      "Description": "Time the specified statistic is applied. Must be in seconds that is also a multiple of 60.",
+      "ConstraintDescription": "Must be a valid integer."
+    }
+  },
+  "Conditions": {
+    "CreateRoute5": {
+      "Fn::And": [
+        {
+          "Condition": "SetStaticRoute"
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "StaticRoutesCount"
+            },
+            5
+          ]
+        }
+      ]
+    },
+    "CreateNewCGW": {
+      "Fn::Equals": [
+        {
+          "Ref": "ExistingCGWId"
+        },
+        ""
+      ]
+    },
+    "SetStaticRoute": {
+      "Fn::Equals": [
+        {
+          "Ref": "VPNRoutingType"
+        },
+        "Static"
+      ]
+    },
+    "PropagateRoutes": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "PropagateRoutesTo"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreateRoute4": {
+      "Fn::And": [
+        {
+          "Condition": "SetStaticRoute"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "StaticRoutesCount"
+                },
+                "4"
+              ]
+            },
+            {
+              "Condition": "CreateRoute5"
+            }
+          ]
+        }
+      ]
+    },
+    "isNotification": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NotificationTopic"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreateRoute1": {
+      "Fn::And": [
+        {
+          "Condition": "SetStaticRoute"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "StaticRoutesCount"
+                },
+                "1"
+              ]
+            },
+            {
+              "Condition": "CreateRoute2"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateRoute3": {
+      "Fn::And": [
+        {
+          "Condition": "SetStaticRoute"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "StaticRoutesCount"
+                },
+                "3"
+              ]
+            },
+            {
+              "Condition": "CreateRoute4"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateRoute2": {
+      "Fn::And": [
+        {
+          "Condition": "SetStaticRoute"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "StaticRoutesCount"
+                },
+                "2"
+              ]
+            },
+            {
+              "Condition": "CreateRoute3"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateNewVGW": {
+      "Fn::Equals": [
+        {
+          "Ref": "ExistingVGWId"
+        },
+        ""
+      ]
+    }
+  },
+  "Resources": {
+    "AttachVpnGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "VpnGatewayId": {
+          "Ref": "VPNGateway"
+        }
+      },
+      "Condition": "CreateNewVGW"
+    },
+    "CustomerGateway": {
+      "Type": "AWS::EC2::CustomerGateway",
+      "Properties": {
+        "BgpAsn": "65000",
+        "IpAddress": {
+          "Ref": "CustomerIP"
+        },
+        "Type": "ipsec.1",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": "CustomerGateway"
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      },
+      "Condition": "CreateNewCGW"
+    },
+    "VPNGateway": {
+      "Type": "AWS::EC2::VPNGateway",
+      "Properties": {
+        "Type": "ipsec.1",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      },
+      "Condition": "CreateNewVGW"
+    },
+    "VPNConnection": {
+      "Type": "AWS::EC2::VPNConnection",
+      "Properties": {
+        "CustomerGatewayId": {
+          "Fn::If": [
+            "CreateNewCGW",
+            {
+              "Ref": "CustomerGateway"
+            },
+            {
+              "Ref": "ExistingCGWId"
+            }
+          ]
+        },
+        "StaticRoutesOnly": {
+          "Fn::If": [
+            "SetStaticRoute",
+            "True",
+            "False"
+          ]
+        },
+        "Type": "ipsec.1",
+        "VpnGatewayId": {
+          "Fn::If": [
+            "CreateNewVGW",
+            {
+              "Ref": "VPNGateway"
+            },
+            {
+              "Ref": "ExistingVGWId"
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-VPN"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "VPNStatus": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "VpnEvaluations"
+        },
+        "Dimensions": [
+          {
+            "Name": "VpnId",
+            "Value": {
+              "Ref": "VPNConnection"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "isNotification",
+              {
+                "Ref": "NotificationTopic"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "${AWS::StackName} -VPN connection state."
+        },
+        "Namespace": "AWS/VPN",
+        "Period": {
+          "Ref": "VpnPeriod"
+        },
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "Statistic": "Maximum",
+        "Threshold": "0",
+        "OKActions": [],
+        "MetricName": "TunnelState"
+      }
+    },
+    "VPNRoutePropagation": {
+      "Type": "AWS::EC2::VPNGatewayRoutePropagation",
+      "Properties": {
+        "RouteTableIds": {
+          "Ref": "PropagateRoutesTo"
+        },
+        "VpnGatewayId": {
+          "Fn::If": [
+            "CreateNewVGW",
+            {
+              "Ref": "VPNGateway"
+            },
+            {
+              "Ref": "ExistingVGWId"
+            }
+          ]
+        }
+      },
+      "Condition": "PropagateRoutes",
+      "DependsOn": "VPNConnection"
+    },
+    "VPNConnectionRoute4": {
+      "Type": "AWS::EC2::VPNConnectionRoute",
+      "Properties": {
+        "VpnConnectionId": {
+          "Ref": "VPNConnection"
+        },
+        "DestinationCidrBlock": {
+          "Fn::Select": [
+            3,
+            {
+              "Ref": "StaticRoutes"
+            }
+          ]
+        }
+      },
+      "Condition": "CreateRoute4",
+      "DependsOn": "VPNConnection"
+    },
+    "VPNConnectionRoute5": {
+      "Type": "AWS::EC2::VPNConnectionRoute",
+      "Properties": {
+        "VpnConnectionId": {
+          "Ref": "VPNConnection"
+        },
+        "DestinationCidrBlock": {
+          "Fn::Select": [
+            4,
+            {
+              "Ref": "StaticRoutes"
+            }
+          ]
+        }
+      },
+      "Condition": "CreateRoute5",
+      "DependsOn": "VPNConnection"
+    },
+    "VPNConnectionRoute2": {
+      "Type": "AWS::EC2::VPNConnectionRoute",
+      "Properties": {
+        "VpnConnectionId": {
+          "Ref": "VPNConnection"
+        },
+        "DestinationCidrBlock": {
+          "Fn::Select": [
+            1,
+            {
+              "Ref": "StaticRoutes"
+            }
+          ]
+        }
+      },
+      "Condition": "CreateRoute2",
+      "DependsOn": "VPNConnection"
+    },
+    "VPNConnectionRoute3": {
+      "Type": "AWS::EC2::VPNConnectionRoute",
+      "Properties": {
+        "VpnConnectionId": {
+          "Ref": "VPNConnection"
+        },
+        "DestinationCidrBlock": {
+          "Fn::Select": [
+            2,
+            {
+              "Ref": "StaticRoutes"
+            }
+          ]
+        }
+      },
+      "Condition": "CreateRoute3",
+      "DependsOn": "VPNConnection"
+    },
+    "VPNConnectionRoute1": {
+      "Type": "AWS::EC2::VPNConnectionRoute",
+      "Properties": {
+        "VpnConnectionId": {
+          "Ref": "VPNConnection"
+        },
+        "DestinationCidrBlock": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "StaticRoutes"
+            }
+          ]
+        }
+      },
+      "Condition": "CreateRoute1",
+      "DependsOn": "VPNConnection"
+    }
+  },
+  "Outputs": {
+    "VirtualPrivateGatewayId": {
+      "Condition": "CreateNewVGW",
+      "Value": {
+        "Ref": "VPNGateway"
+      }
+    },
+    "CustomerGatewayId": {
+      "Condition": "CreateNewCGW",
+      "Value": {
+        "Ref": "CustomerGateway"
+      }
+    }
+  }
+}

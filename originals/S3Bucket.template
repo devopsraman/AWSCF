@@ -1,0 +1,246 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Rackspace Hosting - Creates the necessary S3 bucket. Please be aware that this template will create resources for which you will be charged.",
+  "Metadata": {
+  "Version": "v0.1.0",
+  "AWS::CloudFormation::Interface" : {
+    "ParameterGroups" : [
+      {
+        "Label" : { "default" : "Bucket Configuration" },
+        "Parameters" : ["BucketName", "EnableLogging", "Website","Versioning", "LifeCycle","AccessControl","ServerSideEncryption" ]
+      },
+      {
+        "Label" : { "default" : "LifeCycle Configuration" },
+        "Parameters" : ["Prefix", "ExpirationInDays", "TransitionInDays"]
+      },
+      {
+        "Label" : { "default" : "Website Configuration" },
+        "Parameters" : ["ErrorDocument", "IndexDocument"]
+      },
+      {
+        "Label" : { "default" : "Logging Configuration" },
+        "Parameters" : ["DestinationBucketName", "LogFilePrefix"]
+      }
+    ]
+  }
+  },
+  "Parameters": {
+    "Environment": {
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "Type": "String",
+      "Default": "Development",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "BucketName": {
+      "Type": "String",
+      "Description" : "The name of the bucket to use. Must be unique.",
+      "AllowedPattern": "([a-z0-9\\.-]+)",
+      "ConstraintDescription": "The bucket name must contain only lowercase letters, numbers, periods (.), and dashes (-)."
+    },
+    "EnableLogging": {
+      "Description": "Enable Logging",
+      "Type": "String",
+      "Default": "No",
+      "AllowedValues": [ "Yes", "No" ],
+      "ConstraintDescription": "Must be either Yes or No."
+    },
+    "Website": {
+      "Description": "Enable Website",
+      "Type": "String",
+      "Default": "No",
+      "AllowedValues": [ "Yes", "No" ],
+      "ConstraintDescription": "Must be either Yes or No."
+    },
+    "ServerSideEncryption": {
+      "Description": "Enable Server Side Encryption",
+      "Type": "String",
+      "Default": "No",
+      "AllowedValues": [ "Yes", "No" ],
+      "ConstraintDescription": "Must be either Yes or No."
+    },
+    "Versioning": {
+      "Description": "Enable Versioning",
+      "Type": "String",
+      "Default": "No",
+      "AllowedValues": [ "Yes", "No" ],
+      "ConstraintDescription": "Must be either Yes or No."
+    },
+    "LifeCycle": {
+      "Description": "Enable LifeCycle config",
+      "Type": "String",
+      "Default": "No",
+      "AllowedValues": [ "Yes", "No" ],
+      "ConstraintDescription": "Must be either Yes or No."
+    },
+    "Prefix" : {
+      "Description" : "Prefix for Glacier Name",
+      "Type" : "String",
+      "Default" : "glacier"
+    },
+    "TransitionInDays": {
+      "Description": "Indicates after how many days we are moving objects",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "3",
+      "Default": "30",
+      "AllowedPattern": "^[0-9]+$",
+      "ConstraintDescription": "Must be a valid number between 1 and 999."
+    },
+    "ExpirationInDays": {
+      "Description": "Indicates after how many days we are deleting objects",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "3",
+      "Default": "30",
+      "AllowedPattern": "^[0-9]+$",
+      "ConstraintDescription": "Must be a valid number between 1 and 999."
+    },
+    "AccessControl": {
+      "Description": "Define ACL for Bucket",
+      "Type": "String",
+      "Default": "BucketOwnerFullControl",
+      "AllowedValues": [ "AuthenticatedRead", "AwsExecRead", "BucketOwnerRead", "BucketOwnerFullControl", "LogDeliveryWrite", "Private", "PublicRead", "PublicReadWrite" ],
+      "ConstraintDescription": "Must be either AuthenticatedRead, AwsExecRead, BucketOwnerRead, BucketOwnerFullControl, LogDeliveryWrite, Private, PublicRead or PublicReadWrite."
+    },
+    "IndexDocument" : {
+      "Description" : "Name for Index Document file",
+      "Type" : "String",
+      "Default" : "index.html"
+    },
+    "ErrorDocument" : {
+      "Description" : "Name for Error Document file",
+      "Type" : "String",
+      "Default" : "error.html"
+    },
+    "DestinationBucketName" : {
+      "Description" : "Where to store logs",
+      "Type" : "String",
+      "Default" : ""
+    },
+    "LogFilePrefix" : {
+      "Description" : "Prefix for all log object keys",
+      "Type" : "String",
+      "Default" : "logs/"
+    }
+  },
+  "Conditions" : {
+    "Glacier" : {"Fn::Equals" : [{"Ref" : "LifeCycle"}, "Yes"]},
+    "Versioning" : {"Fn::Equals" : [{"Ref" : "Versioning"}, "Yes"]},
+    "Logging" : {"Fn::Equals" : [{"Ref" : "EnableLogging"}, "Yes"]},
+    "Website" : {"Fn::Equals" : [{"Ref" : "Website"}, "Yes"]},
+    "ServerSideEncryption" : {"Fn::Equals" : [{"Ref" : "ServerSideEncryption"}, "Yes"]}
+  },
+  "Resources": {
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName" : { "Ref": "BucketName" },
+        "AccessControl": { "Ref": "AccessControl" },
+        "Tags" : [
+          { "Key": "Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "ServiceProvider", "Value": "Rackspace"},
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ],
+        "LifecycleConfiguration": {
+          "Fn::If": [ "Glacier",
+          {
+          "Rules": [
+            {
+              "Id": "GlacierRule",
+              "Prefix": { "Ref": "Prefix" },
+              "Status": "Enabled",
+              "ExpirationInDays": { "Ref": "ExpirationInDays" },
+              "Transition": {
+                  "TransitionInDays": { "Ref": "TransitionInDays" },
+                  "StorageClass": "Glacier"
+              }
+            }
+          ]
+          },
+          { "Ref": "AWS::NoValue" }
+          ]
+        },
+        "WebsiteConfiguration" : {
+          "Fn::If": [ "Website",
+          {
+            "IndexDocument" : { "Ref": "IndexDocument" },
+            "ErrorDocument" : { "Ref": "ErrorDocument" }
+          },
+          { "Ref": "AWS::NoValue" }
+          ]
+        },
+        "LoggingConfiguration": {
+          "Fn::If": [ "Logging",
+          {
+            "DestinationBucketName" : { "Ref": "DestinationBucketName" },
+            "LogFilePrefix" : { "Ref": "LogFilePrefix" }
+          },
+          { "Ref": "AWS::NoValue" }
+          ]
+        },
+        "VersioningConfiguration": {
+          "Fn::If": [ "Versioning",
+          {
+            "Status" : "Enabled"
+          },
+          { "Ref": "AWS::NoValue" }
+          ]
+        }
+      }
+    },
+    "S3BucketwithWebsitePolicy": {
+      "Condition": "Website",
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref": "S3Bucket" },
+        "PolicyDocument": {
+          "Statement": [{
+            "Sid": "AddPerm",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": ["s3:GetObject"],
+            "Resource": [{
+              "Fn::Join": ["", ["arn:aws:s3:::", {
+                "Ref": "BucketName"
+              }, "/*"]]
+            }]
+          }]
+        }
+      }
+    },
+    "ServerSideEncryptionPolicy": {
+      "Condition": "ServerSideEncryption",
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref": "S3Bucket" },
+        "PolicyDocument": {
+          "Statement": [{
+            "Sid": "DenyIncorrectEncryptionHeader",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:PutObject",
+            "Resource": { "Fn::Join": ["", ["arn:aws:s3:::", { "Ref": "S3Bucket" }, "/*"]] },
+            "Condition": {
+              "StringNotEquals": {
+                "s3:x-amz-server-side-encryption": "AES256"
+              }
+            }
+          },
+          {
+            "Sid": "DenyUnEncryptedObjectUploads",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:PutObject",
+            "Resource": { "Fn::Join": ["", ["arn:aws:s3:::", { "Ref": "S3Bucket" }, "/*"]] },
+            "Condition": {
+              "Null": {
+                "s3:x-amz-server-side-encryption": "true"
+              }
+            }
+          }]
+        }
+      }
+    }
+  }
+}
+

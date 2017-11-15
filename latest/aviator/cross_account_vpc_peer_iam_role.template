@@ -1,0 +1,310 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "cross_account_vpc_peer_iam_role.template - Create a IAM role that will allow for cross account VPC peering",
+  "Parameters": {
+    "VpcPeeringConnectionId": {
+      "AllowedPattern": "^(pcx-.*)?",
+      "Default": "",
+      "Type": "String",
+      "Description": "The ID of the existing Peering Connection.",
+      "ConstraintDescription": "Must match the pattern pcx-XXXXXXXX"
+    },
+    "VpcRoutingTables": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "Comma delimited list of VPC routing tables."
+    },
+    "VpcRoutingTablesCount": {
+      "Default": "3",
+      "Type": "String",
+      "Description": "The number of vpc routing tables to update.",
+      "AllowedValues": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "VPCCIDRRange": {
+      "Default": "",
+      "Type": "String",
+      "Description": "VPC CIDR Range e.g. 172.19.0.0/16"
+    },
+    "AccountNumber": {
+      "AllowedPattern": "^[0-9]*$",
+      "ConstraintDescription": "Must be a numeric account ID.",
+      "Type": "String",
+      "Description": "Account ID for the VPC requester."
+    }
+  },
+  "Conditions": {
+    "setPeeringConnectionID": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcPeeringConnectionId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreateRT3": {
+      "Fn::And": [
+        {
+          "Condition": "setPeeringConnectionID"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "VpcRoutingTablesCount"
+                },
+                "3"
+              ]
+            },
+            {
+              "Condition": "CreateRT4"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateRT2": {
+      "Fn::And": [
+        {
+          "Condition": "setPeeringConnectionID"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "VpcRoutingTablesCount"
+                },
+                "2"
+              ]
+            },
+            {
+              "Condition": "CreateRT3"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateRT1": {
+      "Fn::And": [
+        {
+          "Condition": "setPeeringConnectionID"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "VpcRoutingTablesCount"
+                },
+                "1"
+              ]
+            },
+            {
+              "Condition": "CreateRT2"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateRT5": {
+      "Fn::And": [
+        {
+          "Condition": "setPeeringConnectionID"
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcRoutingTablesCount"
+            },
+            5
+          ]
+        }
+      ]
+    },
+    "CreateRT4": {
+      "Fn::And": [
+        {
+          "Condition": "setPeeringConnectionID"
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "VpcRoutingTablesCount"
+                },
+                "4"
+              ]
+            },
+            {
+              "Condition": "CreateRT5"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "CrossAccountVPCRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "CrossAccountVPCPeeringAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:AcceptVpcPeeringConnection"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ]
+            }
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:aws:iam::${AccountNumber}:root"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "VpcRoute5": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            4,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeeringConnectionId"
+        }
+      },
+      "Condition": "CreateRT5"
+    },
+    "VpcRoute4": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            3,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeeringConnectionId"
+        }
+      },
+      "Condition": "CreateRT4"
+    },
+    "VpcRoute1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeeringConnectionId"
+        }
+      },
+      "Condition": "CreateRT1"
+    },
+    "VpcRoute3": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            2,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeeringConnectionId"
+        }
+      },
+      "Condition": "CreateRT3"
+    },
+    "VpcRoute2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            1,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "VpcPeeringConnectionId"
+        }
+      },
+      "Condition": "CreateRT2"
+    }
+  },
+  "Outputs": {
+    "CrossAccountRoleArn": {
+      "Description": "The Cross Account IAM Role ARN",
+      "Value": {
+        "Fn::GetAtt": [
+          "CrossAccountVPCRole",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

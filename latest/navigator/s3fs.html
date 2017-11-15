@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="s3fs-faws-template">S3fs FAWS Template</h1>
+<p>s3fs.template - Creates the necessary S3 bucket, IAM Role, and IAM Instance Profile for using the s3fs-fuse mount. Additional steps are required to use this template. Please be aware that this template will create resources for which you will be charged. ### Parameters</p>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="bucketname">BucketName</h4>
+<ul>
+<li>AllowedPattern: <code>([a-z0-9\.-]+)</code></li>
+<li>ConstraintDescription: <code>The bucket name must contain only lowercase letters, numbers, periods (.), and dashes (-).</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of the bucket to use for the s3fs-fuse mount. Must be unique.</code></li>
+</ul>
+<h4 id="versioning">Versioning</h4>
+<ul>
+<li>Default: <code>Enabled</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable versioning for the S3 bucket.</code></li>
+<li>AllowedValues: <code>['Enabled', 'Suspended']</code></li>
+</ul>
+<h4 id="iamroles3fsmanagedpolicyarns">IAMRoleS3FSManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the IAMRoleS3FS IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>IAMRole</code></li>
+<li><code>MountCommand</code></li>
+<li><code>InstanceProfile</code></li>
+<li><code>Bucket</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

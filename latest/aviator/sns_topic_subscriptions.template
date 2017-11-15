@@ -1,0 +1,271 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "sns_topic_subscriptions.template - SNS Template. Creates a Topic with up to 3 Subscription.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "DisplayName"
+          ],
+          "Label": {
+            "default": "SNS Topic"
+          }
+        },
+        {
+          "Parameters": [
+            "SubscriptionEndpoint3",
+            "SubscriptionProtocol3"
+          ],
+          "Label": {
+            "default": "Subscription #3"
+          }
+        },
+        {
+          "Parameters": [
+            "SubscriptionEndpoint2",
+            "SubscriptionProtocol2"
+          ],
+          "Label": {
+            "default": "Subscription #2"
+          }
+        },
+        {
+          "Parameters": [
+            "SubscriptionEndpoint1",
+            "SubscriptionProtocol1"
+          ],
+          "Label": {
+            "default": "Subscription #1"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "SubscriptionEndpoint1": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The subscription's endpoint #1."
+    },
+    "SubscriptionEndpoint3": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The subscription's endpoint #3."
+    },
+    "SubscriptionEndpoint2": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The subscription's endpoint #2."
+    },
+    "SubscriptionProtocol1": {
+      "Default": "http",
+      "Type": "String",
+      "Description": "The protocol you want to use in your endpoint #1. Supported protocols include: http, https, email, email-json, sms, sqs, application, lambda.",
+      "AllowedValues": [
+        "http",
+        "https",
+        "email",
+        "email-json",
+        "sms",
+        "sqs",
+        "application",
+        "lambda"
+      ]
+    },
+    "SubscriptionProtocol2": {
+      "Default": "http",
+      "Type": "String",
+      "Description": "The protocol you want to use in your endpoint #2. Supported protocols include: http, https, email, email-json, sms, sqs, application, lambda.",
+      "AllowedValues": [
+        "http",
+        "https",
+        "email",
+        "email-json",
+        "sms",
+        "sqs",
+        "application",
+        "lambda"
+      ]
+    },
+    "SubscriptionProtocol3": {
+      "Default": "http",
+      "Type": "String",
+      "Description": "The protocol you want to use in your endpoint #3. Supported protocols include: http, https, email, email-json, sms, sqs, application, lambda.",
+      "AllowedValues": [
+        "http",
+        "https",
+        "email",
+        "email-json",
+        "sms",
+        "sqs",
+        "application",
+        "lambda"
+      ]
+    },
+    "DisplayName": {
+      "Default": "MySNSTopic",
+      "Type": "String",
+      "Description": "A developer-defined string that can be used to identify this SNS topic."
+    }
+  },
+  "Conditions": {
+    "3Protocol": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SubscriptionEndpoint3"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "2Protocol": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SubscriptionEndpoint3"
+            },
+            ""
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "SubscriptionEndpoint2"
+                },
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "1Protocol": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SubscriptionEndpoint2"
+            },
+            ""
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "SubscriptionEndpoint3"
+            },
+            ""
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "SubscriptionEndpoint1"
+                },
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "MySNSTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": {
+          "Ref": "DisplayName"
+        },
+        "Subscription": {
+          "Fn::If": [
+            "1Protocol",
+            [
+              {
+                "Endpoint": {
+                  "Ref": "SubscriptionEndpoint1"
+                },
+                "Protocol": {
+                  "Ref": "SubscriptionProtocol1"
+                }
+              }
+            ],
+            {
+              "Fn::If": [
+                "2Protocol",
+                [
+                  {
+                    "Endpoint": {
+                      "Ref": "SubscriptionEndpoint1"
+                    },
+                    "Protocol": {
+                      "Ref": "SubscriptionProtocol1"
+                    }
+                  },
+                  {
+                    "Endpoint": {
+                      "Ref": "SubscriptionEndpoint2"
+                    },
+                    "Protocol": {
+                      "Ref": "SubscriptionProtocol2"
+                    }
+                  }
+                ],
+                {
+                  "Fn::If": [
+                    "3Protocol",
+                    [
+                      {
+                        "Endpoint": {
+                          "Ref": "SubscriptionEndpoint1"
+                        },
+                        "Protocol": {
+                          "Ref": "SubscriptionProtocol1"
+                        }
+                      },
+                      {
+                        "Endpoint": {
+                          "Ref": "SubscriptionEndpoint2"
+                        },
+                        "Protocol": {
+                          "Ref": "SubscriptionProtocol2"
+                        }
+                      },
+                      {
+                        "Endpoint": {
+                          "Ref": "SubscriptionEndpoint3"
+                        },
+                        "Protocol": {
+                          "Ref": "SubscriptionProtocol3"
+                        }
+                      }
+                    ],
+                    {
+                      "Ref": "AWS::NoValue"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "MySNSTopicTopicARN": {
+      "Value": {
+        "Ref": "MySNSTopic"
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="ecscdpipeline-faws-template">EcsCdPipeline FAWS Template</h1>
+<p>ecs_cd_pipeline.template - Create a Continuous Deployment Pipeline for an ECS Service. Unsupported!!!! ### Parameters</p>
+<h4 id="ecsserviceparameterkey">ECSServiceParameterKey</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Bucket Key for the Service Template Parameters file.</code></li>
+</ul>
+<h4 id="ecsserviceparameterbucket">ECSServiceParameterBucket</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Valid Bucket name housing the Service CloudFormation Parameters file.</code></li>
+</ul>
+<h4 id="repository">Repository</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of the Github Repository.</code></li>
+</ul>
+<h4 id="codepipelinerolemanagedpolicyarns">CodePipelineRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the CodePipelineRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="ecsservicekey">ECSServiceKey</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Bucket Key for the ECS Service CloudFormation Template.</code></li>
+</ul>
+<h4 id="oauthtoken">OAuthToken</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>NoEcho: <code>True</code></li>
+<li>Description: <code>Github OAuthToken with correct access to Repository.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="codebuildrolemanagedpolicyarns">CodeBuildRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the CodeBuildRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="branch">Branch</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Git branch to use as the source for this pipeline</code></li>
+</ul>
+<h4 id="organization">Organization</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of Github organization the source repository belongs to.</code></li>
+</ul>
+<h4 id="ecsservicestack">ECSServiceStack</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of the ECS Service Stack this pipeline deploys to.</code></li>
+</ul>
+<h4 id="cloudformationbuildrolemanagedpolicyarns">CloudFormationBuildRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the CloudFormationBuildRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="ecsservicebucket">ECSServiceBucket</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Valid Bucket name housing the Service CloudFormation Template for this service.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

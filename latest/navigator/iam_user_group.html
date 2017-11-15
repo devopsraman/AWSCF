@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="iamusergroup-faws-template">IamUserGroup FAWS Template</h1>
+<p>iam_user_group.template - Creates IAM Users and an associated group ### Parameters</p>
+<h4 id="username1">UserName1</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to use for User 1. OPTIONAL</code></li>
+</ul>
+<h4 id="username3">UserName3</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to use for User 3. OPTIONAL</code></li>
+</ul>
+<h4 id="username2">UserName2</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to use for User 2. OPTIONAL</code></li>
+</ul>
+<h4 id="username5">UserName5</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to use for User 5. OPTIONAL</code></li>
+</ul>
+<h4 id="username4">UserName4</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to use for User 4. OPTIONAL</code></li>
+</ul>
+<h4 id="existinggroupnames">ExistingGroupNames</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of existing IAM groups that should be assigned to all users created in this template.  If this parameter is set, no new group will be created.  (OPTIONAL)</code></li>
+</ul>
+<h4 id="managedpolicies">ManagedPolicies</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the IAM group.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="newgroupname">NewGroupName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name to use for the new IAM Group.  If omitted, a name will be generated for the new group.  Unused if Existing Groups are supplied. OPTIONAL</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>IamGroup</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

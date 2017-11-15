@@ -1,0 +1,334 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "iam_user_group.template - Creates IAM Users and an associated group",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "UserName1": {
+          "default": "User 1 Name"
+        },
+        "UserName3": {
+          "default": "User 3 Name"
+        },
+        "UserName2": {
+          "default": "User 2 Name"
+        },
+        "UserName5": {
+          "default": "User 5 Name"
+        },
+        "UserName4": {
+          "default": "User 4 Name"
+        },
+        "NewGroupName": {
+          "default": "Group Name"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "UserName1": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for User 1. OPTIONAL"
+    },
+    "UserName3": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for User 3. OPTIONAL"
+    },
+    "UserName2": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for User 2. OPTIONAL"
+    },
+    "UserName5": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for User 5. OPTIONAL"
+    },
+    "UserName4": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for User 4. OPTIONAL"
+    },
+    "ExistingGroupNames": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of existing IAM groups that should be assigned to all users created in this template.  If this parameter is set, no new group will be created.  (OPTIONAL)"
+    },
+    "ManagedPolicies": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of IAM policy ARNs for the IAM group.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "NewGroupName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for the new IAM Group.  If omitted, a name will be generated for the new group.  Unused if Existing Groups are supplied. OPTIONAL"
+    }
+  },
+  "Conditions": {
+    "SetUserName4": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "UserName4"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetUserName5": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "UserName5"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "PoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "ManagedPolicies"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetUserName2": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "UserName2"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetUserName3": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "UserName3"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetExistingGroups": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "ExistingGroupNames"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetGroupName": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NewGroupName"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreateNewGroup": {
+      "Fn::Not": [
+        {
+          "Condition": "SetExistingGroups"
+        }
+      ]
+    },
+    "SetUserName1": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "UserName1"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "Group": {
+      "Type": "AWS::IAM::Group",
+      "Properties": {
+        "GroupName": {
+          "Fn::If": [
+            "SetGroupName",
+            {
+              "Ref": "NewGroupName"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ManagedPolicyArns": {
+          "Fn::If": [
+            "PoliciesSet",
+            {
+              "Ref": "ManagedPolicies"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      },
+      "Condition": "CreateNewGroup"
+    },
+    "IAMUser4": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": {
+          "Ref": "UserName4"
+        },
+        "Groups": {
+          "Fn::If": [
+            "SetExistingGroups",
+            {
+              "Ref": "ExistingGroupNames"
+            },
+            [
+              {
+                "Ref": "Group"
+              }
+            ]
+          ]
+        }
+      },
+      "Condition": "SetUserName4"
+    },
+    "IAMUser5": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": {
+          "Ref": "UserName5"
+        },
+        "Groups": {
+          "Fn::If": [
+            "SetExistingGroups",
+            {
+              "Ref": "ExistingGroupNames"
+            },
+            [
+              {
+                "Ref": "Group"
+              }
+            ]
+          ]
+        }
+      },
+      "Condition": "SetUserName5"
+    },
+    "IAMUser2": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": {
+          "Ref": "UserName2"
+        },
+        "Groups": {
+          "Fn::If": [
+            "SetExistingGroups",
+            {
+              "Ref": "ExistingGroupNames"
+            },
+            [
+              {
+                "Ref": "Group"
+              }
+            ]
+          ]
+        }
+      },
+      "Condition": "SetUserName2"
+    },
+    "IAMUser3": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": {
+          "Ref": "UserName3"
+        },
+        "Groups": {
+          "Fn::If": [
+            "SetExistingGroups",
+            {
+              "Ref": "ExistingGroupNames"
+            },
+            [
+              {
+                "Ref": "Group"
+              }
+            ]
+          ]
+        }
+      },
+      "Condition": "SetUserName3"
+    },
+    "IAMUser1": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": {
+          "Ref": "UserName1"
+        },
+        "Groups": {
+          "Fn::If": [
+            "SetExistingGroups",
+            {
+              "Ref": "ExistingGroupNames"
+            },
+            [
+              {
+                "Ref": "Group"
+              }
+            ]
+          ]
+        }
+      },
+      "Condition": "SetUserName1"
+    }
+  },
+  "Outputs": {
+    "IamGroup": {
+      "Value": {
+        "Ref": "Group"
+      },
+      "Description": "IAM Group Name",
+      "Condition": "CreateNewGroup"
+    }
+  }
+}

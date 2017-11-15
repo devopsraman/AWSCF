@@ -1,0 +1,188 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "systems_manager_service_role.template - Infrastructure Template for Systems Manager Service Role",
+  "Parameters": {
+    "EnableAutomation": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Specifies whether the Automation IAM role will be created.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "EnableMaintenanceWindow": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Specifies whether the Maintenance Window IAM role will be created.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    }
+  },
+  "Conditions": {
+    "CreateAutomation": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableAutomation"
+        },
+        "True"
+      ]
+    },
+    "CreateMaintenanceWindow": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableMaintenanceWindow"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "MaintenanceWindowServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonSSMMaintenanceWindowRole"
+        ],
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com",
+                  "ssm.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "Condition": "CreateMaintenanceWindow"
+    },
+    "AutomationServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole",
+          "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+        ],
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com",
+                  "ssm.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "Condition": "CreateAutomation"
+    },
+    "AutomationRoleInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "AutomationServiceRole"
+          }
+        ]
+      },
+      "Condition": "CreateAutomation"
+    },
+    "AutomationRoleInlinePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "AutomationRole",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "iam:PassRole"
+              ],
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AutomationServiceRole",
+                  "Arn"
+                ]
+              },
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "AutomationServiceRole"
+          }
+        ]
+      },
+      "Condition": "CreateAutomation"
+    }
+  },
+  "Outputs": {
+    "AutomationRoleARN": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AutomationServiceRole",
+          "Arn"
+        ]
+      },
+      "Description": "Automation Role ARN",
+      "Condition": "CreateAutomation"
+    },
+    "MaintenanceWindowRoleName": {
+      "Value": {
+        "Ref": "MaintenanceWindowServiceRole"
+      },
+      "Description": "Maintenance Window Role Name",
+      "Condition": "CreateMaintenanceWindow"
+    },
+    "AutomationRoleName": {
+      "Value": {
+        "Ref": "AutomationServiceRole"
+      },
+      "Description": "Automation Role Name",
+      "Condition": "CreateAutomation"
+    },
+    "MaintenanceWindowRoleARN": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MaintenanceWindowServiceRole",
+          "Arn"
+        ]
+      },
+      "Description": "Maintenance Window Role ARN",
+      "Condition": "CreateMaintenanceWindow"
+    },
+    "AutomationInstanceProfileName": {
+      "Value": {
+        "Ref": "AutomationRoleInstanceProfile"
+      },
+      "Description": "Automation Role Instance Profile Name",
+      "Condition": "CreateAutomation"
+    },
+    "AutomationInstanceProfileARN": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AutomationRoleInstanceProfile",
+          "Arn"
+        ]
+      },
+      "Description": "Automation Role Instance Profile ARN",
+      "Condition": "CreateAutomation"
+    }
+  }
+}

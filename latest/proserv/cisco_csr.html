@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="ciscocsr-faws-template">CiscoCsr FAWS Template</h1>
+<p>cisco_csr.template - Deploy a standalone Cisco CSR w/ EIP into existing VPC's public subnet. Creates automation account and saves keys to restricted bucket for separate Lambda functions. ### Parameters</p>
+<h4 id="solutionhelperrolemanagedpolicyarns">SolutionHelperRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the SolutionHelperRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="pubsubnet">PubSubnet</h4>
+<ul>
+<li>Type: <code>AWS::EC2::Subnet::Id</code></li>
+<li>Description: <code>Public Subnet</code></li>
+</ul>
+<h4 id="licensemodel">LicenseModel</h4>
+<ul>
+<li>Default: <code>LicenseIncluded</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Choose between BYOL (Bring Your Own License) and License Included license models. Remember to first subscribe the the appropriate Marketplace AMI!</code></li>
+<li>AllowedValues: <code>['LicenseIncluded', 'BYOL']</code></li>
+</ul>
+<h4 id="s3prefix">S3Prefix</h4>
+<ul>
+<li>Default: <code>csrconfig/</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>For config automation storage, the S3 prefix to append before S3 key names.</code></li>
+</ul>
+<h4 id="csrtype">CSRType</h4>
+<ul>
+<li>Default: <code>500Mbps</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Maximum network throughput required for CSR instances.</code></li>
+<li>AllowedValues: <code>['250Mbps', '500Mbps', '1Gbps', '2Gbps', '4.5Gbps']</code></li>
+</ul>
+<h4 id="terminationprotection">TerminationProtection</h4>
+<ul>
+<li>Default: <code>Yes</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable termination protection on the CSR EC2 instances to avoid accidential CSR termination?</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h4 id="keyname">KeyName</h4>
+<ul>
+<li>Type: <code>AWS::EC2::KeyPair::KeyName</code></li>
+<li>Description: <code>Name of an existing EC2 KeyPair to enable SSH access to the instances.</code></li>
+</ul>
+<h4 id="vpc">VPC</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>VPC to launch into.</code></li>
+</ul>
+<h4 id="csrrolemanagedpolicyarns">CSRRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the CSRRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="tentype">TenType</h4>
+<ul>
+<li>Default: <code>default</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Preferred EC2 tenancy type (default, dedicated instance or full host).</code></li>
+<li>AllowedValues: <code>['default', 'dedicated', 'host']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>URL</code></li>
+<li><code>PubIP</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="csrrecoveryalarm">CSRRecoveryAlarm</h4>
+<ul>
+<li>Description: Trigger a recovery when CSR instance status check fails for 15 consecutive minutes.</li>
+<li>Metric: StatusCheckFailed_System</li>
+<li>Threshold: 0</li>
+<li>Actions: <code>{'Fn::Join': ['', ['arn:aws:automate:', {'Ref': 'AWS::Region'}, ':ec2:recover']]}</code></li>
+</ul>
+</body>
+</html>

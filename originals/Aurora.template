@@ -1,0 +1,416 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Rackspace Hosting - Creates the necessary resources for an Aurora Cluster. Please be aware that this template will create resources for which you will be charged.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "VPC Configuration" },
+          "Parameters": [ "VPCID", "RDSSubnets", "VPCSecurityGroupIds" ]
+        },
+        {
+          "Label": { "default": "RDS Configuration" },
+          "Parameters": [ "Engine", "DBInstanceClass", "DBInstanceIdentifier", "DBName", "MasterUsername", "MasterUserPassword", "StorageEncrypted", "DBSnapshotName", "MultiAZ", "PubliclyAccessible", "Port" ]
+        },
+        {
+          "Label": { "default": "Backups" },
+          "Parameters": [ "AutoMinorVersionUpgrade", "BackupRetentionPeriod", "PreferredBackupWindow", "PreferredMaintenanceWindow", "NotificationEmail" ]
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "AutoMinorVersionUpgrade": {
+      "Default": "True",
+      "Description" : "Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window.",
+      "Type": "String",
+      "AllowedValues" : [ "True", "False" ],
+      "ConstraintDescription" : "Must be either True or False."
+    },
+    "BackupRetentionPeriod": {
+      "Default": "1",
+      "Description" : "The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups.",
+      "Type": "Number",
+      "MinValue": "0",
+      "MaxValue": "35",
+      "ConstraintDescription" : "Must be between 0 and 35"
+    },
+    "DBInstanceClass": {
+      "Default": "db.r3.large",
+      "Description" : "The database instance type",
+      "Type": "String",
+      "AllowedValues" : [ "db.r3.large", "db.r3.xlarge", "db.r3.2xlarge", "db.r3.4xlarge", "db.r3.8xlarge"],
+      "ConstraintDescription" : "Must select a valid database instance type."
+    },
+    "DBInstanceIdentifier": {
+      "Default": "Aurora",
+      "Description" : "The DB instance identifier. This parameter is stored as a lowercase string.",
+      "Type": "String"
+    },
+    "DBSnapshotName": {
+      "Description": "The name of a DB snapshot (optional)",
+      "Default": "",
+      "Type": "String"
+    },
+    "Environment": {
+      "Description": "Application environment for which this RDS is being created. e.g. Development/Production",
+      "Type": "String",
+      "Default": "Development",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "MasterUsername": {
+      "Description": "The name of master user for the client DB instance.",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16"
+    },
+    "MasterUserPassword": {
+      "Description": "Password for the local administrator account. Must be at least 8 characters containing letters, numbers and symbols.",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "30",
+      "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+      "NoEcho": "True"
+    },
+    "PubliclyAccessible": {
+      "Default": "False",
+      "Description" : "Indicates whether the database instance is an Internet-facing instance.",
+      "Type": "String",
+      "AllowedValues" : [ "True", "False" ],
+      "ConstraintDescription" : "Must be either True or False."
+    },
+    "Port": {
+      "Default": "3306",
+      "Description" : "The port number on which the database accepts connections.",
+      "Type": "Number",
+      "MinValue": "1150",
+      "MaxValue": "65535",
+      "ConstraintDescription" : "Must be between 1150 and 65535"
+    },
+    "PreferredBackupWindow": {
+      "Default": "05:00-06:00",
+      "Description" : "The daily time range during which automated backups are created if automated backups are enabled.",
+      "Type": "String"
+    },
+    "PreferredMaintenanceWindow": {
+      "Default": "Sun:07:00-Sun:08:00",
+      "Description" : "The daily time range during which automated backups are created if automated backups are enabled.",
+      "Type": "String"
+    },
+    "RDSSubnets": {
+      "Description": "Subnets for RDS Instances",
+      "Type": "List<AWS::EC2::Subnet::Id>"
+    },
+    "StorageEncrypted": {
+      "Default": "False",
+      "Description" : "Specifies whether the DB instance is encrypted.",
+      "Type": "String",
+      "AllowedValues" : [ "True", "False" ],
+      "ConstraintDescription" : "Must be either True or False."
+    },
+    "NotificationEmail": {
+      "Description": "SNS topic to notify if there are operational issues",
+      "Type": "String",
+      "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
+      "ConstraintDescription": "Must be a valid email address."
+    },
+    "VPCID" : {
+      "Type" : "AWS::EC2::VPC::Id",
+      "Description" : "Select Virtual Private Cloud ID"
+    },
+    "VPCSecurityGroupIds": {
+      "Description": "Existing security groups being used by App ec2 instances. If no AppSG, enter the VPC Default.",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Default": ""
+    }
+  },
+  "Mappings" : {
+    "InstanceTypeMap" : {
+      "db.r3.large" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.r3.xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.r3.2xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.r3.4xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.r3.8xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      }
+    }
+  },
+  "Conditions": {
+    "UseDBSnapshot": {"Fn::Not": [{"Fn::Equals" : [{"Ref" : "DBSnapshotName"}, ""]}]}
+  },
+  "Resources": {
+    "NotificationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [ { "Endpoint": { "Ref": "NotificationEmail" }, "Protocol": "email" } ]
+      }
+    },
+    "RDSCluster": {
+      "Type": "AWS::RDS::DBCluster",
+      "Properties": {
+        "BackupRetentionPeriod"       : { "Ref" : "BackupRetentionPeriod" },
+        "PreferredBackupWindow"       : { "Ref" : "PreferredBackupWindow" },
+        "PreferredMaintenanceWindow"  : { "Ref" : "PreferredMaintenanceWindow" },
+        "DBSubnetGroupName"           : { "Ref" : "DBSubnetGroup" },
+        "DBClusterParameterGroupName" : { "Ref" : "ClusterParameterGroup" },
+        "Engine"                      : "aurora",
+        "MasterUsername"              : { "Fn::If" : ["UseDBSnapshot", {"Ref" : "AWS::NoValue"}, { "Ref": "MasterUsername" }]},
+        "MasterUserPassword"          : { "Fn::If" : ["UseDBSnapshot", {"Ref" : "AWS::NoValue"}, { "Ref": "MasterUserPassword" }]},
+        "Port"                        : { "Ref" : "Port"},
+        "StorageEncrypted"            : { "Ref" : "StorageEncrypted" },
+        "VpcSecurityGroupIds"         : { "Ref" : "VPCSecurityGroupIds" },
+        "Tags": [
+          { "Key": "Name", "Value": { "Fn::Join" : [ "", [ { "Ref": "AWS::StackName" }, "AppGroupName" ] ] } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "ServiceProvider", "Value": "Rackspace" }
+        ]
+      }
+    },
+    "RDSInstance01" : {
+      "Type" : "AWS::RDS::DBInstance",
+      "Properties" : {
+        "AutoMinorVersionUpgrade"   : { "Ref" : "AutoMinorVersionUpgrade" },
+        "DBClusterIdentifier"       : { "Ref" : "RDSCluster" },
+        "DBInstanceClass"           : { "Ref" : "DBInstanceClass" },
+        "DBInstanceIdentifier"      : { "Fn::Join" : [ "-" , [ { "Ref" : "DBInstanceIdentifier" } , "01"] ] },
+        "DBParameterGroupName"      : { "Ref" : "ParameterGroup" },
+        "DBSnapshotIdentifier"      : { "Fn::If" : ["UseDBSnapshot",{"Ref" : "DBSnapshotName"},{"Ref" : "AWS::NoValue"}]},
+        "DBSubnetGroupName"         : { "Ref" : "DBSubnetGroup" },
+        "Engine"                    : "aurora",
+        "OptionGroupName"           : { "Ref" : "OptionGroup"},
+        "PubliclyAccessible"        : { "Ref" : "PubliclyAccessible" },
+        "StorageEncrypted"          : { "Ref" : "StorageEncrypted" },
+        "Tags" : [
+          { "Key":"Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "ServiceProvider", "Value": "Rackspace" }
+        ]
+      },
+      "DeletionPolicy" : "Delete"
+    },
+    "RDSInstance02" : {
+      "Type" : "AWS::RDS::DBInstance",
+      "Properties" : {
+        "AutoMinorVersionUpgrade"   : { "Ref" : "AutoMinorVersionUpgrade" },
+        "DBClusterIdentifier"       : { "Ref" : "RDSCluster" },
+        "DBInstanceClass"           : { "Ref" : "DBInstanceClass" },
+        "DBInstanceIdentifier"      : { "Fn::Join" : [ "-" , [ { "Ref" : "DBInstanceIdentifier" } , "02"] ] },
+        "DBParameterGroupName"      : { "Ref" : "ParameterGroup" },
+        "DBSnapshotIdentifier"      : { "Fn::If" : ["UseDBSnapshot",{"Ref" : "DBSnapshotName"},{"Ref" : "AWS::NoValue"}]},
+        "DBSubnetGroupName"         : { "Ref" : "DBSubnetGroup" },
+        "Engine"                    : "aurora",
+        "OptionGroupName"           : { "Ref" : "OptionGroup"},
+        "PubliclyAccessible"        : { "Ref" : "PubliclyAccessible" },
+        "StorageEncrypted"          : { "Ref" : "StorageEncrypted" },
+        "Tags" : [
+          { "Key":"Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "Environment", "Value": { "Ref": "Environment"} },
+          { "Key": "ServiceProvider", "Value": "Rackspace" }
+        ]
+      },
+      "DeletionPolicy" : "Delete"
+    },
+    "DBSubnetGroup" : {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "VPC Subnet Group for RDS",
+        "SubnetIds" : { "Ref" : "RDSSubnets" },
+        "Tags" : [
+          { "Key": "Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "ServiceProvider", "Value": "Rackspace"},
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      }
+    },
+    "CPUAlarmHigh01": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBInstanceIdentifier" }, " CPU > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "CPULimit" ]}, "% for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "CPUUtilization",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "CPULimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "NotificationTopic" } ],
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance01" }
+          }]
+      }
+    },
+    "ReadIOPSHigh01": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBInstanceIdentifier" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "ReadIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "ReadIOPS",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "ReadIOPSLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "NotificationTopic" } ],
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance01" }
+          }]
+      }
+    },
+    "WriteIOPSHigh01": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBInstanceIdentifier" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "WriteIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "WriteIOPS",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "WriteIOPSLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "NotificationTopic" } ],
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance01" }
+          }]
+      }
+    },
+    "CPUAlarmHigh02": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBInstanceIdentifier" }, " CPU > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "CPULimit" ]}, "% for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "CPUUtilization",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "CPULimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "NotificationTopic" } ],
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance02" }
+          }]
+      }
+    },
+    "ReadIOPSHigh02": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBInstanceIdentifier" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "ReadIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "ReadIOPS",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "ReadIOPSLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "NotificationTopic" } ],
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance02" }
+          }]
+      }
+    },
+    "WriteIOPSHigh02": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBInstanceIdentifier" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "WriteIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "WriteIOPS",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBInstanceClass" }, "WriteIOPSLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "NotificationTopic" } ],
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "RDSInstance02" }
+          }]
+      }
+    },
+    "OptionGroup": {
+      "Type": "AWS::RDS::OptionGroup",
+      "Properties": {
+        "EngineName": "aurora",
+        "MajorEngineVersion": "5.6",
+        "OptionGroupDescription":  { "Fn::Join" : ["-",[{ "Ref" : "Environment" }, "OptionGroup" ]] },
+        "Tags" : [
+          { "Key": "Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "ServiceProvider", "Value": "Rackspace"},
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+      },
+      "DeletionPolicy" : "Retain"
+    },
+    "ParameterGroup": {
+     "Type": "AWS::RDS::DBParameterGroup",
+     "Properties" : {
+        "Description" : { "Fn::Join" : ["-",[{ "Ref" : "Environment" }, "ParameterGroup" ]] },
+        "Family" : "aurora5.6",
+        "Tags" : [
+          { "Key": "Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "ServiceProvider", "Value": "Rackspace"},
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+     },
+     "DeletionPolicy" : "Retain"
+   },
+   "ClusterParameterGroup": {
+     "Type": "AWS::RDS::DBClusterParameterGroup",
+     "Properties" : {
+        "Description" : { "Fn::Join" : ["-",[{ "Ref" : "Environment" }, "ClusterParameterGroup" ]] },
+        "Family" : "aurora5.6",
+        "Parameters" : {
+          "binlog_format" : "off"
+        },
+        "Tags" : [
+          { "Key": "Name", "Value": { "Ref" : "AWS::StackName" } },
+          { "Key": "ServiceProvider", "Value": "Rackspace"},
+          { "Key": "Environment", "Value": { "Ref": "Environment"} }
+        ]
+     },
+     "DeletionPolicy" : "Retain"
+   }
+  },
+  "Outputs": {
+    "ClusterAddress" : {
+      "Description" : "Address of database endpoint",
+      "Value" : { "Fn::GetAtt": [ "RDSCluster", "Endpoint.Address" ] }
+    },
+    "DBPort" : {
+      "Description" : "Database endpoint port number",
+      "Value" : { "Fn::GetAtt": [ "RDSCluster", "Endpoint.Port" ] }
+    }
+  }
+}

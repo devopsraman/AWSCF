@@ -1,0 +1,143 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security Group template for a ASG - Amazon Linux with RDS and Elasticache .",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID."
+    }
+  },
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "PublicSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public SSH traffic."
+      }
+    },
+    "PrivateWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80},
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private WEB traffic from load balancer."
+      }
+    },
+    "MySQLSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 3306, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 3306}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow MySQL traffic."
+      }
+    },
+    "ElastiCacheSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 11211, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 11211}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private ElastiCache traffic for app."
+      }
+    },
+    "PublicWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 80},
+          {"ToPort": 443, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 443}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public WEB traffic."
+      }
+    },
+    "PrivateSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicSSHSecurityGroup"}, "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private SSH traffic from load balancer."
+      }
+    }
+  },
+  "Outputs": {
+    "outputPublicSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputMySQLSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MySQLSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputElastiCacheSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ElastiCacheSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "code_pipeline.template - Create a Continuous Deployment Pipeline Skeleton. Read the docs: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/continuous-delivery-codepipeline.html",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "NotificationTopic"
+          ],
+          "Label": {
+            "default": "Notifications"
+          }
+        },
+        {
+          "Parameters": [
+            "Repository",
+            "OAuthToken",
+            "Branch",
+            "Organization"
+          ],
+          "Label": {
+            "default": "Github"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "Organization": {
+          "default": "Github Organization"
+        },
+        "Repository": {
+          "default": "Github Repository"
+        },
+        "OAuthToken": {
+          "default": "Github OAuth Token"
+        },
+        "Branch": {
+          "default": "Git Branch"
+        },
+        "NotificationTopic": {
+          "default": "Notification ARN"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "Repository": {
+      "Type": "String",
+      "Description": "Name of the Github Repository."
+    },
+    "CodePipelineRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the CodePipelineRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "OAuthToken": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Github OAuthToken with correct access to Repository."
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "Branch": {
+      "Type": "String",
+      "Description": "Git branch to use as the source for this pipeline"
+    },
+    "NotificationTopic": {
+      "Type": "String",
+      "Description": "Full ARN of notification topic."
+    },
+    "Organization": {
+      "Type": "String",
+      "Description": "Name of Github organization the source repository belongs to."
+    }
+  },
+  "Conditions": {
+    "CodePipelineRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "CodePipelineRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "CodePipelineRolePolicies": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "PipelineCFAccess",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "cloudformation:*"
+              ],
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "CodePipelineRole"
+          }
+        ]
+      }
+    },
+    "CodePipelineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/AWSCodePipelineFullAccess",
+                  "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+                  {
+                    "Fn::If": [
+                      "CodePipelineRolePoliciesSet",
+                      {
+                        "Ref": "CodePipelineRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CodePipeline": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "Properties": {
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CodePipelineRole",
+            "Arn"
+          ]
+        },
+        "Stages": [
+          {
+            "Name": "SourceCheckout",
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Owner": "ThirdParty",
+                  "Category": "Source",
+                  "Version": "1",
+                  "Provider": "GitHub"
+                },
+                "Configuration": {
+                  "Owner": {
+                    "Ref": "Organization"
+                  },
+                  "Repo": {
+                    "Ref": "Repository"
+                  },
+                  "OAuthToken": {
+                    "Ref": "OAuthToken"
+                  },
+                  "Branch": {
+                    "Ref": "Branch"
+                  }
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "AppCode"
+                  }
+                ],
+                "RunOrder": 1,
+                "Name": "SourceCheckout"
+              }
+            ]
+          },
+          {
+            "Name": "SampleTest",
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Owner": "AWS",
+                  "Category": "Approval",
+                  "Version": "1",
+                  "Provider": "Manual"
+                },
+                "Configuration": {
+                  "NotificationArn": {
+                    "Ref": "NotificationTopic"
+                  },
+                  "CustomData": "Approval or Reject this change after running Tests"
+                },
+                "OutputArtifacts": [],
+                "RunOrder": 2,
+                "Name": "SampleTest"
+              }
+            ]
+          }
+        ],
+        "ArtifactStore": {
+          "Type": "S3",
+          "Location": {
+            "Ref": "S3Bucket"
+          }
+        },
+        "Name": {
+          "Fn::Sub": "${Environment}-${Organization}-${Repository}-Pipeline-Artifacts"
+        }
+      }
+    }
+  }
+}

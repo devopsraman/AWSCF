@@ -1,0 +1,820 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "NLB_TG.template - Elastic Load Balancer v2 (Target Group) template.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "VPCID",
+            "LoadBalancerArn",
+            "TargetGroupNameVersion"
+          ],
+          "Label": {
+            "default": [
+              "Application Load Balancer General Configuration"
+            ]
+          }
+        },
+        {
+          "Parameters": [
+            "Listener1Port",
+            "Listener2Port"
+          ],
+          "Label": {
+            "default": [
+              "Listener Configuration:"
+            ]
+          }
+        },
+        {
+          "Parameters": [
+            "TargetGroupType",
+            "TargetGroupName"
+          ],
+          "Label": {
+            "default": [
+              "Target Group Main Configuration"
+            ]
+          }
+        },
+        {
+          "Parameters": [
+            "TargetGroupPort",
+            "AttributeDelayTimeout"
+          ],
+          "Label": {
+            "default": [
+              "Target Group General Configuration"
+            ]
+          }
+        },
+        {
+          "Parameters": [
+            "HealthCheckPort",
+            "HealthCheckPath",
+            "HealthCheckIntervalSeconds",
+            "HealthCheckProtocol",
+            "HealthyThresholdCount"
+          ],
+          "Label": {
+            "default": [
+              "Target Group Health Monitoring Configuration"
+            ]
+          }
+        },
+        {
+          "Parameters": [
+            "TargetGroupTargetId1",
+            "TargetGroupTargetId2",
+            "TargetGroupTargetId3",
+            "TargetGroupTargetPort1",
+            "TargetGroupTargetPort2",
+            "TargetGroupTargetPort3"
+          ],
+          "Label": {
+            "default": [
+              "Target Group Instance Target Configuration (OPTIONAL)"
+            ]
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "Listener1Port": {
+          "default": "Listener 1 port"
+        },
+        "HealthCheckIntervalSeconds": {
+          "default": "Health check interval"
+        },
+        "VPCID": {
+          "default": "VPC id"
+        },
+        "HealthCheckPort": {
+          "default": "Health check port"
+        },
+        "TargetGroupPort": {
+          "default": "Target Group port"
+        },
+        "TargetGroupType": {
+          "default": "Target Group type"
+        },
+        "HealthCheckProtocol": {
+          "default": "Health check protocol"
+        },
+        "HealthCheckPath": {
+          "default": "Health check path"
+        },
+        "AttributeDelayTimeout": {
+          "default": "Deregistration delay"
+        },
+        "TargetGroupName": {
+          "default": "Target Group name"
+        },
+        "HealthyThresholdCount": {
+          "default": "Healthy threshold count"
+        },
+        "TargetGroupTargetId1": {
+          "default": "Instance target 1"
+        },
+        "Listener2Port": {
+          "default": "Listener 2 port"
+        },
+        "LoadBalancerArn": {
+          "default": "Network Load balancer ARN"
+        },
+        "TargetGroupTargetId2": {
+          "default": "Instance target 2"
+        },
+        "TargetGroupTargetId3": {
+          "default": "Instance target 3"
+        },
+        "TargetGroupTargetPort1": {
+          "default": "Instance target 1 port"
+        },
+        "TargetGroupTargetPort2": {
+          "default": "Instance target 2 port"
+        },
+        "TargetGroupTargetPort3": {
+          "default": "Instance target 3 port"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC in which your targets are located."
+    },
+    "TargetGroupPort": {
+      "Default": "80",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The port on which the targets receive traffic.",
+      "MaxValue": "65535"
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "EnableRackspaceTicket": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether alarms will generate Rackspace tickets",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "Listener1Port": {
+      "Default": 443,
+      "Type": "Number",
+      "Description": "The port on which the listener 1 listens for requests"
+    },
+    "HealthCheckPort": {
+      "Default": "traffic-port",
+      "Type": "String",
+      "Description": ""
+    },
+    "TargetGroupType": {
+      "Default": "ASG",
+      "Type": "String",
+      "Description": "The type of target. (ASG\\ECS or Instance)",
+      "AllowedValues": [
+        "ASG",
+        "Instance"
+      ]
+    },
+    "HealthCheckPath": {
+      "Default": "/",
+      "Type": "String",
+      "Description": "The ping path destination where Elastic Load Balancing sends health check requests.",
+      "MaxLength": "1024"
+    },
+    "TargetGroupTargetId1": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The ID of the target, such as an EC2 instance ID."
+    },
+    "TargetGroupTargetId2": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The ID of the target, such as an EC2 instance ID."
+    },
+    "TargetGroupTargetId3": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The ID of the target, such as an EC2 instance ID."
+    },
+    "Listener2Port": {
+      "Default": 0,
+      "Type": "Number",
+      "Description": "The port on which the listener 2 listens for requests"
+    },
+    "HealthCheckIntervalSeconds": {
+      "Default": "30",
+      "MinValue": "5",
+      "Type": "Number",
+      "Description": "The approximate number of seconds between health checks for an individual target.",
+      "MaxValue": "300"
+    },
+    "AttributeDelayTimeout": {
+      "Default": "30",
+      "MinValue": "0",
+      "Type": "Number",
+      "Description": "The amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused.",
+      "MaxValue": "3600"
+    },
+    "LoadBalancerArn": {
+      "Type": "String",
+      "Description": "The Amazon resource name (ARN) of the network load balancer."
+    },
+    "HealthCheckProtocol": {
+      "Default": "TCP",
+      "Type": "String",
+      "Description": "The protocol that the load balancer uses when performing health checks on the targets, such as HTTP or HTTPS.",
+      "AllowedValues": [
+        "TCP",
+        "HTTP",
+        "HTTPS"
+      ]
+    },
+    "TargetGroupNameVersion": {
+      "Default": "v00",
+      "Type": "String",
+      "Description": "NOTE: This needs to increment on update with new Target Group."
+    },
+    "HealthyThresholdCount": {
+      "Default": "5",
+      "MinValue": "2",
+      "Type": "Number",
+      "Description": "The number of consecutive successful health checks that are required before an unhealthy target is considered healthy.",
+      "MaxValue": "10"
+    },
+    "TargetGroupName": {
+      "Default": "NLB-TargetGroup",
+      "Type": "String",
+      "Description": "A name for the Target Group."
+    },
+    "TargetGroupTargetPort1": {
+      "Default": "80",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The port number on which the target is listening for traffic.",
+      "MaxValue": "65535"
+    },
+    "TargetGroupTargetPort2": {
+      "Default": "80",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The port number on which the target is listening for traffic.",
+      "MaxValue": "65535"
+    },
+    "TargetGroupTargetPort3": {
+      "Default": "80",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The port number on which the target is listening for traffic.",
+      "MaxValue": "65535"
+    }
+  },
+  "Conditions": {
+    "RackspaceAlarmsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableRackspaceTicket"
+        },
+        "True"
+      ]
+    },
+    "Listener2Enabled": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Listener2Port"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "UseTGNameVersion": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TargetGroupNameVersion"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "TargetTypeisInstance": {
+      "Fn::Equals": [
+        {
+          "Ref": "TargetGroupType"
+        },
+        "Instance"
+      ]
+    },
+    "TCPHealthCheck": {
+      "Fn::Equals": [
+        {
+          "Ref": "HealthCheckProtocol"
+        },
+        "TCP"
+      ]
+    },
+    "Listener1Enabled": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Listener1Port"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "TargetTypeisASG": {
+      "Fn::Equals": [
+        {
+          "Ref": "TargetGroupType"
+        },
+        "ASG"
+      ]
+    },
+    "UseTarget1": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TargetGroupTargetId1"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "UseTarget2": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TargetGroupTargetId2"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "UseTarget3": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TargetGroupTargetId3"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "TargetGroupASG": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "HealthyThresholdCount": {
+          "Ref": "HealthyThresholdCount"
+        },
+        "HealthCheckIntervalSeconds": {
+          "Ref": "HealthCheckIntervalSeconds"
+        },
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "Protocol": "TCP",
+        "Name": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "TargetGroupName"
+              },
+              {
+                "Fn::If": [
+                  "UseTGNameVersion",
+                  {
+                    "Ref": "TargetGroupNameVersion"
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "CloudformationStackName",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}TargetGroup"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "HealthCheckProtocol": {
+          "Ref": "HealthCheckProtocol"
+        },
+        "UnhealthyThresholdCount": {
+          "Ref": "HealthyThresholdCount"
+        },
+        "HealthCheckPath": {
+          "Fn::If": [
+            "TCPHealthCheck",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "HealthCheckPath"
+            }
+          ]
+        },
+        "TargetGroupAttributes": [
+          {
+            "Value": {
+              "Ref": "AttributeDelayTimeout"
+            },
+            "Key": "deregistration_delay.timeout_seconds"
+          }
+        ],
+        "HealthCheckPort": {
+          "Ref": "HealthCheckPort"
+        },
+        "Port": {
+          "Ref": "TargetGroupPort"
+        }
+      },
+      "Condition": "TargetTypeisASG"
+    },
+    "TargetGroupInstance": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "HealthyThresholdCount": {
+          "Ref": "HealthyThresholdCount"
+        },
+        "HealthCheckIntervalSeconds": {
+          "Ref": "HealthCheckIntervalSeconds"
+        },
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "Protocol": "TCP",
+        "Name": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "TargetGroupName"
+              },
+              {
+                "Fn::If": [
+                  "UseTGNameVersion",
+                  {
+                    "Ref": "TargetGroupNameVersion"
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        "UnhealthyThresholdCount": {
+          "Ref": "HealthyThresholdCount"
+        },
+        "Tags": [
+          {
+            "Key": "CloudformationStackName",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}TargetGroup"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "HealthCheckProtocol": {
+          "Ref": "HealthCheckProtocol"
+        },
+        "Targets": [
+          {
+            "Fn::If": [
+              "UseTarget1",
+              {
+                "Id": {
+                  "Ref": "TargetGroupTargetId1"
+                },
+                "Port": {
+                  "Ref": "TargetGroupTargetPort1"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "UseTarget2",
+              {
+                "Id": {
+                  "Ref": "TargetGroupTargetId2"
+                },
+                "Port": {
+                  "Ref": "TargetGroupTargetPort2"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "UseTarget3",
+              {
+                "Id": {
+                  "Ref": "TargetGroupTargetId3"
+                },
+                "Port": {
+                  "Ref": "TargetGroupTargetPort3"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "HealthCheckPath": {
+          "Fn::If": [
+            "TCPHealthCheck",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "HealthCheckPath"
+            }
+          ]
+        },
+        "TargetGroupAttributes": [
+          {
+            "Value": {
+              "Ref": "AttributeDelayTimeout"
+            },
+            "Key": "deregistration_delay.timeout_seconds"
+          }
+        ],
+        "HealthCheckPort": {
+          "Ref": "HealthCheckPort"
+        },
+        "Port": {
+          "Ref": "TargetGroupPort"
+        }
+      },
+      "Condition": "TargetTypeisInstance"
+    },
+    "ELBv2Listener2": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "Protocol": "TCP",
+        "DefaultActions": {
+          "Fn::If": [
+            "TargetTypeisInstance",
+            [
+              {
+                "TargetGroupArn": {
+                  "Ref": "TargetGroupInstance"
+                },
+                "Type": "forward"
+              }
+            ],
+            [
+              {
+                "TargetGroupArn": {
+                  "Ref": "TargetGroupASG"
+                },
+                "Type": "forward"
+              }
+            ]
+          ]
+        },
+        "LoadBalancerArn": {
+          "Ref": "LoadBalancerArn"
+        },
+        "Port": {
+          "Ref": "Listener2Port"
+        }
+      },
+      "Condition": "Listener2Enabled"
+    },
+    "ELBv2Listener1": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "Protocol": "TCP",
+        "DefaultActions": {
+          "Fn::If": [
+            "TargetTypeisInstance",
+            [
+              {
+                "TargetGroupArn": {
+                  "Ref": "TargetGroupInstance"
+                },
+                "Type": "forward"
+              }
+            ],
+            [
+              {
+                "TargetGroupArn": {
+                  "Ref": "TargetGroupASG"
+                },
+                "Type": "forward"
+              }
+            ]
+          ]
+        },
+        "LoadBalancerArn": {
+          "Ref": "LoadBalancerArn"
+        },
+        "Port": {
+          "Ref": "Listener1Port"
+        }
+      },
+      "Condition": "Listener1Enabled"
+    },
+    "UnHealthyHostCountAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "10",
+        "Dimensions": {
+          "Fn::If": [
+            "TargetTypeisInstance",
+            [
+              {
+                "Name": "LoadBalancer",
+                "Value": {
+                  "Fn::Select": [
+                    2,
+                    {
+                      "Fn::Split": [
+                        "/",
+                        {
+                          "Ref": "LoadBalancerArn"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "Name": "TargetGroup",
+                "Value": {
+                  "Fn::GetAtt": [
+                    "TargetGroupInstance",
+                    "TargetGroupFullName"
+                  ]
+                }
+              }
+            ],
+            [
+              {
+                "Name": "LoadBalancer",
+                "Value": {
+                  "Fn::Select": [
+                    2,
+                    {
+                      "Fn::Split": [
+                        "/",
+                        {
+                          "Ref": "LoadBalancerArn"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "Name": "TargetGroup",
+                "Value": {
+                  "Fn::GetAtt": [
+                    "TargetGroupASG",
+                    "TargetGroupFullName"
+                  ]
+                }
+              }
+            ]
+          ]
+        },
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": "Unhealthy Host count is above threshold, creating ticket.",
+        "Namespace": "AWS/ApplicationELB",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Average",
+        "Threshold": "1",
+        "OKActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "Unit": "Count",
+        "MetricName": "UnHealthyHostCount"
+      }
+    }
+  },
+  "Outputs": {
+    "ELBv2TargetGroupInstance": {
+      "Value": {
+        "Ref": "TargetGroupInstance"
+      },
+      "Description": "Target Group ARN for EC2 Instance deployments.",
+      "Condition": "TargetTypeisInstance"
+    },
+    "UnHealthyHostCountAlarm": {
+      "Description": "UnHealthy Host Count Alarm Name.",
+      "Value": {
+        "Ref": "UnHealthyHostCountAlarm"
+      }
+    },
+    "ELBv2TargetGroupASG": {
+      "Value": {
+        "Ref": "TargetGroupASG"
+      },
+      "Description": "Target Group ARN for ASG\\ECS deployments.",
+      "Condition": "TargetTypeisASG"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security Group template for 2 EC2 instnaces with Auto Recovery .",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID."
+    }
+  },
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "PublicSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public SSH traffic."
+      }
+    },
+    "PublicWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 80},
+          {"ToPort": 443, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 443}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public WEB traffic."
+      }
+    },
+    "PrivateWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80},
+          {"ToPort": 443, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 443}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private WEB traffic from load balancer."
+      }
+    }
+  },
+  "Outputs": {
+    "outputPrivateWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    }
+  }
+}

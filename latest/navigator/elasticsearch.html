@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="elasticsearch-faws-template">Elasticsearch FAWS Template</h1>
+<p>elasticsearch.template - Elasticsearch domain template. ### Parameters</p>
+<h4 id="masternodeinstancetype">MasterNodeInstanceType</h4>
+<ul>
+<li>Default: <code>m3.large.elasticsearch</code></li>
+<li>ConstraintDescription: <code>Must be a valid Elasticsearch instance type</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select master instance type</code></li>
+<li>AllowedValues: <code>['t2.micro.elasticsearch', 't2.small.elasticsearch', 't2.medium.elasticsearch', 'm3.medium.elasticsearch', 'm3.large.elasticsearch', 'm3.xlarge.elasticsearch', 'm3.2xlarge.elasticsearch', 'm4.large.elasticsearch', 'm4.xlarge.elasticsearch', 'm4.2xlarge.elasticsearch', 'm4.4xlarge.elasticsearch', 'm4.10xlarge.elasticsearch', 'c4.large.elasticsearch', 'c4.xlarge.elasticsearch', 'c4.2xlarge.elasticsearch', 'c4.4xlarge.elasticsearch', 'c4.8xlarge.elasticsearch', 'r3.large.elasticsearch', 'r3.xlarge.elasticsearch', 'r3.2xlarge.elasticsearch', 'r3.4xlarge.elasticsearch', 'r3.8xlarge.elasticsearch', 'r4.large.elasticsearch', 'r4.xlarge.elasticsearch', 'r4.2xlarge.elasticsearch', 'r4.4xlarge.elasticsearch', 'r4.8xlarge.elasticsearch', 'r4.16xlarge.elasticsearch', 'i2.xlarge.elasticsearch', 'i2.2xlarge.elasticsearch']</code></li>
+</ul>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="esversion">ESVersion</h4>
+<ul>
+<li>Default: <code>5.1</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>ElasticSearch Version.</code></li>
+<li>AllowedValues: <code>['1.5', '2.3', '5.1']</code></li>
+</ul>
+<h4 id="ebsvolumesize">EbsVolumeSize</h4>
+<ul>
+<li>Default: <code>20</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The size of the EBS volume for each data node.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="masternodecount">MasterNodeCount</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of master (non-data) nodes in the cluster.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer &lt;= 20.</code></li>
+</ul>
+<h4 id="esdomainname">ESDomainName</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>AWS Elasticsearch name for domain</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="ipaddresswhitelist">IPAddressWhiteList</h4>
+<ul>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>IP Addresses allowed to access the ElasticSearch Cluster</code></li>
+</ul>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="datanodecount">DataNodeCount</h4>
+<ul>
+<li>Default: <code>6</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of Data Nodes in the Elasticsearch cluster.</code></li>
+<li>ConstraintDescription: <code>Must be a valid, even integer.</code></li>
+</ul>
+<h4 id="automatedsnapshotstarthour">AutomatedSnapshotStartHour</h4>
+<ul>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Default: <code>0</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The hour (0-23) to issue a daily snapshot of Elasticsearch cluster.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer between 0 - 23.</code></li>
+</ul>
+<h4 id="ebsvolumetype">EbsVolumeType</h4>
+<ul>
+<li>Default: <code>gp2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The EBS volume type to use with the Amazon ES domain, such as standard, gp2, or io1.</code></li>
+<li>AllowedValues: <code>['io1', 'standard', 'gp2']</code></li>
+</ul>
+<h4 id="datanodeinstancetype">DataNodeInstanceType</h4>
+<ul>
+<li>Default: <code>m3.large.elasticsearch</code></li>
+<li>ConstraintDescription: <code>Must be a valid Elasticsearch instance type</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select data node instance type</code></li>
+<li>AllowedValues: <code>['t2.micro.elasticsearch', 't2.small.elasticsearch', 't2.medium.elasticsearch', 'm3.medium.elasticsearch', 'm3.large.elasticsearch', 'm3.xlarge.elasticsearch', 'm3.2xlarge.elasticsearch', 'm4.large.elasticsearch', 'm4.xlarge.elasticsearch', 'm4.2xlarge.elasticsearch', 'm4.4xlarge.elasticsearch', 'm4.10xlarge.elasticsearch', 'c4.large.elasticsearch', 'c4.xlarge.elasticsearch', 'c4.2xlarge.elasticsearch', 'c4.4xlarge.elasticsearch', 'c4.8xlarge.elasticsearch', 'r3.large.elasticsearch', 'r3.xlarge.elasticsearch', 'r3.2xlarge.elasticsearch', 'r3.4xlarge.elasticsearch', 'r3.8xlarge.elasticsearch', 'r4.large.elasticsearch', 'r4.xlarge.elasticsearch', 'r4.2xlarge.elasticsearch', 'r4.4xlarge.elasticsearch', 'r4.8xlarge.elasticsearch', 'r4.16xlarge.elasticsearch', 'i2.xlarge.elasticsearch', 'i2.2xlarge.elasticsearch']</code></li>
+</ul>
+<h4 id="ebsiops">EbsIops</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of I/O operations per second (IOPS) that the volume supports.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

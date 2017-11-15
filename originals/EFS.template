@@ -1,0 +1,80 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Rackspace Hosting - Create an EFS Filesystem with 2AZ's and Mount Points",
+  "Metadata": {
+    "Version": "v0.1.0",
+    "LastUpdated": "2016-06-28"
+  },
+  "Parameters": {
+    "VolumeName": {
+      "Description": "The name to be used for the EFS volume",
+      "Type": "String",
+      "MinLength": "1",
+      "Default": "myEFSvolume"
+    },
+    "SubnetAZ1": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Private Subnet for AZ1 EFS Mount Point"
+    },
+    "SubnetAZ2": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Private Subnet for AZ2 EFS Mount Point"
+    },
+    "Environment": {
+      "Description": "Application environment for which this EFS is being created. e.g. Development/Production",
+      "Type": "String",
+      "Default": "Development",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID" : {
+      "Type" : "AWS::EC2::VPC::Id",
+      "Description" : "Select Virtual Private Cloud ID"
+    },
+    "EFSSecurityGroupList": {
+      "Description": "Security Group List assigned to the EFS FileSystem",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>"
+    }
+  },
+  "Resources": {
+    "WebServerFileSystem": {
+      "Type": "AWS::EFS::FileSystem",
+      "Properties": {
+        "FileSystemTags": [
+          { "Key": "ServiceProvider", "Value": "Rackspace" },
+          { "Key": "Name", "Value": { "Ref": "VolumeName" } },
+          { "Key": "Environment", "Value": { "Ref": "Environment" }}
+        ]
+      }
+    },
+    "MountTargetAZ1": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": { "Ref": "WebServerFileSystem" },
+        "SubnetId": { "Ref": "SubnetAZ1" },
+        "SecurityGroups": { "Ref": "EFSSecurityGroupList" }
+      }
+    },
+    "MountTargetAZ2": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": { "Ref": "WebServerFileSystem" },
+        "SubnetId": { "Ref": "SubnetAZ2" },
+        "SecurityGroups": { "Ref": "EFSSecurityGroupList" }
+      }
+    }
+  },
+  "Outputs": {
+    "outputMountTargetIDAZ1": {
+      "Description": "Mount target ID",
+      "Value":  { "Ref" : "MountTargetAZ1" }
+    },
+    "outputMountTargetIDAZ2": {
+      "Description": "Mount target ID",
+      "Value":  { "Ref" : "MountTargetAZ2" }
+    },
+    "outputFileSystemID": {
+      "Description": "File system ID",
+      "Value": { "Ref" : "WebServerFileSystem" }
+    }
+  }
+}

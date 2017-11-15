@@ -1,0 +1,230 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "code_deploy_deployment.template - Create a Code Deploy Deployment",
+  "Parameters": {
+    "ApplicationName": {
+      "Type": "String",
+      "Description": "Application Name"
+    },
+    "AutoScalingGroups": {
+      "Default": "none",
+      "Type": "CommaDelimitedList",
+      "Description": "Autoscaling Groups. Ex: 'asg1, asg2'"
+    },
+    "EC2TagKey": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Tag Key for EC2 Tag Filter (Required when EC2TagValue is Set)"
+    },
+    "EnableS3Bucket": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether an S3 artifcat bucket should be created.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "ServiceRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the ServiceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "EC2TagValue": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Tag Value for ec2 Tag Filter (Required when EC2TagKey is Set)"
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "DeploymentConfiguration": {
+      "Default": "CodeDeployDefault.OneAtATime",
+      "Type": "String",
+      "Description": "Code Deployment Configuration",
+      "AllowedValues": [
+        "CodeDeployDefault.HalfAtATime",
+        "CodeDeployDefault.AllAtOnce",
+        "CodeDeployDefault.OneAtATime"
+      ]
+    }
+  },
+  "Conditions": {
+    "SetEc2TagFilters": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "EC2TagKey"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreateS3Bucket": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableS3Bucket"
+        },
+        "True"
+      ]
+    },
+    "ServiceRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ServiceRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetAutoScaleGroups": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                0,
+                {
+                  "Ref": "AutoScalingGroups"
+                }
+              ]
+            },
+            "none"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "DeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "ServiceRole",
+            "Arn"
+          ]
+        },
+        "AutoScalingGroups": {
+          "Fn::If": [
+            "SetAutoScaleGroups",
+            {
+              "Ref": "AutoScalingGroups"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "DeploymentConfigName": {
+          "Ref": "DeploymentConfiguration"
+        },
+        "Ec2TagFilters": [
+          {
+            "Fn::If": [
+              "SetEc2TagFilters",
+              {
+                "Type": "KEY_AND_VALUE",
+                "Key": {
+                  "Ref": "EC2TagKey"
+                },
+                "Value": {
+                  "Ref": "EC2TagValue"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "DeploymentGroupName": {
+          "Fn::Sub": "${Environment}-${ApplicationName}"
+        },
+        "ApplicationName": {
+          "Ref": "ApplicationName"
+        }
+      },
+      "DependsOn": [
+        "ServiceRole"
+      ]
+    },
+    "ServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole",
+                  {
+                    "Fn::If": [
+                      "ServiceRolePoliciesSet",
+                      {
+                        "Ref": "ServiceRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codedeploy.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ConfigurationBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Condition": "CreateS3Bucket"
+    }
+  },
+  "Outputs": {
+    "DeploymentGroup": {
+      "Description": "The Deployment Group",
+      "Value": {
+        "Ref": "DeploymentGroup"
+      }
+    },
+    "ConfigurationBucket": {
+      "Value": {
+        "Ref": "ConfigurationBucket"
+      },
+      "Description": "S3 Bucket",
+      "Condition": "CreateS3Bucket"
+    }
+  }
+}

@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="s3-faws-template">S3 FAWS Template</h1>
+<p>s3.template - Creates the necessary S3 bucket. Please be aware that this template will create resources for which you will be charged. ### Parameters</p>
+<h4 id="website">Website</h4>
+<ul>
+<li>Default: <code>No</code></li>
+<li>ConstraintDescription: <code>Must be either Yes or No.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Website</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h4 id="accesscontrol">AccessControl</h4>
+<ul>
+<li>Default: <code>BucketOwnerFullControl</code></li>
+<li>ConstraintDescription: <code>Must be either AuthenticatedRead, AwsExecRead, BucketOwnerRead, BucketOwnerFullControl, LogDeliveryWrite, Private, PublicRead or PublicReadWrite.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Define ACL for Bucket</code></li>
+<li>AllowedValues: <code>['AuthenticatedRead', 'AwsExecRead', 'BucketOwnerRead', 'BucketOwnerFullControl', 'LogDeliveryWrite', 'Private', 'PublicRead', 'PublicReadWrite']</code></li>
+</ul>
+<h4 id="indexdocument">IndexDocument</h4>
+<ul>
+<li>Default: <code>index.html</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name for Index Document file</code></li>
+</ul>
+<h4 id="errordocument">ErrorDocument</h4>
+<ul>
+<li>Default: <code>error.html</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name for Error Document file</code></li>
+</ul>
+<h4 id="noncurrentversiontransitionindaysinfrequentaccess">NoncurrentVersionTransitionInDaysInfrequentAccess</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid number between 1 and 999.</code></li>
+<li>Description: <code>Indicates after how many days we are moving previous version objects to Standard-IA storage. Set to 0 to disable.</code></li>
+<li>Default: <code>0</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[0-9]+$</code></li>
+<li>MaxLength: <code>3</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="originidentityuserid">OriginIdentityUserId</h4>
+<ul>
+<li>Default: ``</li>
+<li>AllowedPattern: <code>^[a-f0-9]+$||^$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The S3CanonicalUserId property fron your CloudFront distribution.  If the Website parameter is enabled, and this parameter is provided, access will only be allowed from the associated CloudFront distribution.  (OPTIONAL)</code></li>
+<li>ConstraintDescription: <code>Must be a hexadecimal string</code></li>
+</ul>
+<h4 id="transitionindaysglacier">TransitionInDaysGlacier</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid number between 1 and 999.</code></li>
+<li>Description: <code>Indicates after how many days we are moving current versions to Glacier.  Should be 0 to disable or at least 30 days longer than TransitionInDaysInfrequentAccess.</code></li>
+<li>Default: <code>0</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[0-9]+$</code></li>
+<li>MaxLength: <code>3</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="destinationbucketname">DestinationBucketName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Where to store logs</code></li>
+</ul>
+<h4 id="expirationindays">ExpirationInDays</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid number between 1 and 999.</code></li>
+<li>Description: <code>Indicates after how many days we are deleting current version of objects.  Set to 0 to disable or at least 365 days longer than TransitionInDaysGlacier.</code></li>
+<li>Default: <code>0</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[0-9]+$</code></li>
+<li>MaxLength: <code>3</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="enablelogging">EnableLogging</h4>
+<ul>
+<li>Default: <code>No</code></li>
+<li>ConstraintDescription: <code>Must be either Yes or No.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Logging</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h4 id="logfileprefix">LogFilePrefix</h4>
+<ul>
+<li>Default: <code>logs/</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Prefix for all log object keys</code></li>
+</ul>
+<h4 id="noncurrentversionexpirationindays">NoncurrentVersionExpirationInDays</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid number between 1 and 999.</code></li>
+<li>Description: <code>Indicates after how many days we are deleting previous version of objects.  Set to 0 to disable or at least 365 days longer than NoncurrentVersionTransitionInDaysGlacier.</code></li>
+<li>Default: <code>0</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[0-9]+$</code></li>
+<li>MaxLength: <code>3</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="prefix">Prefix</h4>
+<ul>
+<li>Default: <code>glacier</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Prefix for Lifecycle Rule Objects</code></li>
+</ul>
+<h4 id="transitionindaysinfrequentaccess">TransitionInDaysInfrequentAccess</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid number between 1 and 999.</code></li>
+<li>Description: <code>Indicates after how many days we are moving current objects to Standard-IA storage. Set to 0 to disable.</code></li>
+<li>Default: <code>0</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[0-9]+$</code></li>
+<li>MaxLength: <code>3</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="bucketname">BucketName</h4>
+<ul>
+<li>AllowedPattern: <code>([a-z0-9\.-]+)</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>The bucket name must contain only lowercase letters, numbers, periods (.), and dashes (-).</code></li>
+<li>Description: <code>The name of the bucket to use. Must be unique.</code></li>
+</ul>
+<h4 id="serversideencryption">ServerSideEncryption</h4>
+<ul>
+<li>Default: <code>No</code></li>
+<li>ConstraintDescription: <code>Must be either Yes or No.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Server Side Encryption</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h4 id="noncurrentversiontransitionindaysglacier">NoncurrentVersionTransitionInDaysGlacier</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid number between 1 and 999.</code></li>
+<li>Description: <code>Indicates after how many days we are moving previous versions to Glacier.  Should be 0 to disable or at least 30 days longer than NoncurrentVersionTransitionInDaysInfrequentAccess.</code></li>
+<li>Default: <code>0</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[0-9]+$</code></li>
+<li>MaxLength: <code>3</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="lifecycle">LifeCycle</h4>
+<ul>
+<li>Default: <code>No</code></li>
+<li>ConstraintDescription: <code>Must be either Yes or No.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable LifeCycle config.  If enabled, one of the available transitions in this section must be enabled.</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h4 id="versioning">Versioning</h4>
+<ul>
+<li>Default: <code>No</code></li>
+<li>ConstraintDescription: <code>Must be either Yes or No.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Versioning</code></li>
+<li>AllowedValues: <code>['Yes', 'No']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>BucketARN</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

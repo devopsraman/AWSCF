@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="securitygroup-faws-template">Securitygroup FAWS Template</h1>
+<p>securitygroup.template - Template for the security groups. ### Parameters</p>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>Select Virtual Private Cloud ID.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>PublicRDPSecurityGroup</code></li>
+<li><code>ElasticCacheMemcacheSecurityGroup</code></li>
+<li><code>PublicSSHSecurityGroup</code></li>
+<li><code>PrivateWebSecurityGroup</code></li>
+<li><code>NFSSecurityGroup</code></li>
+<li><code>MySQLSecurityGroup</code></li>
+<li><code>MSSQLSecurityGroup</code></li>
+<li><code>PrivateSSHSecurityGroup</code></li>
+<li><code>PrivateECSSecurityGroup</code></li>
+<li><code>EFSSecurityGroup</code></li>
+<li><code>PublicWebSecurityGroup</code></li>
+<li><code>OracleSecurityGroup</code></li>
+<li><code>RedshiftSecurityGroup</code></li>
+<li><code>ElasticCacheRedisSecurityGroup</code></li>
+<li><code>PostgresSecurityGroup</code></li>
+<li><code>PrivateRDPSecurityGroup</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

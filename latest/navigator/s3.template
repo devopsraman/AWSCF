@@ -1,0 +1,762 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "s3.template - Creates the necessary S3 bucket. Please be aware that this template will create resources for which you will be charged.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "IndexDocument",
+            "ErrorDocument"
+          ],
+          "Label": {
+            "default": "Website Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "DestinationBucketName",
+            "LogFilePrefix"
+          ],
+          "Label": {
+            "default": "Logging Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "Website",
+            "AccessControl",
+            "OriginIdentityUserId",
+            "EnableLogging",
+            "BucketName",
+            "ServerSideEncryption",
+            "Versioning"
+          ],
+          "Label": {
+            "default": "Bucket Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "NoncurrentVersionTransitionInDaysInfrequentAccess",
+            "TransitionInDaysGlacier",
+            "ExpirationInDays",
+            "NoncurrentVersionExpirationInDays",
+            "Prefix",
+            "TransitionInDaysInfrequentAccess",
+            "NoncurrentVersionTransitionInDaysGlacier",
+            "LifeCycle"
+          ],
+          "Label": {
+            "default": "LifeCycle Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Website": {
+      "Default": "No",
+      "ConstraintDescription": "Must be either Yes or No.",
+      "Type": "String",
+      "Description": "Enable Website",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ]
+    },
+    "AccessControl": {
+      "Default": "BucketOwnerFullControl",
+      "ConstraintDescription": "Must be either AuthenticatedRead, AwsExecRead, BucketOwnerRead, BucketOwnerFullControl, LogDeliveryWrite, Private, PublicRead or PublicReadWrite.",
+      "Type": "String",
+      "Description": "Define ACL for Bucket",
+      "AllowedValues": [
+        "AuthenticatedRead",
+        "AwsExecRead",
+        "BucketOwnerRead",
+        "BucketOwnerFullControl",
+        "LogDeliveryWrite",
+        "Private",
+        "PublicRead",
+        "PublicReadWrite"
+      ]
+    },
+    "IndexDocument": {
+      "Default": "index.html",
+      "Type": "String",
+      "Description": "Name for Index Document file"
+    },
+    "ErrorDocument": {
+      "Default": "error.html",
+      "Type": "String",
+      "Description": "Name for Error Document file"
+    },
+    "NoncurrentVersionTransitionInDaysInfrequentAccess": {
+      "ConstraintDescription": "Must be a valid number between 1 and 999.",
+      "Description": "Indicates after how many days we are moving previous version objects to Standard-IA storage. Set to 0 to disable.",
+      "Default": "0",
+      "MinLength": "1",
+      "AllowedPattern": "^[0-9]+$",
+      "MaxLength": "3",
+      "Type": "String"
+    },
+    "OriginIdentityUserId": {
+      "Default": "",
+      "AllowedPattern": "^[a-f0-9]+$||^$",
+      "Type": "String",
+      "Description": "The S3CanonicalUserId property fron your CloudFront distribution.  If the Website parameter is enabled, and this parameter is provided, access will only be allowed from the associated CloudFront distribution.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a hexadecimal string"
+    },
+    "TransitionInDaysGlacier": {
+      "ConstraintDescription": "Must be a valid number between 1 and 999.",
+      "Description": "Indicates after how many days we are moving current versions to Glacier.  Should be 0 to disable or at least 30 days longer than TransitionInDaysInfrequentAccess.",
+      "Default": "0",
+      "MinLength": "1",
+      "AllowedPattern": "^[0-9]+$",
+      "MaxLength": "3",
+      "Type": "String"
+    },
+    "DestinationBucketName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Where to store logs"
+    },
+    "ServerSideEncryption": {
+      "Default": "No",
+      "ConstraintDescription": "Must be either Yes or No.",
+      "Type": "String",
+      "Description": "Enable Server Side Encryption",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ]
+    },
+    "EnableLogging": {
+      "Default": "No",
+      "ConstraintDescription": "Must be either Yes or No.",
+      "Type": "String",
+      "Description": "Enable Logging",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ]
+    },
+    "LifeCycle": {
+      "Default": "No",
+      "ConstraintDescription": "Must be either Yes or No.",
+      "Type": "String",
+      "Description": "Enable LifeCycle config.  If enabled, one of the available transitions in this section must be enabled.",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ]
+    },
+    "NoncurrentVersionExpirationInDays": {
+      "ConstraintDescription": "Must be a valid number between 1 and 999.",
+      "Description": "Indicates after how many days we are deleting previous version of objects.  Set to 0 to disable or at least 365 days longer than NoncurrentVersionTransitionInDaysGlacier.",
+      "Default": "0",
+      "MinLength": "1",
+      "AllowedPattern": "^[0-9]+$",
+      "MaxLength": "3",
+      "Type": "String"
+    },
+    "Versioning": {
+      "Default": "No",
+      "ConstraintDescription": "Must be either Yes or No.",
+      "Type": "String",
+      "Description": "Enable Versioning",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ]
+    },
+    "Prefix": {
+      "Default": "glacier",
+      "Type": "String",
+      "Description": "Prefix for Lifecycle Rule Objects"
+    },
+    "TransitionInDaysInfrequentAccess": {
+      "ConstraintDescription": "Must be a valid number between 1 and 999.",
+      "Description": "Indicates after how many days we are moving current objects to Standard-IA storage. Set to 0 to disable.",
+      "Default": "0",
+      "MinLength": "1",
+      "AllowedPattern": "^[0-9]+$",
+      "MaxLength": "3",
+      "Type": "String"
+    },
+    "BucketName": {
+      "AllowedPattern": "([a-z0-9\\.-]+)",
+      "Type": "String",
+      "ConstraintDescription": "The bucket name must contain only lowercase letters, numbers, periods (.), and dashes (-).",
+      "Description": "The name of the bucket to use. Must be unique."
+    },
+    "ExpirationInDays": {
+      "ConstraintDescription": "Must be a valid number between 1 and 999.",
+      "Description": "Indicates after how many days we are deleting current version of objects.  Set to 0 to disable or at least 365 days longer than TransitionInDaysGlacier.",
+      "Default": "0",
+      "MinLength": "1",
+      "AllowedPattern": "^[0-9]+$",
+      "MaxLength": "3",
+      "Type": "String"
+    },
+    "NoncurrentVersionTransitionInDaysGlacier": {
+      "ConstraintDescription": "Must be a valid number between 1 and 999.",
+      "Description": "Indicates after how many days we are moving previous versions to Glacier.  Should be 0 to disable or at least 30 days longer than NoncurrentVersionTransitionInDaysInfrequentAccess.",
+      "Default": "0",
+      "MinLength": "1",
+      "AllowedPattern": "^[0-9]+$",
+      "MaxLength": "3",
+      "Type": "String"
+    },
+    "LogFilePrefix": {
+      "Default": "logs/",
+      "Type": "String",
+      "Description": "Prefix for all log object keys"
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    }
+  },
+  "Conditions": {
+    "Website": {
+      "Fn::Equals": [
+        {
+          "Ref": "Website"
+        },
+        "Yes"
+      ]
+    },
+    "SetNoncurrentVersionTransitionInDaysIA": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NoncurrentVersionTransitionInDaysInfrequentAccess"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "SetNoncurrentVersionExpirationInDays": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NoncurrentVersionExpirationInDays"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "Logging": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableLogging"
+        },
+        "Yes"
+      ]
+    },
+    "SetTransitionInDaysGlacier": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TransitionInDaysGlacier"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "SetOAI": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "OriginIdentityUserId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SseWithoutWebsite": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ServerSideEncryption"
+            },
+            "Yes"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Website"
+            },
+            "No"
+          ]
+        }
+      ]
+    },
+    "SetTransitionInDaysIA": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TransitionInDaysInfrequentAccess"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "EnableLifecycle": {
+      "Fn::Equals": [
+        {
+          "Ref": "LifeCycle"
+        },
+        "Yes"
+      ]
+    },
+    "ServerSideEncryption": {
+      "Fn::Equals": [
+        {
+          "Ref": "ServerSideEncryption"
+        },
+        "Yes"
+      ]
+    },
+    "SetExpirationInDays": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ExpirationInDays"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "SetNoncurrentVersionTransitionInDaysGlacier": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NoncurrentVersionTransitionInDaysGlacier"
+            },
+            "0"
+          ]
+        }
+      ]
+    },
+    "WebsiteAndSse": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ServerSideEncryption"
+            },
+            "Yes"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Website"
+            },
+            "Yes"
+          ]
+        }
+      ]
+    },
+    "WebsiteWithoutSse": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ServerSideEncryption"
+            },
+            "No"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Website"
+            },
+            "Yes"
+          ]
+        }
+      ]
+    },
+    "Versioning": {
+      "Fn::Equals": [
+        {
+          "Ref": "Versioning"
+        },
+        "Yes"
+      ]
+    }
+  },
+  "Resources": {
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": {
+          "Ref": "AccessControl"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "LoggingConfiguration": {
+          "Fn::If": [
+            "Logging",
+            {
+              "DestinationBucketName": {
+                "Ref": "DestinationBucketName"
+              },
+              "LogFilePrefix": {
+                "Ref": "LogFilePrefix"
+              }
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "LifecycleConfiguration": {
+          "Fn::If": [
+            "EnableLifecycle",
+            {
+              "Rules": [
+                {
+                  "Status": "Enabled",
+                  "NoncurrentVersionExpirationInDays": {
+                    "Fn::If": [
+                      "SetNoncurrentVersionExpirationInDays",
+                      {
+                        "Ref": "NoncurrentVersionExpirationInDays"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  },
+                  "NoncurrentVersionTransitions": [
+                    {
+                      "Fn::If": [
+                        "SetNoncurrentVersionTransitionInDaysIA",
+                        {
+                          "TransitionInDays": {
+                            "Ref": "NoncurrentVersionTransitionInDaysInfrequentAccess"
+                          },
+                          "StorageClass": "STANDARD_IA"
+                        },
+                        {
+                          "Ref": "AWS::NoValue"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::If": [
+                        "SetNoncurrentVersionTransitionInDaysGlacier",
+                        {
+                          "TransitionInDays": {
+                            "Ref": "NoncurrentVersionTransitionInDaysGlacier"
+                          },
+                          "StorageClass": "GLACIER"
+                        },
+                        {
+                          "Ref": "AWS::NoValue"
+                        }
+                      ]
+                    }
+                  ],
+                  "Prefix": {
+                    "Ref": "Prefix"
+                  },
+                  "ExpirationInDays": {
+                    "Fn::If": [
+                      "SetExpirationInDays",
+                      {
+                        "Ref": "ExpirationInDays"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  },
+                  "Transitions": [
+                    {
+                      "Fn::If": [
+                        "SetTransitionInDaysIA",
+                        {
+                          "TransitionInDays": {
+                            "Ref": "TransitionInDaysInfrequentAccess"
+                          },
+                          "StorageClass": "STANDARD_IA"
+                        },
+                        {
+                          "Ref": "AWS::NoValue"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::If": [
+                        "SetTransitionInDaysGlacier",
+                        {
+                          "TransitionInDays": {
+                            "Ref": "TransitionInDaysGlacier"
+                          },
+                          "StorageClass": "GLACIER"
+                        },
+                        {
+                          "Ref": "AWS::NoValue"
+                        }
+                      ]
+                    }
+                  ],
+                  "Id": "LifecycleRule"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "BucketName": {
+          "Ref": "BucketName"
+        },
+        "WebsiteConfiguration": {
+          "Fn::If": [
+            "Website",
+            {
+              "IndexDocument": {
+                "Ref": "IndexDocument"
+              },
+              "ErrorDocument": {
+                "Ref": "ErrorDocument"
+              }
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VersioningConfiguration": {
+          "Fn::If": [
+            "Versioning",
+            {
+              "Status": "Enabled"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "ServerSideEncryptionWithWebsitePolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Deny",
+              "Condition": {
+                "StringNotEquals": {
+                  "s3:x-amz-server-side-encryption": "AES256"
+                }
+              },
+              "Principal": "*"
+            },
+            {
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Deny",
+              "Condition": {
+                "Null": {
+                  "s3:x-amz-server-side-encryption": "true"
+                }
+              },
+              "Principal": "*"
+            },
+            {
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Deny",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              },
+              "Principal": "*"
+            },
+            {
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Fn::If": [
+                  "SetOAI",
+                  {
+                    "CanonicalUser": {
+                      "Ref": "OriginIdentityUserId"
+                    }
+                  },
+                  "*"
+                ]
+              }
+            }
+          ]
+        },
+        "Bucket": {
+          "Ref": "S3Bucket"
+        }
+      },
+      "Condition": "WebsiteAndSse"
+    },
+    "ServerSideEncryptionPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Deny",
+              "Condition": {
+                "StringNotEquals": {
+                  "s3:x-amz-server-side-encryption": "AES256"
+                }
+              },
+              "Principal": "*"
+            },
+            {
+              "Action": "s3:PutObject",
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Deny",
+              "Condition": {
+                "Null": {
+                  "s3:x-amz-server-side-encryption": "true"
+                }
+              },
+              "Principal": "*"
+            },
+            {
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Deny",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              },
+              "Principal": "*"
+            }
+          ]
+        },
+        "Bucket": {
+          "Ref": "S3Bucket"
+        }
+      },
+      "Condition": "SseWithoutWebsite"
+    },
+    "S3BucketwithWebsitePolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": {
+                "Fn::Sub": "${S3Bucket.Arn}/*"
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Fn::If": [
+                  "SetOAI",
+                  {
+                    "CanonicalUser": {
+                      "Ref": "OriginIdentityUserId"
+                    }
+                  },
+                  "*"
+                ]
+              }
+            }
+          ]
+        },
+        "Bucket": {
+          "Ref": "S3Bucket"
+        }
+      },
+      "Condition": "WebsiteWithoutSse"
+    }
+  },
+  "Outputs": {
+    "BucketARN": {
+      "Description": "S3 bucket ARN",
+      "Value": {
+        "Fn::GetAtt": [
+          "S3Bucket",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

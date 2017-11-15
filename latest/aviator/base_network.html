@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="basenetwork-faws-template">BaseNetwork FAWS Template</h1>
+<p>base_network.template - Base VPC, Network, and NAT gateways. Please be aware that this template will create resources for which you will be charged. ### Parameters</p>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="instancetenancy">InstanceTenancy</h4>
+<ul>
+<li>Default: <code>default</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Must be either 'default' for multi-tenant hypervisor or 'dedicated' for single tenant hypervisor.</code></li>
+<li>Description: <code>VPC default for single tenant (dedicated) vs multi-tenant (default) hypervisor. Overrides instance level tenancy option.</code></li>
+<li>AllowedValues: <code>['default', 'dedicated']</code></li>
+</ul>
+<h4 id="availabilityzonecount">AvailabilityZoneCount</h4>
+<ul>
+<li>Default: <code>2 AZs :: 4 Subnets</code></li>
+<li>ConstraintDescription: <code>Must be either 2 or 3.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of Availability Zones (3 AZs needs a use case)</code></li>
+<li>AllowedValues: <code>['1 AZ :: 2 Subnets', '2 AZs :: 4 Subnets', '3 AZs :: 6 Subnets']</code></li>
+</ul>
+<h4 id="publicsubnetaz1">PublicSubnetAZ1</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>Public IP subnet used for AZ1.  Default &quot;172.18.168.0/22&quot;</code></li>
+<li>Default: <code>172.18.168.0/22</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="privatesubnetaz1">PrivateSubnetAZ1</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>Private IP subnet used for AZ1.  Default &quot;172.18.0.0/21&quot;</code></li>
+<li>Default: <code>172.18.0.0/21</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="privatesubnetaz3">PrivateSubnetAZ3</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>(Conditional) Private IP subnet used for AZ3.  Default &quot;172.18.16.0/21&quot;</code></li>
+<li>Default: <code>172.18.16.0/21</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="privatesubnetaz2">PrivateSubnetAZ2</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>Private IP subnet used for AZ2.  Default &quot;172.18.8.0/21&quot;</code></li>
+<li>Default: <code>172.18.8.0/21</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="customazlist">CustomAZList</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>Ordered list of Availability Zones to use for the VPC.  If not provided, the full AZ list for the region is used. (OPTIONAL)</code></li>
+</ul>
+<h4 id="secondarycidrrange">SecondaryCIDRRange</h4>
+<ul>
+<li>Description: <code>The secondary IP address space to be used for this VPC, in CIDR notation.  (OPTIONAL)</code></li>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/(1[6-9]|2[0-8])$||^$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x between /16 and /28</code></li>
+</ul>
+<h4 id="publicsubnetaz2">PublicSubnetAZ2</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>Public IP subnet used for AZ2.  Default &quot;172.18.172.0/22&quot;</code></li>
+<li>Default: <code>172.18.172.0/22</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="cust.htmlnslist">CustomDNSList</h4>
+<ul>
+<li>Default: <code>AmazonProvidedDNS</code></li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>List of DNS Servers to use for the VPC.  'AmazonProvidedDNS' can be used to reference the AWS provided DNS servers. (OPTIONAL)</code></li>
+</ul>
+<h4 id="cidrrange">CIDRRange</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>The IP address space to be used for this VPC, in CIDR notation</code></li>
+<li>Default: <code>172.18.0.0/16</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="publicsubnetaz3">PublicSubnetAZ3</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x/x</code></li>
+<li>Description: <code>(Conditional) Public IP subnet used for AZ3.  Default &quot;172.18.176.0/22&quot;</code></li>
+<li>Default: <code>172.18.176.0/22</code></li>
+<li>MinLength: <code>9</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+\/[0-9]+$</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="vpngateway">VPNGateway</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Creates a virtual private gateway. A virtual private gateway is the VPC-side endpoint for your VPN connection.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="cust.htmlomainname">CustomDomainName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The custom Domain name to use for the VPC.  Leave blank to use the default generated domain name.  (OPTIONAL)</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>VPCID</code></li>
+<li><code>SubnetPrivateAZ3</code></li>
+<li><code>SubnetPrivateAZ2</code></li>
+<li><code>SubnetPrivateAZ1</code></li>
+<li><code>SubnetPublicAZ3</code></li>
+<li><code>PrivateSubnets</code></li>
+<li><code>Environment</code></li>
+<li><code>CIDRRange</code></li>
+<li><code>SubnetPublicAZ1</code></li>
+<li><code>SubnetPublicAZ2</code></li>
+<li><code>PublicSubnets</code></li>
+<li><code>DefaultSG</code></li>
+<li><code>VPNGateway</code></li>
+<li><code>RouteTablePrivateAZ1</code></li>
+<li><code>RouteTablePrivateAZ3</code></li>
+<li><code>RouteTablePrivateAZ2</code></li>
+<li><code>ElasticIP1</code></li>
+<li><code>ElasticIP2</code></li>
+<li><code>ElasticIP3</code></li>
+<li><code>RouteTablePublic</code></li>
+<li><code>CidrBlockAssociations</code></li>
+<li><code>RouteTables</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

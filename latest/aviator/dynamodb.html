@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="dynamodb-faws-template">Dynamodb FAWS Template</h1>
+<p>dynamodb.template - DynamoDB Template. Creates a DynamoDB table. ### Parameters</p>
+<h4 id="writecapacityunits">WriteCapacityUnits</h4>
+<ul>
+<li>Description: <code>Provisioned write throughput.</code></li>
+<li>Default: <code>10</code></li>
+<li>ConstraintDescription: <code>should be between 5 and 10000</code></li>
+<li>MaxValue: <code>10000</code></li>
+<li>MinValue: <code>5</code></li>
+<li>Type: <code>Number</code></li>
+</ul>
+<h4 id="rangekeyelementtype">RangeKeyElementType</h4>
+<ul>
+<li>ConstraintDescription: <code>must be either S (String) or N (Numeric)</code></li>
+<li>Description: <code>RangeType PrimaryKey Type.</code></li>
+<li>Default: <code>S</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>[S|N]</code></li>
+<li>MaxLength: <code>1</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="tablename">TableName</h4>
+<ul>
+<li>Default: ``</li>
+<li>AllowedPattern: <code>^[a-zA-Z0-9_.-]{3,255}$||^$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Desired Table Name. (OPTIONAL) If you specify a name, you cannot perform updates that require replacement of this resource.  You can perform updates that require no or some interruption. If you must replace the resource, specify a new name.</code></li>
+<li>ConstraintDescription: <code>must contain only alphanumberic characters and be between 3 and 255 characters in length</code></li>
+</ul>
+<h4 id="haskkeyelementname">HaskKeyElementName</h4>
+<ul>
+<li>Description: <code>HashType PrimaryKey Name.</code></li>
+<li>MinLength: <code>1</code></li>
+<li>MaxLength: <code>2048</code></li>
+<li>AllowedPattern: <code>[a-zA-Z0-9-_.]*</code></li>
+<li>ConstraintDescription: <code>must contain only alphanumberic characters, dash (-), underscore (_) or dot (.)</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="readcapacityunits">ReadCapacityUnits</h4>
+<ul>
+<li>Description: <code>Provisioned read throughput.</code></li>
+<li>Default: <code>5</code></li>
+<li>ConstraintDescription: <code>should be between 5 and 10000</code></li>
+<li>MaxValue: <code>10000</code></li>
+<li>MinValue: <code>5</code></li>
+<li>Type: <code>Number</code></li>
+</ul>
+<h4 id="haskkeyelementtype">HaskKeyElementType</h4>
+<ul>
+<li>ConstraintDescription: <code>must be either S (String) or N (Numeric)</code></li>
+<li>Description: <code>HashType PrimaryKey Type.</code></li>
+<li>Default: <code>S</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>[S|N]</code></li>
+<li>MaxLength: <code>1</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="rangekeyelementname">RangeKeyElementName</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>RangeType PrimaryKey Name. (OPTIONAL)</code></li>
+<li>Default: ``</li>
+<li>MinLength: <code>0</code></li>
+<li>AllowedPattern: <code>[a-zA-Z0-9-_.]*</code></li>
+<li>MaxLength: <code>2048</code></li>
+<li>ConstraintDescription: <code>must contain only alphanumberic characters, dash (-), underscore (_) or dot (.)</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>DynamoDBTable</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

@@ -1,0 +1,271 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security Group template for the testing template.",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID."
+    }
+  },
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "PublicRDPSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": {
+          "ToPort": 3389,
+          "IpProtocol": "tcp",
+          "CidrIp": "0.0.0.0/0",
+          "FromPort": 3389
+        },
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public RDP traffic."
+      }
+    },
+    "PublicSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public SSH traffic."
+      }
+    },
+    "ElasticCacheRedisSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 6379, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 6379}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow ElasticCache Redis traffic."
+      }
+    },
+    "NFSSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 111, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 111},
+          {"ToPort": 111, "IpProtocol": "udp", "CidrIp": "0.0.0.0/0", "FromPort": 111},
+          {"ToPort": 2049, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 2049},
+          {"ToPort": 2049, "IpProtocol": "udp", "CidrIp": "0.0.0.0/0", "FromPort": 2049}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow NFS traffic."
+      }
+    },
+    "MySQLSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 3306, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 3306}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow MySQL traffic."
+      }
+    },
+    "MSSQLSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": {
+          "ToPort": 1433,
+          "IpProtocol": "tcp",
+          "CidrIp": "0.0.0.0/0",
+          "FromPort": 1433
+        },
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow MSSQL traffic."
+      }
+    },
+    "PrivateSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicSSHSecurityGroup"}, "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private SSH traffic from load balancer."
+      }
+    },
+    "PublicWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 80},
+          {"ToPort": 443, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 443}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public WEB traffic."
+      }
+    },
+    "PrivateWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80},
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private WEB traffic from load balancer."
+      }
+    },
+    "ElasticCacheMemcacheSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 11211, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 11211}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow ElasticCache Memcache traffic."
+      }
+    },
+    "EFSSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 2049, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 2049}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow ElasticCache Memcache traffic."
+      }
+    },
+    "PrivateRDPSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": {
+          "ToPort": 3389,
+          "IpProtocol": "tcp",
+          "SourceSecurityGroupId": {"Ref": "PublicRDPSecurityGroup"},
+          "FromPort": 3389
+        },
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private RDP traffic from load balancer."
+      }
+    }
+  },
+  "Outputs": {
+    "outputPublicRDPSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicRDPSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputNFSSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "NFSSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputMySQLSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MySQLSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateRDPSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateRDPSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputEFSSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "EFSSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputElasticCacheMemcacheSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ElasticCacheMemcacheSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputMSSQLSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MSSQLSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputElasticCacheRedisSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ElasticCacheRedisSecurityGroup",
+          "GroupId"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="vpcendpoint-faws-template">VpcEndpoint FAWS Template</h1>
+<p>vpc_endpoint.template - Setup VPC endpoints for services that support them, as well as an all access IAM policy ### Parameters</p>
+<h4 id="routetableidslist">RouteTableIdsList</h4>
+<ul>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>List of Route Table ID's for each AZ</code></li>
+</ul>
+<h4 id="dynamodbendpointenable">DynamoDBEndpointEnable</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable/Disable the DynamoDB VPC endpoint</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>Select Virtual Private Cloud ID</code></li>
+</ul>
+<h4 id="s3endpointenable">S3EndpointEnable</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable/Disable the S3 VPC endpoint</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>S3VPCEndpoint</code></li>
+<li><code>DynamoDBVPCEndpoint</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

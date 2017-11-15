@@ -1,0 +1,510 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Rackspace Hosting - Create a VPC Peering Template",
+  "Parameters": {
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID"
+    },
+    "VpcRoutingTables": {
+      "Type": "CommaDelimitedList",
+      "Description": "Comma delimited list of VPC routing tables"
+    },
+    "PeerRoutingTablesCount": {
+      "Default": "3",
+      "Type": "String",
+      "Description": "The number of peer routing tables to update.",
+      "AllowedValues": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "PeerVPCCIDRRange": {
+      "Default": "172.19.0.0/16",
+      "Type": "String",
+      "Description": "Peer VPC CIDR Range e.g. 172.19.0.0/16"
+    },
+    "PeerOwnerId": {
+      "AllowedPattern": "^[0-9]*$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The AWS account ID of the owner of the VPC that you want to peer with",
+      "ConstraintDescription": "Must be a numeric account ID."
+    },
+    "PeerVPCID": {
+      "Type": "String",
+      "Description": "Existing VPC Id to peer to"
+    },
+    "VPCCIDRRange": {
+      "Default": "172.18.0.0/16",
+      "Type": "String",
+      "Description": "VPC CIDR Range e.g. 172.18.0.0/16"
+    },
+    "VpcRoutingTablesCount": {
+      "Default": "3",
+      "Type": "String",
+      "Description": "The number of vpc routing tables to update.",
+      "AllowedValues": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "PeerRoutingTables": {
+      "Type": "CommaDelimitedList",
+      "Description": "Comma delimited list of Peer routing tables"
+    },
+    "PeerRoleArn": {
+      "AllowedPattern": "^(arn:aws:iam::[0-9]+:role/.+)?$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Name (ARN) of the VPC peer role for the peering connection in another AWS account.",
+      "ConstraintDescription": "Must match the pattern arn:aws:iam::[0-9]+:role/.+"
+    }
+  },
+  "Conditions": {
+    "CreatePeerRT3": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Condition": "setPeerOwnerId"
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "PeerRoutingTablesCount"
+                },
+                "3"
+              ]
+            },
+            {
+              "Condition": "CreatePeerRT4"
+            }
+          ]
+        }
+      ]
+    },
+    "CreatePeerRT2": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Condition": "setPeerOwnerId"
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "PeerRoutingTablesCount"
+                },
+                "2"
+              ]
+            },
+            {
+              "Condition": "CreatePeerRT3"
+            }
+          ]
+        }
+      ]
+    },
+    "CreatePeerRT1": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Condition": "setPeerOwnerId"
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "PeerRoutingTablesCount"
+                },
+                "1"
+              ]
+            },
+            {
+              "Condition": "CreatePeerRT2"
+            }
+          ]
+        }
+      ]
+    },
+    "setPeerOwnerId": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "PeerOwnerId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreatePeerRT5": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Condition": "setPeerOwnerId"
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "PeerRoutingTablesCount"
+            },
+            5
+          ]
+        }
+      ]
+    },
+    "CreatePeerRT4": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Condition": "setPeerOwnerId"
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "PeerRoutingTablesCount"
+                },
+                "4"
+              ]
+            },
+            {
+              "Condition": "CreatePeerRT5"
+            }
+          ]
+        }
+      ]
+    },
+    "CreateRT3": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcRoutingTablesCount"
+            },
+            "3"
+          ]
+        },
+        {
+          "Condition": "CreateRT4"
+        }
+      ]
+    },
+    "CreateRT2": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcRoutingTablesCount"
+            },
+            "2"
+          ]
+        },
+        {
+          "Condition": "CreateRT3"
+        }
+      ]
+    },
+    "CreateRT1": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcRoutingTablesCount"
+            },
+            "1"
+          ]
+        },
+        {
+          "Condition": "CreateRT2"
+        }
+      ]
+    },
+    "CreateRT5": {
+      "Fn::Equals": [
+        {
+          "Ref": "VpcRoutingTablesCount"
+        },
+        5
+      ]
+    },
+    "CreateRT4": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "VpcRoutingTablesCount"
+            },
+            "4"
+          ]
+        },
+        {
+          "Condition": "CreateRT5"
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "PeerRoute3": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            2,
+            {
+              "Ref": "PeerRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreatePeerRT3"
+    },
+    "PeerRoute2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            1,
+            {
+              "Ref": "PeerRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreatePeerRT2"
+    },
+    "PeerRoute1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "PeerRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreatePeerRT1"
+    },
+    "PeerRoute5": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            4,
+            {
+              "Ref": "PeerRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreatePeerRT5"
+    },
+    "PeerRoute4": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "VPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            3,
+            {
+              "Ref": "PeerRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreatePeerRT4"
+    },
+    "VpcRoute5": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "PeerVPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            4,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreateRT5"
+    },
+    "VpcRoute4": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "PeerVPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            3,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreateRT4"
+    },
+    "VpcRoute1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "PeerVPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreateRT1"
+    },
+    "VpcRoute3": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "PeerVPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            2,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreateRT3"
+    },
+    "VpcRoute2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": {
+          "Ref": "PeerVPCCIDRRange"
+        },
+        "RouteTableId": {
+          "Fn::Select": [
+            1,
+            {
+              "Ref": "VpcRoutingTables"
+            }
+          ]
+        },
+        "VpcPeeringConnectionId": {
+          "Ref": "myVPCPeeringConnection"
+        }
+      },
+      "Condition": "CreateRT2"
+    },
+    "myVPCPeeringConnection": {
+      "Type": "AWS::EC2::VPCPeeringConnection",
+      "Properties": {
+        "PeerOwnerId": {
+          "Fn::If": [
+            "setPeerOwnerId",
+            {
+              "Ref": "PeerOwnerId"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "PeerRoleArn": {
+          "Fn::If": [
+            "setPeerOwnerId",
+            {
+              "Ref": "PeerRoleArn"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "PeerVpcId": {
+          "Ref": "PeerVPCID"
+        },
+        "VpcId": {
+          "Ref": "VPCID"
+        }
+      }
+    }
+  }
+}

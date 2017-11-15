@@ -1,0 +1,1384 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "DBADeploy.template - Deploy RDBA workstation to access RDS instances.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "EC2Subnets",
+            "VPCID"
+          ],
+          "Label": {
+            "default": "VPC Settings"
+          }
+        },
+        {
+          "Parameters": [
+            "EbsVolumeSize",
+            "LinuxWorkstation",
+            "KeyName",
+            "InstanceType",
+            "WindowsWorkstation"
+          ],
+          "Label": {
+            "default": "Instance Settings"
+          }
+        },
+        {
+          "Parameters": [
+            "ScalingTimeOut",
+            "ScalingTermination",
+            "ScalingMin",
+            "ScalingMax"
+          ],
+          "Label": {
+            "default": "AutoScaling Configuration"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "ScalingTimeOut": {
+          "default": "Create Signal Timeout"
+        },
+        "EbsVolumeSize": {
+          "default": "EBS Volume Size"
+        },
+        "ScalingTermination": {
+          "default": "Termination Count"
+        },
+        "KeyName": {
+          "default": "SSH Key Name"
+        },
+        "ScalingMin": {
+          "default": "Mininum Instances"
+        },
+        "ScalingMax": {
+          "default": "Maximum Instances"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "EC2Subnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnet where the instance will be deployed"
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "VPC to deploy EC2 instance."
+    },
+    "ScalingTimeOut": {
+      "Default": "30M",
+      "Type": "String",
+      "ConstraintDescription": "#H#M#S where each # is the number of hours or minutes or seconds",
+      "Description": "Time to wait for the number of signals equal to ScalingMin. H/M/S Hours/Minutes/Seconds"
+    },
+    "EbsVolumeSize": {
+      "Default": "60",
+      "Type": "Number",
+      "Description": "Select EBS Volume Size in GB.",
+      "MinValue": "0"
+    },
+    "LinuxWorkstation": {
+      "Default": "None",
+      "Type": "String",
+      "Description": "Deploy a Linux Workstation",
+      "AllowedValues": [
+        "Deploy",
+        "None"
+      ]
+    },
+    "DbConnectLambdaRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the DbConnectLambdaRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "InstanceRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "ScalingTermination": {
+      "Default": "1",
+      "ConstraintDescription": "Must be a valid integer.",
+      "Type": "Number",
+      "Description": "The maximum number of instances that are terminated at a given time.",
+      "MinValue": "1"
+    },
+    "LambdaFunctionName": {
+      "Default": "DBATagSupport",
+      "Type": "String",
+      "Description": "The name to assign to the Lambda Function"
+    },
+    "KeyName": {
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair.",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Provides the name of the EC2 key pair."
+    },
+    "ScalingMin": {
+      "Default": "1",
+      "ConstraintDescription": "Must be a valid integer.",
+      "Type": "Number",
+      "Description": "The minimum size of the Auto Scaling group.",
+      "MinValue": "0"
+    },
+    "ScalingMax": {
+      "Default": "1",
+      "ConstraintDescription": "Must be a valid integer.",
+      "Type": "Number",
+      "Description": "The maximum size of the Auto Scaling group.",
+      "MinValue": "0"
+    },
+    "InstanceType": {
+      "Default": "t2.micro",
+      "Type": "String",
+      "ConstraintDescription": "Must be a valid EC2 instance type. Default is t2.micro",
+      "Description": "EC2 instance type.",
+      "AllowedValues": [
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "t2.xlarge",
+        "t2.2xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m4.16xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "r4.large",
+        "r4.xlarge",
+        "r4.2xlarge",
+        "r4.4xlarge",
+        "r4.8xlarge",
+        "r4.16xlarge",
+        "x1.16xlarge",
+        "x1.32xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "i3.large",
+        "i3.xlarge",
+        "i3.2xlarge",
+        "i3.4xlarge",
+        "i3.8xlarge",
+        "i3.16xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "g3.4xlarge",
+        "g3.8xlarge",
+        "g3.16xlarge",
+        "p2.xlarge",
+        "p2.8xlarge",
+        "p2.16xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "f1.2xlarge",
+        "f1.16xlarge"
+      ]
+    },
+    "WindowsWorkstation": {
+      "Default": "None",
+      "Type": "String",
+      "Description": "Deploy a Windows Workstation",
+      "AllowedValues": [
+        "Deploy",
+        "None"
+      ]
+    }
+  },
+  "Conditions": {
+    "BuildLinux": {
+      "Fn::Equals": [
+        {
+          "Ref": "LinuxWorkstation"
+        },
+        "Deploy"
+      ]
+    },
+    "BuildWindows": {
+      "Fn::Equals": [
+        {
+          "Ref": "WindowsWorkstation"
+        },
+        "Deploy"
+      ]
+    },
+    "InstanceRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InstanceRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "DbConnectLambdaRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DbConnectLambdaRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "AWSRegionArch2AMIWindows": {
+      "us-east-1": {
+        "64": "ami-f6529b8c"
+      },
+      "us-west-1": {
+        "64": "ami-955c6ef5"
+      },
+      "ap-northeast-2": {
+        "64": "ami-82fe5bec"
+      },
+      "ap-northeast-1": {
+        "64": "ami-4d34eb2b"
+      },
+      "sa-east-1": {
+        "64": "ami-5d512f31"
+      },
+      "ap-southeast-1": {
+        "64": "ami-0e13686d"
+      },
+      "ca-central-1": {
+        "64": "ami-8bff47ef"
+      },
+      "ap-southeast-2": {
+        "64": "ami-2013f142"
+      },
+      "us-west-2": {
+        "64": "ami-f318de8b"
+      },
+      "us-east-2": {
+        "64": "ami-80765ae5"
+      },
+      "ap-south-1": {
+        "64": "ami-27286b48"
+      },
+      "eu-central-1": {
+        "64": "ami-e8843b87"
+      },
+      "eu-west-1": {
+        "64": "ami-1ecc1e67"
+      },
+      "eu-west-2": {
+        "64": "ami-4cbba928"
+      }
+    },
+    "AWSRegionArch2AMILinux": {
+      "us-east-1": {
+        "64": "ami-8c1be5f6"
+      },
+      "us-west-1": {
+        "64": "ami-02eada62"
+      },
+      "ap-northeast-2": {
+        "64": "ami-9bec36f5"
+      },
+      "ap-northeast-1": {
+        "64": "ami-2a69be4c"
+      },
+      "sa-east-1": {
+        "64": "ami-f1344b9d"
+      },
+      "ap-southeast-1": {
+        "64": "ami-0797ea64"
+      },
+      "ca-central-1": {
+        "64": "ami-fd55ec99"
+      },
+      "ap-southeast-2": {
+        "64": "ami-8536d6e7"
+      },
+      "us-west-2": {
+        "64": "ami-e689729e"
+      },
+      "us-east-2": {
+        "64": "ami-c5062ba0"
+      },
+      "ap-south-1": {
+        "64": "ami-4fc58420"
+      },
+      "eu-central-1": {
+        "64": "ami-c7ee5ca8"
+      },
+      "eu-west-1": {
+        "64": "ami-acd005d5"
+      },
+      "eu-west-2": {
+        "64": "ami-1a7f6d7e"
+      }
+    }
+  },
+  "Resources": {
+    "LinuxLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "exec 1> >(logger -s -t $(basename $0)) 2>&1\n",
+                "yum install -y aws-cfn-bootstrap\n",
+                "yum update -y aws-cfn-bootstrap\n",
+                "# Helper function\n",
+                "function exit_cfn_signal {\n",
+                "  exit_status=$?\n",
+                "  if [ -e /opt/aws/bin/cfn-signal ]; then\n",
+                "    /opt/aws/bin/cfn-signal -e $exit_status --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                " --resource LinuxAutoScaleGroup --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "  fi\n",
+                "  exit $exit_status\n",
+                "}\n",
+                "trap exit_cfn_signal TERM EXIT\n",
+                "/opt/aws/bin/cfn-init -v --configsets Init --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                " --resource LinuxLaunchConfig --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ";\n"
+              ]
+            ]
+          }
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMILinux",
+            {
+              "Ref": "AWS::Region"
+            },
+            "64"
+          ]
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "DeleteOnTermination": "true",
+              "VolumeType": "gp2",
+              "VolumeSize": {
+                "Ref": "EbsVolumeSize"
+              }
+            }
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "WorkstationSecurityGroup"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "InstanceRoleInstanceProfile"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        }
+      },
+      "Condition": "BuildLinux",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "cfnConfig": {
+            "files": {
+              "/etc/cfn/cfn-hup.conf": {
+                "owner": "root",
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack={{ StackName }}\n",
+                      "region={{ Region }}\n",
+                      "interval=1\n"
+                    ]
+                  ]
+                },
+                "group": "root",
+                "mode": "000400",
+                "context": {
+                  "StackName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "Region": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.LinuxLaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                      "action=/opt/aws/bin/cfn-init -v --configsets Update --stack {{ StackName }} --resource LinuxLaunchConfig --region {{ Region }}\n",
+                      "runas=root\n"
+                    ]
+                  ]
+                },
+                "context": {
+                  "StackName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "Region": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              }
+            },
+            "services": {
+              "sysvinit": {
+                "cfn-hup": {
+                  "files": [
+                    "/etc/cfn/cfn-hup.conf",
+                    "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            }
+          },
+          "configSets": {
+            "Init": [
+              "cfnConfig",
+              "SSMInstall",
+              "scaleft"
+            ],
+            "Update": [
+              "cfnConfig"
+            ]
+          },
+          "SSMInstall": {
+            "commands": {
+              "2-InstallSSMAgent": {
+                "test": "! rpm -qa | grep -q amazon-ssm-agent",
+                "command": "yum install -y /tmp/amazon-ssm-agent.rpm"
+              },
+              "3-StartSSMAgentService": {
+                "test": "status amazon-ssm-agent | grep stop > /dev/null && [ $? -eq 0 ]",
+                "command": "service amazon-ssm-agent start"
+              },
+              "1-DownloadSSMAgent": {
+                "test": "[ ! -e /opt/aws/amazon-ssm-agent.rpm ]",
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "curl https://amazon-ssm-",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ".s3.amazonaws.com/latest/linux_amd64/amazon-ssm-agent.rpm -o /tmp/amazon-ssm-agent.rpm\n"
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "scaleft": {
+            "files": {
+              "/etc/logrotate.d/sftd": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "/var/log/sftd.log {\n",
+                      "    missingok\n",
+                      "    weekly\n",
+                      "    copytruncate\n",
+                      "    rotate 4\n",
+                      "    compress\n",
+                      "    postrotate\n",
+                      "      service sftd restart\n",
+                      "    endscript\n",
+                      "}\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "0644"
+              },
+              "/root/scaleft_yum.sh": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "n=0\n",
+                      "while :\n",
+                      "do\n",
+                      "  yum install -y -q scaleft-server-tools\n",
+                      "  [[ $? = 0 ]] && break || ((n++))\n",
+                      "  (( n >= 5 )) && break\n",
+                      "done\n"
+                    ]
+                  ]
+                },
+                "owner": "root",
+                "group": "root",
+                "mode": "000400"
+              }
+            },
+            "commands": {
+              "7-ClearLogrotateFileBackup": {
+                "test": "[ -e /etc/logrotate.d/sftd.bak ]",
+                "command": "/bin/rm /etc/logrotate.d/sftd.bak"
+              },
+              "2-TrustKey": {
+                "command": "rpm --import https://dist.scaleft.com/pki/scaleft_rpm_key.asc"
+              },
+              "3-AddRepo": {
+                "test": "[ ! -e /etc/yum.repos.d/scaleft.repo ]",
+                "command": "curl -C - https://pkg.scaleft.com/scaleft_yum.repo | tee /etc/yum.repos.d/scaleft.repo"
+              },
+              "4-InstallScaleFT": {
+                "test": "! rpm -qa | grep -q scaleft-server-tools",
+                "command": "bash /root/scaleft_yum.sh"
+              },
+              "1-InitialUrl": {
+                "test": "[ ! -e /etc/sft/sftd.yaml ]",
+                "command": "mkdir -p /etc/sft && echo 'InitialURL: https://scaleft.api.manage.rackspace.com\nLogLevel: WARN' > /etc/sft/sftd.yaml"
+              },
+              "5-RemoveDisableAutoStartIfExist": {
+                "test": "[ -e /etc/sftd/disable-autostart ]",
+                "command": "rm /etc/sftd/disable-autostart"
+              },
+              "6-StartScaleFTService": {
+                "test": "! ps aux | grep [s]ftd",
+                "command": "service sftd start"
+              }
+            }
+          }
+        }
+      }
+    },
+    "AddDbTagLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/usr/bin/env python\n",
+                "\n",
+                "import boto3\n",
+                "\n",
+                "\n",
+                "class AwsApiCommon(object):\n",
+                "    def __init__(self, event):\n",
+                "        self.dba_sg_id = '",
+                {
+                  "Fn::GetAtt": [
+                    "WorkstationSecurityGroup",
+                    "GroupId"
+                  ]
+                },
+                "'\n",
+                "        self.event = event\n",
+                "        self.resource_name = None\n",
+                "        self.resource_type = None\n",
+                "        self.resource_active_sgs = []\n",
+                "\n",
+                "    def resource_assigned_sgs(self, resource_type=None, resource_data=None):\n",
+                "        for sgd in resource_data[resource_type][0]['VpcSecurityGroups']:\n",
+                "            self.resource_active_sgs.append(sgd['VpcSecurityGroupId'])\n",
+                "\n",
+                "    def get_resource_name(self):\n",
+                "        self.resource_name = self.event['detail']['requestParameters']['resourceName'].split(':')[-1]\n",
+                "\n",
+                "\n",
+                "class RdsDbInstances(AwsApiCommon):\n",
+                "    def __init__(self, event):\n",
+                "        super(RdsDbInstances, self).__init__(event)\n",
+                "        self.rds_mon_role = '",
+                {
+                  "Ref": "DbConnectLambdaRole"
+                },
+                "'\n",
+                "        self.rds_mon_arn = '",
+                {
+                  "Fn::GetAtt": [
+                    "DbConnectLambdaRole",
+                    "Arn"
+                  ]
+                },
+                "'\n",
+                "        self.dbi_data = None\n",
+                "        self.rds_cloud_watch = None\n",
+                "\n",
+                "    def decribe_db_instance(self):\n",
+                "        self.dbi_data = boto3.client('rds').describe_db_instances(DBInstanceIdentifier=self.resource_name)\n",
+                "\n",
+                "    def set_rds_cloud_watch(self):\n",
+                "        self.rds_cloud_watch = boto3.client('rds').modify_db_instance(DBInstanceIdentifier=self.resource_name, MonitoringRoleArn=self.rds_mon_arn, MonitoringInterval=60, ApplyImmediately=True)\n",
+                "\n",
+                "    def set_dbinstance_security_groups(self):\n",
+                "        self.resource_active_sgs.append(self.dba_sg_id)\n",
+                "        boto3.client('rds').modify_db_instance(DBInstanceIdentifier=self.resource_name, VpcSecurityGroupIds=self.resource_active_sgs, ApplyImmediately=True)\n",
+                "\n",
+                "\n",
+                "def lambda_handler(event, context):\n",
+                "    print(event)\n",
+                "    if 'source' in event:\n",
+                "        for tag_dict in event['detail']['requestParameters']['tags']:\n",
+                "            if tag_dict['key'] == 'RackspaceDBA' and tag_dict['value'].lower() == 'true':\n",
+                "                rds_obj = RdsDbInstances(event=event)\n",
+                "                rds_obj.get_resource_name()\n",
+                "                rds_obj.decribe_db_instance()\n",
+                "                if 'DBInstances' in rds_obj.dbi_data:\n",
+                "                    rds_obj.resource_assigned_sgs(resource_type='DBInstances', resource_data=rds_obj.dbi_data)\n",
+                "                    rds_obj.set_rds_cloud_watch()\n",
+                "                    if rds_obj.dba_sg_id not in rds_obj.resource_active_sgs:\n",
+                "                        rds_obj.set_dbinstance_security_groups()\n",
+                "                break\n"
+              ]
+            ]
+          }
+        },
+        "Description": "Specific tag added to RDS instance for DBA Support",
+        "Handler": "index.lambda_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "DbConnectLambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": "60",
+        "Runtime": "python2.7",
+        "FunctionName": {
+          "Ref": "LambdaFunctionName"
+        }
+      }
+    },
+    "WindowsLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "<powershell>\n",
+                "cfn-init.exe -v --configsets Init --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                " --resource WindowsLaunchConfig --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n",
+                "</powershell>\n"
+              ]
+            ]
+          }
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMIWindows",
+            {
+              "Ref": "AWS::Region"
+            },
+            "64"
+          ]
+        },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "DeleteOnTermination": "true",
+              "VolumeType": "gp2",
+              "VolumeSize": {
+                "Ref": "EbsVolumeSize"
+              }
+            }
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "WorkstationSecurityGroup"
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "InstanceRoleInstanceProfile"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        }
+      },
+      "Condition": "BuildWindows",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "cfnConfig": {
+            "services": {
+              "windows": {
+                "cfn-hup": {
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf"
+                  ],
+                  "ensureRunning": "true",
+                  "enabled": "true"
+                }
+              }
+            },
+            "files": {
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[main]\n",
+                      "stack={{ StackName }}\n",
+                      "region={{ Region }}\n",
+                      "interval=1\n"
+                    ]
+                  ]
+                },
+                "context": {
+                  "StackName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "Region": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              },
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.WindowsLaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                      "action=cfn-init.exe --configsets Update --stack {{ StackName }} --resource WindowsLaunchConfig --region {{ Region }}\n"
+                    ]
+                  ]
+                },
+                "context": {
+                  "StackName": {
+                    "Ref": "AWS::StackName"
+                  },
+                  "Region": {
+                    "Ref": "AWS::Region"
+                  }
+                }
+              }
+            }
+          },
+          "webInstall": {
+            "commands": {
+              "1-Install-IIS": {
+                "command": "powershell.exe add-windowsfeature web-webserver -includeallsubfeature",
+                "waitAfterCompletion": "0"
+              },
+              "2-Install-IISTools": {
+                "command": "powershell.exe add-windowsfeature web-mgmt-tools -includeallsubfeature",
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "finalize": {
+            "commands": {
+              "1-signal-success": {
+                "ignoreErrors": "true",
+                "command": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "cfn-signal.exe -e 0 ",
+                      "--stack ",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      " --resource WindowsAutoScaleGroup --region ",
+                      {
+                        "Ref": "AWS::Region"
+                      }
+                    ]
+                  ]
+                },
+                "waitAfterCompletion": "0"
+              }
+            }
+          },
+          "scaleft": {
+            "services": {
+              "windows": {
+                "scaleft-server-tools": {
+                  "ensureRunning": "true",
+                  "packages": {
+                    "msi": "scaleft-server-tools"
+                  },
+                  "enabled": "true",
+                  "commands": [
+                    "1-ConfigureScaleFT"
+                  ]
+                }
+              }
+            },
+            "files": {
+              "C:\\Windows\\System32\\config\\systemprofile\\AppData\\Local\\ScaleFT\\sftd.yaml": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "InitialURL: https://scaleft.api.manage.rackspace.com\n",
+                      "LogLevel: WARN\n"
+                    ]
+                  ]
+                }
+              },
+              "c:\\cfn\\ConfigureScaleFT.ps1": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "$StateDirectory='{{ StateDirectory }}'\n",
+                      "$ConfigFile='{{ ConfigFile }}'\n",
+                      "$ServiceName='{{ ServiceName }}'\n",
+                      "if([bool](Get-Service | ? name -eq $ServiceName)){ Get-Service -Name $ServiceName | Stop-Service }\n",
+                      "if (-not (Test-Path $StateDirectory)){\n",
+                      "  New-Item -ItemType Directory -Path $StateDirectory\n",
+                      "  Set-Content  -Path $(Join-path $StateDirectory $ConfigFile) -Value 'InitialURL: https://scaleft.api.manage.rackspace.com' -Force\n",
+                      "  Add-Content -Path $(Join-path $StateDirectory $ConfigFile) -Value 'LogLevel: WARN' -Force\n",
+                      "}\n"
+                    ]
+                  ]
+                },
+                "context": {
+                  "ConfigFile": "sftd.yaml",
+                  "ServiceName": "scaleft-server-tools",
+                  "StateDirectory": "C:\\Windows\\System32\\config\\systemprofile\\AppData\\Local\\ScaleFT",
+                  "installer_url": "https://dist.scaleft.com/server-tools/windows/latest/ScaleFT-Server-Tools-latest.msi"
+                }
+              }
+            },
+            "commands": {
+              "1-ConfigureScaleFT": {
+                "command": "powershell.exe -ExecutionPolicy Bypass -File c:\\cfn\\ConfigureScaleFT.ps1"
+              }
+            },
+            "packages": {
+              "msi": {
+                "ScaleFT Server Tools": "https://dist.scaleft.com/server-tools/windows/latest/ScaleFT-Server-Tools-latest.msi"
+              }
+            }
+          },
+          "mountEBS": {
+            "files": {
+              "c:\\cfn\\format-volume.ps1": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "$disks = @()\n",
+                      "$disks += get-disk | Where-Object {$_.partitionStyle -eq \"RAW\" -and $_.IsSystem -eq $false}\n",
+                      "$disks.foreach({\n",
+                      "   set-disk $_.number -isOffline $false\n",
+                      "   Initialize-Disk $_.number\n",
+                      "   $part = New-Partition -DiskNumber $_.number -UseMaximumSize -AssignDriveLetter\n",
+                      "   start-sleep -Seconds 5\n",
+                      "   Format-Volume -FileSystem NTFS -Confirm:$false -DriveLetter $part.DriveLetter\n",
+                      "})\n"
+                    ]
+                  ]
+                }
+              }
+            },
+            "commands": {
+              "1-MountVolume": {
+                "command": "powershell.exe -ExecutionPolicy Bypass -File c:\\cfn\\format-volume.ps1"
+              }
+            }
+          },
+          "configSets": {
+            "Init": [
+              "cfnConfig",
+              "webInstall",
+              "scaleft",
+              "finalize"
+            ],
+            "Ebsformat": [
+              "mountEBS"
+            ],
+            "Update": [
+              "cfnConfig",
+              "finalize"
+            ]
+          }
+        }
+      }
+    },
+    "WorkstationSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "Fn::If": [
+              "BuildWindows",
+              {
+                "ToPort": 3389,
+                "IpProtocol": "tcp",
+                "FromPort": 3389,
+                "CidrIp": "0.0.0.0/0"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "BuildLinux",
+              {
+                "ToPort": 22,
+                "IpProtocol": "tcp",
+                "FromPort": 22,
+                "CidrIp": "0.0.0.0/0"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Establish DBA Workstation SecurityGroup.",
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": "RaxDbaAdminSG"
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "InstanceRoleInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
+                  {
+                    "Fn::If": [
+                      "InstanceRolePoliciesSet",
+                      {
+                        "Ref": "InstanceRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "InstanceRolePolicies": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "InstanceRole",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "cloudformation:Describe*"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "ssm:CreateAssociation"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "cloudwatch:PutMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:ListMetrics"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "ec2:DescribeTags"
+              ],
+              "Resource": "*",
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "PermissionForEventsToInvokeLambda": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "EventRule",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "AddDbTagLambdaFunction"
+        },
+        "Principal": "events.amazonaws.com"
+      }
+    },
+    "DbConnectLambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/AmazonRDSFullAccess",
+                  "arn:aws:iam::aws:policy/IAMFullAccess",
+                  "arn:aws:iam::aws:policy/CloudWatchFullAccess",
+                  "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole",
+                  "arn:aws:iam::aws:policy/CloudWatchEventsFullAccess",
+                  "arn:aws:iam::aws:policy/AWSXrayFullAccess",
+                  {
+                    "Fn::If": [
+                      "DbConnectLambdaRolePoliciesSet",
+                      {
+                        "Ref": "DbConnectLambdaRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "monitoring.rds.amazonaws.com",
+                  "lambda.amazonaws.com",
+                  "events.amazonaws.com",
+                  "rds.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "LinuxAutoScaleGroup": {
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": {
+            "Ref": "ScalingMin"
+          },
+          "Timeout": {
+            "Fn::Sub": "PT${ScalingTimeOut}"
+          }
+        }
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": {
+            "Fn::Sub": "PT${ScalingTimeOut}"
+          },
+          "WaitOnResourceSignals": "true",
+          "MaxBatchSize": {
+            "Ref": "ScalingTermination"
+          },
+          "MinInstancesInService": {
+            "Ref": "ScalingMin"
+          }
+        }
+      },
+      "Condition": "BuildLinux",
+      "Properties": {
+        "Tags": [
+          {
+            "PropagateAtLaunch": "true",
+            "Value": {
+              "Ref": "Environment"
+            },
+            "Key": "Environment"
+          },
+          {
+            "PropagateAtLaunch": "true",
+            "Value": "DBALinuxWk",
+            "Key": "Name"
+          },
+          {
+            "PropagateAtLaunch": "true",
+            "Value": "Rackspace",
+            "Key": "ServiceProvider"
+          }
+        ],
+        "MinSize": {
+          "Ref": "ScalingMin"
+        },
+        "MaxSize": {
+          "Ref": "ScalingMax"
+        },
+        "VPCZoneIdentifier": {
+          "Ref": "EC2Subnets"
+        },
+        "LaunchConfigurationName": {
+          "Ref": "LinuxLaunchConfig"
+        },
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute"
+          }
+        ],
+        "HealthCheckGracePeriod": "300"
+      }
+    },
+    "WindowsAutoScaleGroup": {
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": {
+            "Ref": "ScalingMin"
+          },
+          "Timeout": {
+            "Fn::Sub": "PT${ScalingTimeOut}"
+          }
+        }
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "PauseTime": {
+            "Fn::Sub": "PT${ScalingTimeOut}"
+          },
+          "WaitOnResourceSignals": "true",
+          "MaxBatchSize": {
+            "Ref": "ScalingTermination"
+          },
+          "MinInstancesInService": {
+            "Ref": "ScalingMin"
+          }
+        }
+      },
+      "Condition": "BuildWindows",
+      "Properties": {
+        "Tags": [
+          {
+            "PropagateAtLaunch": "true",
+            "Value": {
+              "Ref": "Environment"
+            },
+            "Key": "Environment"
+          },
+          {
+            "PropagateAtLaunch": "true",
+            "Value": "DBAWindowsWk",
+            "Key": "Name"
+          },
+          {
+            "PropagateAtLaunch": "true",
+            "Value": "Rackspace",
+            "Key": "ServiceProvider"
+          }
+        ],
+        "MinSize": {
+          "Ref": "ScalingMin"
+        },
+        "MaxSize": {
+          "Ref": "ScalingMax"
+        },
+        "VPCZoneIdentifier": {
+          "Ref": "EC2Subnets"
+        },
+        "LaunchConfigurationName": {
+          "Ref": "WindowsLaunchConfig"
+        },
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute"
+          }
+        ],
+        "HealthCheckGracePeriod": "300"
+      }
+    },
+    "EventRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "State": "ENABLED",
+        "EventPattern": {
+          "detail": {
+            "eventName": [
+              "AddTagsToResource"
+            ],
+            "eventSource": [
+              "rds.amazonaws.com"
+            ]
+          },
+          "detail-type": [
+            "AWS API Call via CloudTrail"
+          ]
+        },
+        "Targets": [
+          {
+            "Id": "AddTagsToResource",
+            "Arn": {
+              "Fn::GetAtt": [
+                "AddDbTagLambdaFunction",
+                "Arn"
+              ]
+            }
+          }
+        ],
+        "Description": "EventRule"
+      }
+    },
+    "WorkStationSecurityGroupIngress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "SourceSecurityGroupId": {
+          "Ref": "WorkstationSecurityGroup"
+        },
+        "FromPort": "-1",
+        "ToPort": "-1",
+        "GroupId": {
+          "Ref": "WorkstationSecurityGroup"
+        },
+        "IpProtocol": "-1"
+      }
+    }
+  }
+}

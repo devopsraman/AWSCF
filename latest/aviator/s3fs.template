@@ -1,0 +1,192 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "s3fs.template - Creates the necessary S3 bucket, IAM Role, and IAM Instance Profile for using the s3fs-fuse mount. Additional steps are required to use this template. Please be aware that this template will create resources for which you will be charged.",
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "BucketName": {
+      "AllowedPattern": "([a-z0-9\\.-]+)",
+      "ConstraintDescription": "The bucket name must contain only lowercase letters, numbers, periods (.), and dashes (-).",
+      "Type": "String",
+      "Description": "The name of the bucket to use for the s3fs-fuse mount. Must be unique."
+    },
+    "Versioning": {
+      "Default": "Enabled",
+      "Type": "String",
+      "Description": "Enable versioning for the S3 bucket.",
+      "AllowedValues": [
+        "Enabled",
+        "Suspended"
+      ]
+    },
+    "IAMRoleS3FSManagedPolicyArns": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of IAM policy ARNs for the IAMRoleS3FS IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    }
+  },
+  "Conditions": {
+    "IAMRoleS3FSPoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "IAMRoleS3FSManagedPolicyArns"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "VersioningConfiguration": {
+          "Status": {
+            "Ref": "Versioning"
+          }
+        },
+        "BucketName": {
+          "Ref": "BucketName"
+        }
+      }
+    },
+    "S3FSIAMPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "S3FSIAMPolicy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "s3:*"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:s3:::${S3Bucket}/*"
+                }
+              ],
+              "Effect": "Allow"
+            },
+            {
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:s3:::${S3Bucket}"
+                }
+              ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "IAMRoleS3FS"
+          }
+        ]
+      }
+    },
+    "S3FSInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "IAMRoleS3FS"
+          }
+        ]
+      }
+    },
+    "IAMRoleS3FS": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::If": [
+            "IAMRoleS3FSPoliciesSet",
+            {
+              "Ref": "IAMRoleS3FSManagedPolicyArns"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "IAMRole": {
+      "Value": {
+        "Ref": "IAMRoleS3FS"
+      }
+    },
+    "MountCommand": {
+      "Value": {
+        "Fn::Sub": "s3fs ${S3Bucket} /path/to/mountpoint -o iam_role=${IAMRoleS3FS} -o use_cache=/tmp"
+      }
+    },
+    "InstanceProfile": {
+      "Value": {
+        "Ref": "S3FSInstanceProfile"
+      }
+    },
+    "Bucket": {
+      "Value": {
+        "Ref": "S3Bucket"
+      }
+    }
+  }
+}

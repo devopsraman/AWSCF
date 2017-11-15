@@ -1,0 +1,161 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security Group template for ASG - Amazon Linux with RDS and Elasticache .",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID."
+    }
+  },
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "PublicSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public SSH traffic."
+      }
+    },
+    "PrivateWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80},
+          {"ToPort": 65535, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PrivateWorkerSecurityGroup"}, "FromPort": 0}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private WEB traffic from load balancer."
+      }
+    },
+    "ElastiCacheSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 6379, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PrivateWebSecurityGroup"}, "FromPort": 6379},
+          {"ToPort": 6379, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PrivateWorkerSecurityGroup"}, "FromPort": 6379}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private ElastiCache traffic for app."
+      }
+    },
+    "PublicWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 443, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 443}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public WEB traffic."
+      }
+    },
+    "PrivateWorkerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private WEB traffic from load balancer."
+      }
+    },
+    "PrivateSSHSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 22, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicSSHSecurityGroup"}, "FromPort": 22}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private SSH traffic from load balancer."
+      }
+    },
+    "PostgresSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 5432, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PrivateWebSecurityGroup"}, "FromPort": 5432}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow Postgres traffic."
+      }
+    }
+  },
+  "Outputs": {
+    "outputPublicSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPostgresSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PostgresSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateSSHSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateSSHSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateWorkerSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateWorkerSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputElastiCacheSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ElastiCacheSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    }
+  }
+}

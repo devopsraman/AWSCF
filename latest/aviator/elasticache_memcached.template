@@ -1,0 +1,310 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "elasticache_memcached.template - AWS Cluster for ElastiCache",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "ElastiCacheSubnets",
+            "VPCSecurityGroupIds"
+          ],
+          "Label": {
+            "default": "VPC Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "PreferredMaintenanceWindow"
+          ],
+          "Label": {
+            "default": "Backup / Maintenance"
+          }
+        },
+        {
+          "Parameters": [
+            "CacheClusterPort"
+          ],
+          "Label": {
+            "default": "ElastiCache Advanced Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "ClusterName",
+            "InstanceClass",
+            "ElastiCacheEngineType",
+            "NumberOfNodes"
+          ],
+          "Label": {
+            "default": "ElastiCache Basic Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "InternalRecordName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Record Name for the new Resource Record in the Internal Hosted Zone"
+    },
+    "ElastiCacheSubnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for use with this cache cluster"
+    },
+    "ClusterName": {
+      "Default": "MyMemcachedCluster",
+      "Type": "String",
+      "Description": "Name of Cluster"
+    },
+    "VPCSecurityGroupIds": {
+      "Default": "",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "Existing security group being used by Elasticache cluster."
+    },
+    "CacheClusterPort": {
+      "Default": "11211",
+      "MinValue": "1024",
+      "Type": "Number",
+      "Description": "The port number on which each of the cache nodes will accept connections",
+      "MaxValue": "65535"
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "InstanceClass": {
+      "Default": "cache.m3.medium",
+      "Type": "String",
+      "Description": "The compute and memory capacity of the nodes within the ElastiCache cluster",
+      "AllowedValues": [
+        "cache.t2.micro",
+        "cache.t2.small",
+        "cache.t2.medium",
+        "cache.c1.xlarge",
+        "cache.m3.medium",
+        "cache.m3.large",
+        "cache.m3.xlarge",
+        "cache.m3.2xlarge",
+        "cache.m4.large",
+        "cache.m4.xlarge",
+        "cache.m4.2xlarge",
+        "cache.m4.4xlarge",
+        "cache.m4.10xlarge",
+        "cache.r3.large",
+        "cache.r3.xlarge",
+        "cache.r3.2xlarge",
+        "cache.r3.4xlarge",
+        "cache.r3.8xlarge"
+      ]
+    },
+    "ElastiCacheEngineType": {
+      "Default": "memcached14",
+      "Type": "String",
+      "Description": "The name of the cache engine to be used for this memcached cache cluster",
+      "AllowedValues": [
+        "memcached14"
+      ]
+    },
+    "PreferredMaintenanceWindow": {
+      "Default": "Sun:05:00-Sun:07:00",
+      "Type": "String",
+      "Description": "The weekly time range (in UTC) during which system maintenance can occur."
+    },
+    "InternalZoneId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Route53 Internal Hosted Zone ID"
+    },
+    "NumberOfNodes": {
+      "Default": "1",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The number of cache nodes within the ElastiCache cluster",
+      "MaxValue": "100"
+    }
+  },
+  "Conditions": {
+    "isInternalHostedZoneIdProvided": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InternalZoneId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isMultiAZ": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NumberOfNodes"
+            },
+            "1"
+          ]
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "ElastiCacheEngine": {
+      "memcached14": {
+        "Version": "1.4.34",
+        "Name": "memcached",
+        "Family": "memcached1.4"
+      }
+    }
+  },
+  "Resources": {
+    "CacheCluster": {
+      "Type": "AWS::ElastiCache::CacheCluster",
+      "Properties": {
+        "Engine": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Name"
+          ]
+        },
+        "CacheParameterGroupName": {
+          "Ref": "ParameterGroup"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "ClusterName"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "NumCacheNodes": {
+          "Ref": "NumberOfNodes"
+        },
+        "VpcSecurityGroupIds": {
+          "Ref": "VPCSecurityGroupIds"
+        },
+        "EngineVersion": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Version"
+          ]
+        },
+        "AZMode": {
+          "Fn::If": [
+            "isMultiAZ",
+            "cross-az",
+            "single-az"
+          ]
+        },
+        "CacheNodeType": {
+          "Ref": "InstanceClass"
+        },
+        "Port": {
+          "Ref": "CacheClusterPort"
+        },
+        "PreferredMaintenanceWindow": {
+          "Ref": "PreferredMaintenanceWindow"
+        },
+        "CacheSubnetGroupName": {
+          "Ref": "ElastiCacheSubnetGroup"
+        }
+      }
+    },
+    "ElastiCacheSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "SubnetIds": {
+          "Ref": "ElastiCacheSubnets"
+        },
+        "Description": "Subnets available for use with the cache cluster"
+      }
+    },
+    "ParameterGroup": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::ElastiCache::ParameterGroup",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${Environment}-ParameterGroup"
+        },
+        "Properties": {
+          "Ref": "AWS::NoValue"
+        },
+        "CacheParameterGroupFamily": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Family"
+          ]
+        }
+      }
+    },
+    "InternalRecordSetMemcached": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "Internal Record Set for ${InternalRecordName}"
+        },
+        "Name": {
+          "Fn::Sub": "${InternalRecordName}.${InternalZoneName}."
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "CacheCluster",
+              "ConfigurationEndpoint.Address"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "HostedZoneId": {
+          "Ref": "InternalZoneId"
+        },
+        "Type": "CNAME"
+      },
+      "Condition": "isInternalHostedZoneIdProvided"
+    }
+  },
+  "Outputs": {
+    "MemcachedConnection": {
+      "Value": {
+        "Fn::Sub": "${CacheCluster.ConfigurationEndpoint.Address}:${CacheCluster.ConfigurationEndpoint.Port}"
+      }
+    }
+  }
+}

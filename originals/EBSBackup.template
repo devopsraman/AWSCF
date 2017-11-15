@@ -1,0 +1,130 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Rackspace Hosting - Sets up a Lambda Role and SNS topics in order to enable Ebs Snapshots Automatic Backups",
+  "Metadata": {
+    "Version": "v0.1.0"
+  },
+  "Parameters": {
+    "S3Bucket": {
+      "Description": "S3Bucket where to find the Scripts to run as Lambda Functions",
+      "Type": "String",
+      "Default": "rslambda-backup"
+    }
+  },
+  "Resources": {
+    "CreateBackupAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alarm for failed snapshot creation",
+        "AlarmActions": [{ "Fn::Join" : [":", [ "arn", "aws", "sns", { "Ref" : "AWS::Region" }, { "Ref": "AWS::AccountId" }, "rackspace-support" ]] }],
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": "1",
+        "Period": "60",
+        "Statistic": "Sum",
+        "Threshold": "1",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {"Ref": "CreateBackup"}
+          }]
+      }
+    },
+    "RemoveBackupAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alarm for failed snapshot deletion",
+        "AlarmActions": [{ "Fn::Join" : [":", [ "arn", "aws", "sns", { "Ref" : "AWS::Region" }, { "Ref": "AWS::AccountId" }, "rackspace-support" ]] }],
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": "1",
+        "Period": "60",
+        "Statistic": "Sum",
+        "Threshold": "1",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {"Ref": "RemoveBackup"}
+          }]
+      }
+    },
+    "CreateBackup": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {"Fn::Join" : ["-", [ { "Ref" : "S3Bucket" }, { "Ref" : "AWS::Region" } ]] },
+          "S3Key": "createBackup.py.zip"
+        },
+        "Description": "Creates Snapshots",
+        "Handler": "createBackup.lambda_handler",
+        "MemorySize": 128,
+        "Role": { "Fn::GetAtt": ["LambdaExecutionRole", "Arn"] },
+        "Runtime": "python2.7",
+        "Timeout": "300"
+      }
+    },
+    "RemoveBackup": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {"Fn::Join" : ["-", [ { "Ref" : "S3Bucket" }, { "Ref" : "AWS::Region" } ]] },
+          "S3Key": "purgeBackup.py.zip"
+        },
+        "Description": "Removes Snapshots",
+        "Handler": "purgeBackup.lambda_handler",
+        "MemorySize": 128,
+        "Role": { "Fn::GetAtt": ["LambdaExecutionRole", "Arn"] },
+        "Runtime": "python2.7",
+        "Timeout": "60"
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": ["lambda.amazonaws.com"]
+            },
+            "Action": ["sts:AssumeRole"]
+          }]
+        },
+        "Path": "/",
+        "Policies": [{
+          "PolicyName": "rs_lambda_role",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents"],
+              "Resource": "arn:aws:logs:::*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["cloudformation:DescribeStacks",
+              "ec2:Describe*",
+              "ec2:CreateTags",
+              "ec2:CreateSnapshot",
+              "ec2:ModifySnapshotAttribute",
+              "ec2:ResetSnapshotAttribute",
+              "ec2:DeleteSnapshot"],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": ["SNS:Publish",
+              "SNS:ListTopics"],
+              "Resource": { "Fn::Join": ["", ["arn:aws:sns::", { "Ref": "AWS::AccountId"}, ":*" ] ] }
+            }]
+          }
+        }]
+      }
+    }
+  }
+}

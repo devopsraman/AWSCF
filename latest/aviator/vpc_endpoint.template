@@ -1,0 +1,148 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "vpc_endpoint.template - Setup VPC endpoints for services that support them, as well as an all access IAM policy",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "RouteTableIdsList",
+            "VPCID"
+          ],
+          "Label": {
+            "default": "VPC Basic Parameters"
+          }
+        },
+        {
+          "Parameters": [
+            "DynamoDBEndpointEnable",
+            "S3EndpointEnable"
+          ],
+          "Label": {
+            "default": "Endpoints"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "RouteTableIdsList": {
+      "Type": "CommaDelimitedList",
+      "Description": "List of Route Table ID's for each AZ"
+    },
+    "DynamoDBEndpointEnable": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Enable/Disable the DynamoDB VPC endpoint",
+      "AllowedValues": [
+        "True",
+        "False"
+      ]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID"
+    },
+    "S3EndpointEnable": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Enable/Disable the S3 VPC endpoint",
+      "AllowedValues": [
+        "True",
+        "False"
+      ]
+    }
+  },
+  "Conditions": {
+    "S3Enabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "S3EndpointEnable"
+        },
+        "True"
+      ]
+    },
+    "DynamoDBEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "DynamoDBEndpointEnable"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "S3VPCEndpoint": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:*"
+              ],
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow",
+              "Principal": "*"
+            }
+          ]
+        },
+        "RouteTableIds": {
+          "Ref": "RouteTableIdsList"
+        },
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.s3"
+        }
+      },
+      "Condition": "S3Enabled"
+    },
+    "DynamoDBVPCEndpoint": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:*"
+              ],
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow",
+              "Principal": "*"
+            }
+          ]
+        },
+        "RouteTableIds": {
+          "Ref": "RouteTableIdsList"
+        },
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.dynamodb"
+        }
+      },
+      "Condition": "DynamoDBEnabled"
+    }
+  },
+  "Outputs": {
+    "S3VPCEndpoint": {
+      "Value": {
+        "Ref": "S3VPCEndpoint"
+      },
+      "Condition": "S3Enabled"
+    },
+    "DynamoDBVPCEndpoint": {
+      "Value": {
+        "Ref": "DynamoDBVPCEndpoint"
+      },
+      "Condition": "DynamoDBEnabled"
+    }
+  }
+}

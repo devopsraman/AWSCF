@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="vpcflowlogs-faws-template">VpcFlowLogs FAWS Template</h1>
+<p>vpc_flow_logs.template - VPC Flow Logs. http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-flowlog.html ### Parameters</p>
+<h4 id="resourcetype">ResourceType</h4>
+<ul>
+<li>Default: <code>VPC</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The type of resource that you specified in the ResourceId property. For example, if you specified a VPC ID for the ResourceId property, specify VPC for this property. For valid values, see the ResourceType parameter for the CreateFlowLogs action in the Amazon EC2 API Reference.</code></li>
+</ul>
+<h4 id="resourceid">ResourceId</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the subnet, network interface, or VPC for which you want to create a flow log.</code></li>
+</ul>
+<h4 id="loggroupname">LogGroupName</h4>
+<ul>
+<li>Default: <code>VPCFlowLogsGroup</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of a new CloudWatch Logs log group where Amazon EC2 publishes your flow logs.</code></li>
+</ul>
+<h4 id="instancerolemanagedpolicyarns">InstanceRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="traffictype">TrafficType</h4>
+<ul>
+<li>Default: <code>ALL</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The type of traffic to log. You can log traffic that the resource accepts or rejects, or all traffic. For valid values, see the TrafficType parameter for the CreateFlowLogs action in the Amazon EC2 API Reference.</code></li>
+</ul>
+<h4 id="retentionindays">RetentionInDays</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of days log events are kept in CloudWatch Logs. When a log event expires, CloudWatch Logs automatically deletes it.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>VPCFlowLogs</code></li>
+<li><code>LogGroup</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

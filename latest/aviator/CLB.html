@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="clb-faws-template">Clb FAWS Template</h1>
+<p>CLB.template - Elastic Load Balancer version 1 (Classic) Template. ### Parameters</p>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="loadbalancerport1">LoadBalancerPort1</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the external load balancer port number.</code></li>
+</ul>
+<h4 id="connectiondrainingtimeout">ConnectionDrainingTimeout</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>MinValue: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Set the timeout value for elastic loadbalancer draining policy if desired. OPTIONAL</code></li>
+<li>MaxValue: <code>3600</code></li>
+</ul>
+<h4 id="loadbalancerprotocol2">LoadBalancerProtocol2</h4>
+<ul>
+<li>Default: <code>HTTPS</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the protocol to use for the Load Balancer HTTP / HTTPS / TCP / SSL.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS', 'TCP', 'SSL']</code></li>
+</ul>
+<h4 id="loadbalancerprotocol1">LoadBalancerProtocol1</h4>
+<ul>
+<li>Default: <code>HTTP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the protocol to use for the Load Balancer HTTP / HTTPS / TCP / SSL.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS', 'TCP', 'SSL']</code></li>
+</ul>
+<h4 id="scheme">Scheme</h4>
+<ul>
+<li>Default: <code>internet-facing</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether to create an internal CLB or a public facing one.</code></li>
+<li>AllowedValues: <code>['internet-facing', 'internal']</code></li>
+</ul>
+<h4 id="subnets">Subnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>A list of subnet IDs in your virtual private cloud (VPC) to attach to your load balancer.</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="healthtimeout">HealthTimeout</h4>
+<ul>
+<li>Default: <code>5</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Number of seconds during which no response means a failed health probe.</code></li>
+</ul>
+<h4 id="enablelistener1">EnableListener1</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Primary Listener on the Load Balancer</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="createloggingbucket">CreateLoggingBucket</h4>
+<ul>
+<li>Default: <code>true</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Create a new S3 logging bucket</code></li>
+<li>AllowedValues: <code>['true', 'false']</code></li>
+</ul>
+<h4 id="appcookiename">AppCookieName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Generates a stickiness policy based upon an application cookie. Leave blank not to use.  Overrides CookieExpirationPeriod.</code></li>
+</ul>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="securitygroups">SecurityGroups</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>A list of security groups assigned to your load balancer within your virtual private cloud (VPC).</code></li>
+</ul>
+<h4 id="instanceport1">InstancePort1</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the TCP port on which the instance server is listening.</code></li>
+</ul>
+<h4 id="instanceport2">InstancePort2</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the TCP port on which the instance server is listening.</code></li>
+</ul>
+<h4 id="healthinterval">HealthInterval</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Seconds between health checks.</code></li>
+</ul>
+<h4 id="healthtarget">HealthTarget</h4>
+<ul>
+<li>Default: <code>HTTP:80/</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Protocol &amp; port check on instance. TCP:5000 | SSL:5000 || HTTP(S) = HTTP:80/path/to/my/file.</code></li>
+</ul>
+<h4 id="s3bucketprefix">S3BucketPrefix</h4>
+<ul>
+<li>Default: <code>FrontendCLBLogs</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The prefix for the location in the S3 bucket. If you don't specify a prefix, the access logs are stored in the root of the bucket.</code></li>
+</ul>
+<h4 id="unhealthythreshold">UnHealthyThreshold</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Consecutive failed checks before marking instance unhealthy.</code></li>
+</ul>
+<h4 id="healthythreshold">HealthyThreshold</h4>
+<ul>
+<li>Default: <code>3</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Consecutive successful checks before marking instance healthy.</code></li>
+</ul>
+<h4 id="asgtargets">ASGTargets</h4>
+<ul>
+<li>Default: <code>true</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Are the targets part of an auto scaling group.</code></li>
+<li>AllowedValues: <code>['true', 'false']</code></li>
+</ul>
+<h4 id="sslidcert">SSLIdCert</h4>
+<ul>
+<li>Default: ``</li>
+<li>ConstraintDescription: <code>Must be an existing SSL Name.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SSL Certificate Name. Full ARN required.</code></li>
+</ul>
+<h4 id="crosszone">CrossZone</h4>
+<ul>
+<li>Default: <code>true</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Whether cross-zone load balancing is enabled for the load balancer.</code></li>
+<li>AllowedValues: <code>['true', 'false']</code></li>
+</ul>
+<h4 id="cookieexpirationperiod">CookieExpirationPeriod</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Generates a stickiness policy with sticky session lifetimes controlled by a specified expiration period. Leave blank not to use.</code></li>
+</ul>
+<h4 id="logretention">LogRetention</h4>
+<ul>
+<li>Default: <code>14</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of days to retain load balancer logs.  Parameter is ignored if not creating a new S3 bucket.</code></li>
+<li>MaxValue: <code>999</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h4 id="loadbalancerport2">LoadBalancerPort2</h4>
+<ul>
+<li>Default: <code>443</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the external load balancer port number.</code></li>
+</ul>
+<h4 id="instances">Instances</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A list of EC2 instance IDs for the load balancer. Use when not assigned to auto scale group.</code></li>
+</ul>
+<h4 id="enablelistener2">EnableListener2</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Enable Primary Listener on the Load Balancer</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="logaccesscontrol">LogAccessControl</h4>
+<ul>
+<li>Default: <code>BucketOwnerFullControl</code></li>
+<li>ConstraintDescription: <code>Must be either AuthenticatedRead, AwsExecRead, BucketOwnerRead, BucketOwnerFullControl, LogDeliveryWrite, Private, PublicRead or PublicReadWrite.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Define ACL for Bucket</code></li>
+<li>AllowedValues: <code>['AuthenticatedRead', 'AwsExecRead', 'BucketOwnerRead', 'BucketOwnerFullControl', 'LogDeliveryWrite', 'Private', 'PublicRead', 'PublicReadWrite']</code></li>
+</ul>
+<h4 id="s3bucketname">S3BucketName</h4>
+<ul>
+<li>Default: ``</li>
+<li>ConstraintDescription: <code>The bucket name must contain only lowercase letters, numbers, periods (.), and dashes (-).</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of the bucket to use for CLB logs. Must be unique.</code></li>
+</ul>
+<h4 id="timeout">TimeOut</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>MinValue: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The time (in seconds) that a connection to the load balancer can remain idle, which means no data is sent over the connection. After the specified time, the load balancer closes the connection.</code></li>
+<li>MaxValue: <code>3600</code></li>
+</ul>
+<h4 id="loadbalancername">LoadBalancerName</h4>
+<ul>
+<li>Default: <code>NewCLB</code></li>
+<li>AllowedPattern: <code>^[^-][\w-]+</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>This name must be unique within your set of load balancers for the region.</code></li>
+<li>MaxLength: <code>32</code></li>
+</ul>
+<h4 id="instanceprotocol2">InstanceProtocol2</h4>
+<ul>
+<li>Default: <code>HTTP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the protocol to use for routing traffic to back-end instances HTTP / HTTPS / TCP / SSL.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS', 'TCP', 'SSL']</code></li>
+</ul>
+<h4 id="instanceprotocol1">InstanceProtocol1</h4>
+<ul>
+<li>Default: <code>HTTP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the protocol to use for routing traffic to back-end instances HTTP / HTTPS / TCP / SSL.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS', 'TCP', 'SSL']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>UnHealthyHostCountAlarm</code></li>
+<li><code>S3BucketName</code></li>
+<li><code>CLB</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="unhealthyhostcountalarm">UnHealthyHostCountAlarm</h4>
+<ul>
+<li>Description: Unhealthy Host count is above threshold, creating ticket.</li>
+<li>Metric: UnHealthyHostCount</li>
+<li>Threshold: 1</li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

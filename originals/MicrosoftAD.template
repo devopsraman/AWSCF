@@ -1,0 +1,89 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Testing template for AWS Microsoft AD resource.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Required Configuration" },
+          "Parameters": [ "Name", "Password", "VpcId", "SubnetIds" ]
+        },
+        {
+          "Label": { "default": "Optional Configuration" },
+          "Parameters": [ "ShortName", "CreateAlias", "EnableSso" ]
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Password": {
+      "Description": "The password for the default administrative user, Admin.",
+      "Type": "String",
+      "NoEcho": "True"
+    },
+    "Name": {
+      "Description": "The fully qualified name for the Microsoft Active Directory in AWS, such as corp.example.com. The name doesn't need to be publicly resolvable; it will resolve inside your VPC only.",
+      "Type": "String"
+    },
+    "ShortName": {
+      "Description": "The NetBIOS name for your domain, such as CORP. If you don't specify a value, AWS Directory Service uses the first part of your directory DNS server name. For example, if your directory DNS server name is corp.example.com, AWS Directory Service specifies CORP for the NetBIOS name.",
+      "Type": "String",
+      "Default": ""
+    },
+    "VpcId": {
+      "Description": "The VPC ID in which to create the Microsoft Active Directory server.",
+      "Type": "AWS::EC2::VPC::Id"
+    },
+    "SubnetIds": {
+      "Description": "A list of at least two subnet IDs for the directory servers. Each subnet must be in different Availability Zones (AZs). AWS Directory Service creates a directory server and a DNS server in each subnet.",
+      "Type": "List<AWS::EC2::Subnet::Id>"
+    },
+    "CreateAlias": {
+      "Description": "A unique alias to assign to the Microsoft Active Directory in AWS. AWS Directory Service uses the alias to construct the access URL for the directory, such as http://alias.awsapps.com. By default, AWS CloudFormation does not create an alias.",
+      "Type": "String",
+      "AllowedValues": [ "True", "False" ],
+      "Default": "False"
+    },
+    "EnableSso": {
+      "Description": "Whether to enable single sign-on for a Microsoft Active Directory in AWS. Single sign-on allows users in your directory to access certain AWS services from a computer joined to the directory without having to enter their credentials separately. If you don't specify a value, AWS CloudFormation disables single sign-on by default.",
+      "Type": "String",
+      "AllowedValues": [ "True", "False" ],
+      "Default": "False"
+    }
+  },
+  "Conditions": {
+    "doCreateAlias": { "Fn::Equals": [ { "Ref": "CreateAlias" }, "True" ] },
+    "doEnableSso": { "Fn::Equals": [ { "Ref": "EnableSso" }, "True" ] },
+    "useShortName": { "Fn::Not": [ { "Fn::Equals": [ { "Ref": "ShortName" }, "" ] } ] }
+  },
+  "Resources": {
+    "MicrosoftAD": {
+      "Type": "AWS::DirectoryService::MicrosoftAD",
+      "Properties": {
+        "Name": { "Ref": "Name" },
+        "Password": { "Ref": "Password" },
+        "VpcSettings": {
+          "SubnetIds": { "Ref": "SubnetIds" },
+          "VpcId": { "Ref": "VpcId" }
+        },
+        "CreateAlias": { "Fn::If": [ "doCreateAlias", "True", { "Ref": "AWS::NoValue" } ] },
+        "EnableSso": { "Fn::If": [ "doEnableSso", "True", { "Ref": "AWS::NoValue" } ] },
+        "ShortName": { "Fn::If": [ "useShortName", { "Ref": "ShortName" }, { "Ref": "AWS::NoValue" } ] }
+      }
+    }
+  },
+  "Outputs": {
+    "directoryId": { "Value": { "Ref": "MicrosoftAD" } },
+    "directoryName": { "Value": { "Ref": "Name" } },
+    "dnsIpAddresses": {
+      "Value": {
+        "Fn::Join": [ ",",
+          [
+            { "Fn::Select": [ "0", { "Fn::GetAtt": [ "MicrosoftAD", "DnsIpAddresses" ] } ] },
+            { "Fn::Select": [ "1", { "Fn::GetAtt": [ "MicrosoftAD", "DnsIpAddresses" ] } ] }
+          ]
+        ]
+      }
+    }
+  }
+}

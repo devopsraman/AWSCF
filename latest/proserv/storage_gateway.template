@@ -1,0 +1,682 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "storage_gateway.template - Deploys Storage Gateway w/ EIP and autorecovery into existing VPC",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "StorageGatewayType",
+            "KeyName",
+            "DetailedMonitoring",
+            "TenType",
+            "InstanceType"
+          ],
+          "Label": {
+            "default": "Storage Gateway Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "UploadBufferVolumeSize",
+            "EBSOptimized",
+            "EbsVolumeType",
+            "CacheVolumeSize",
+            "Iops"
+          ],
+          "Label": {
+            "default": "Storage Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "PubSubnet",
+            "AdminCIDR",
+            "VPC",
+            "EIPAllocationId"
+          ],
+          "Label": {
+            "default": "Network Configuration"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "TenType": {
+          "default": "EC2 Tenancy Type"
+        },
+        "KeyName": {
+          "default": "SSH Key"
+        },
+        "PubSubnet": {
+          "default": "Public subnet"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "PubSubnet": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "Public Subnet to allow for access to instance for activation."
+    },
+    "StorageGatewayType": {
+      "Default": "FileGateway",
+      "Type": "String",
+      "Description": "The type of storage gateway appliance to be built.",
+      "AllowedValues": [
+        "FileGateway",
+        "VolumeGateway",
+        "TapeGateway"
+      ]
+    },
+    "UploadBufferVolumeSize": {
+      "Default": "150",
+      "Type": "String",
+      "Description": "Select Storage Gateway Upload Buffer Storage Volume Size in GB.  (Unused with File Gateways)"
+    },
+    "InstanceType": {
+      "Default": "m4.xlarge",
+      "ConstraintDescription": "Must be a valid EC2 instance type. Default is m4.xlarge",
+      "Type": "String",
+      "Description": "Select instance type",
+      "AllowedValues": [
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m4.16xlarge",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge"
+      ]
+    },
+    "InstanceRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the InstanceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "KeyName": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances."
+    },
+    "EBSOptimized": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Use EBS Optimized.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "DetailedMonitoring": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Enable Detailed Monitoring.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "VPC": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "VPC to launch into."
+    },
+    "EbsVolumeType": {
+      "Default": "gp2",
+      "Type": "String",
+      "Description": "Select EBS Volume Type.",
+      "AllowedValues": [
+        "io1",
+        "standard",
+        "gp2"
+      ]
+    },
+    "CacheVolumeSize": {
+      "Default": "150",
+      "Type": "String",
+      "Description": "Select Storage Gateway Cache Storage Volume Size in GB."
+    },
+    "EIPAllocationId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The AllocationId of an existing EIP you want to associate with the instance (optional)."
+    },
+    "AdminCIDR": {
+      "Type": "String",
+      "Description": "The IP address space that will manage the Storage Gateway, in CIDR notation",
+      "MinLength": "9",
+      "AllowedPattern": "^([0-9]+\\.){3}[0-9]+\\/[0-9]+$",
+      "MaxLength": "18",
+      "ConstraintDescription": "Must be a valid CIDR range of the form x.x.x.x/x"
+    },
+    "Iops": {
+      "Default": "0",
+      "Type": "Number",
+      "Description": "Iops value required for use with io1 EBS volumes. This value should be 3 times the EBS volume size"
+    },
+    "TenType": {
+      "Default": "default",
+      "Type": "String",
+      "Description": "Preferred EC2 tenancy type (default, dedicated instance or full host).",
+      "AllowedValues": [
+        "default",
+        "dedicated",
+        "host"
+      ]
+    }
+  },
+  "Conditions": {
+    "IopsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EbsVolumeType"
+        },
+        "io1"
+      ]
+    },
+    "IsStorageGateway": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "StorageGatewayType"
+            },
+            "VolumeGateway"
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "StorageGatewayType"
+            },
+            "TapeGateway"
+          ]
+        }
+      ]
+    },
+    "InstanceRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InstanceRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CreateEIP": {
+      "Fn::Equals": [
+        {
+          "Ref": "EIPAllocationId"
+        },
+        ""
+      ]
+    }
+  },
+  "Mappings": {
+    "StorageGatewayAMI": {
+      "us-west-1": {
+        "StorageGateway": "ami-f8a38798",
+        "FileGateway": "ami-b75473d7"
+      },
+      "us-east-1": {
+        "StorageGateway": "ami-2541d933",
+        "FileGateway": "ami-28ed893e"
+      },
+      "ap-northeast-1": {
+        "StorageGateway": "ami-21f8d346",
+        "FileGateway": "ami-070c3960"
+      },
+      "eu-west-1": {
+        "StorageGateway": "ami-aac9c8cc",
+        "FileGateway": "ami-bdbabadb"
+      },
+      "ap-northeast-2": {
+        "StorageGateway": "ami-2e5f8d40",
+        "FileGateway": "ami-be6bb9d0"
+      },
+      "sa-east-1": {
+        "StorageGateway": "ami-d987eab5",
+        "FileGateway": "ami-f7d5b89b"
+      },
+      "ap-southeast-1": {
+        "StorageGateway": "ami-c0fd46a3",
+        "FileGateway": "ami-1552e976"
+      },
+      "ca-central-1": {
+        "StorageGateway": "ami-e2b80486",
+        "FileGateway": "ami-ebb00c8f"
+      },
+      "ap-southeast-2": {
+        "StorageGateway": "ami-26050d45",
+        "FileGateway": "ami-6bf9f108"
+      },
+      "us-west-2": {
+        "StorageGateway": "ami-764cd316",
+        "FileGateway": "ami-8c0d93ec"
+      },
+      "ap-south-1": {
+        "StorageGateway": "ami-ff601290",
+        "FileGateway": "ami-63b5c70c"
+      },
+      "eu-central-1": {
+        "StorageGateway": "ami-cbb66aa4",
+        "FileGateway": "ami-a327fbcc"
+      },
+      "us-east-2": {
+        "StorageGateway": "ami-895770ec",
+        "FileGateway": "ami-b72a0dd2"
+      },
+      "eu-west-2": {
+        "StorageGateway": "ami-c5e1f5a1",
+        "FileGateway": "ami-90988cf4"
+      }
+    }
+  },
+  "Resources": {
+    "UploadBufferVolumeAttachment": {
+      "Type": "AWS::EC2::VolumeAttachment",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "StorageGateway"
+        },
+        "Device": "/dev/sdd",
+        "VolumeId": {
+          "Ref": "UploadBufferVolume"
+        }
+      },
+      "Condition": "IsStorageGateway"
+    },
+    "StorageGateway": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "Monitoring": {
+          "Ref": "DetailedMonitoring"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "StorageGatewayType"
+            }
+          }
+        ],
+        "Tenancy": {
+          "Ref": "TenType"
+        },
+        "SecurityGroupIds": [
+          {
+            "Ref": "StorageGatewaySecurityGroup"
+          }
+        ],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "EbsOptimized": {
+          "Ref": "EBSOptimized"
+        },
+        "SubnetId": {
+          "Ref": "PubSubnet"
+        },
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "ImageId": {
+          "Fn::If": [
+            "IsStorageGateway",
+            {
+              "Fn::FindInMap": [
+                "StorageGatewayAMI",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "StorageGateway"
+              ]
+            },
+            {
+              "Fn::FindInMap": [
+                "StorageGatewayAMI",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "FileGateway"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "EIP": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "VPC"
+      },
+      "Condition": "CreateEIP"
+    },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
+                  {
+                    "Fn::If": [
+                      "InstanceRolePoliciesSet",
+                      {
+                        "Ref": "InstanceRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "StorageGatewayClientSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [],
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "GroupDescription": "Storage Gateway Client Security Group",
+        "SecurityGroupEgress": []
+      }
+    },
+    "CacheVolume": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "Iops": {
+          "Fn::If": [
+            "IopsEnabled",
+            {
+              "Ref": "Iops"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VolumeType": {
+          "Ref": "EbsVolumeType"
+        },
+        "AvailabilityZone": {
+          "Fn::GetAtt": [
+            "StorageGateway",
+            "AvailabilityZone"
+          ]
+        },
+        "Size": {
+          "Ref": "CacheVolumeSize"
+        }
+      }
+    },
+    "AssociateIP": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "StorageGateway"
+        },
+        "AllocationId": {
+          "Fn::If": [
+            "CreateEIP",
+            {
+              "Fn::GetAtt": [
+                "EIP",
+                "AllocationId"
+              ]
+            },
+            {
+              "Ref": "EIPAllocationId"
+            }
+          ]
+        }
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "StatusCheckRecoveryAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "2",
+        "Dimensions": [
+          {
+            "Name": "InstanceId",
+            "Value": {
+              "Ref": "StorageGateway"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:automate:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":ec2:recover"
+              ]
+            ]
+          }
+        ],
+        "AlarmDescription": "Trigger a recovery when Storage Gateway instance status check fails for 2 consecutive minutes.",
+        "Namespace": "AWS/EC2",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Minimum",
+        "Threshold": "0",
+        "MetricName": "StatusCheckFailed_System"
+      }
+    },
+    "CacheVolumeAttachment": {
+      "Type": "AWS::EC2::VolumeAttachment",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "StorageGateway"
+        },
+        "Device": "/dev/sdc",
+        "VolumeId": {
+          "Ref": "CacheVolume"
+        }
+      }
+    },
+    "UploadBufferVolume": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "Iops": {
+          "Fn::If": [
+            "IopsEnabled",
+            {
+              "Ref": "Iops"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VolumeType": {
+          "Ref": "EbsVolumeType"
+        },
+        "AvailabilityZone": {
+          "Fn::GetAtt": [
+            "StorageGateway",
+            "AvailabilityZone"
+          ]
+        },
+        "Size": {
+          "Ref": "UploadBufferVolumeSize"
+        }
+      },
+      "Condition": "IsStorageGateway"
+    },
+    "StorageGatewaySecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": "80",
+            "FromPort": "80",
+            "CidrIp": {
+              "Ref": "AdminCIDR"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "3260",
+            "FromPort": "3260",
+            "CidrIp": {
+              "Ref": "AdminCIDR"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "3260",
+            "FromPort": "3260",
+            "SourceSecurityGroupId": {
+              "Ref": "StorageGatewayClientSG"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "2049",
+            "FromPort": "2049",
+            "CidrIp": {
+              "Ref": "AdminCIDR"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "2049",
+            "FromPort": "2049",
+            "SourceSecurityGroupId": {
+              "Ref": "StorageGatewayClientSG"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "111",
+            "FromPort": "111",
+            "CidrIp": {
+              "Ref": "AdminCIDR"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "111",
+            "FromPort": "111",
+            "SourceSecurityGroupId": {
+              "Ref": "StorageGatewayClientSG"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "20048",
+            "FromPort": "20048",
+            "CidrIp": {
+              "Ref": "AdminCIDR"
+            },
+            "IpProtocol": "tcp"
+          },
+          {
+            "ToPort": "20048",
+            "FromPort": "20048",
+            "SourceSecurityGroupId": {
+              "Ref": "StorageGatewayClientSG"
+            },
+            "IpProtocol": "tcp"
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "GroupDescription": "Storage Gateway Appliance Security Group"
+      }
+    }
+  },
+  "Outputs": {
+    "URL": {
+      "Description": "IP Address for Management",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "StorageGateway",
+                "PublicIp"
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    "PubIP": {
+      "Description": "Publicly Allocated Elastic IP Address",
+      "Value": {
+        "Fn::GetAtt": [
+          "StorageGateway",
+          "PublicIp"
+        ]
+      }
+    }
+  }
+}

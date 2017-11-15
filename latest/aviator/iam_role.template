@@ -1,0 +1,96 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "iam_role.template - Create an IAM Service Role",
+  "Parameters": {
+    "Services": {
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of services endpoints that can assume this role."
+    },
+    "RoleName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name to use for the IAM Role.  If omitted, a name will be generated for the role. OPTIONAL"
+    },
+    "ServiceRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of IAM policy ARNs for the ServiceRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    }
+  },
+  "Conditions": {
+    "SetRoleName": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "RoleName"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "ServiceRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "ServiceRoleManagedPolicyArns"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "ServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::If": [
+            "SetRoleName",
+            {
+              "Ref": "RoleName"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Ref": "Services"
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": {
+          "Fn::If": [
+            "ServiceRolePoliciesSet",
+            {
+              "Ref": "ServiceRoleManagedPolicyArns"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    }
+  }
+}

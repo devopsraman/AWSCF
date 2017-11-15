@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="route53healthcheck-faws-template">Route53Healthcheck FAWS Template</h1>
+<p>route53_healthcheck.template - Route53 HealthCheck Monitors. Must be deployed in us-east-1. ### Parameters</p>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="searchstring">SearchString</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>If the string appears in the response body, Amazon Route 53 considers the resource healthy.  Ignored for TCP domain protocols.</code></li>
+</ul>
+<h4 id="monitoreddomain">MonitoredDomain</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Domain or IP to monitor DO NOT include protocol(HTTP(S)://)</code></li>
+</ul>
+<h4 id="resourcepath">ResourcePath</h4>
+<ul>
+<li>Default: <code>/</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies HTTP path to monitor.  The path can be any value which returns an HTTP status code of 2xx or 3xx when the endpoint is healthy.  Ignored for TCP DomainProtocol.</code></li>
+</ul>
+<h4 id="domainprotocol">DomainProtocol</h4>
+<ul>
+<li>Default: <code>HTTP</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies the protocol of the domain.</code></li>
+<li>AllowedValues: <code>['HTTP', 'HTTPS', 'TCP']</code></li>
+</ul>
+<h4 id="requestinterval">RequestInterval</h4>
+<ul>
+<li>Default: <code>30</code></li>
+<li>MinValue: <code>10</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>The number of seconds between the finish of one Route 53 health check request and the start of the next.</code></li>
+<li>MaxValue: <code>30</code></li>
+</ul>
+<h4 id="port">Port</h4>
+<ul>
+<li>Default: <code>80</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Specifies the port number to monitor.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+<h4 id="domainalarmaction">DomainAlarmAction</h4>
+<ul>
+<li>Description: Domain has failed, generating ticket.</li>
+<li>Metric: HealthCheckStatus</li>
+<li>Threshold: 1</li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

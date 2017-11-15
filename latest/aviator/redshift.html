@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="redshift-faws-template">Redshift FAWS Template</h1>
+<p>redshift.template - AWS Redshift ### Parameters</p>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="publiclyaccessible">PubliclyAccessible</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>ConstraintDescription: <code>Must be either True or False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates whether the Redshift cluster is an Internet-facing cluster</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="masterusername">MasterUsername</h4>
+<ul>
+<li>AllowedPattern: <code>^[^\d][a-zA-Z0-9_]+?$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of master user for the Redshift instance</code></li>
+<li>MaxLength: <code>64</code></li>
+</ul>
+<h4 id="redshiftinstanceclass">RedshiftInstanceClass</h4>
+<ul>
+<li>Default: <code>dc1.large</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The compute and memory capacity of the nodes within the Redshift cluster</code></li>
+<li>AllowedValues: <code>['dc1.large', 'dc1.8xlarge', 'ds2.xlarge', 'ds2.8xlarge']</code></li>
+</ul>
+<h4 id="redshiftsubnets">RedshiftSubnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Subnets for use with this Redshift cluster</code></li>
+</ul>
+<h4 id="vpcsecuritygroupids">VPCSecurityGroupIds</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>Existing security group being used by Redshift</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="masteruserpasswords">MasterUserPasswords</h4>
+<ul>
+<li>AllowedPattern: <code>^[\p{ASCII}&amp;&amp;[^@\s\/&quot;]]+$||^$</code></li>
+<li>MinLength: <code>8</code></li>
+<li>Type: <code>String</code></li>
+<li>NoEcho: <code>True</code></li>
+<li>MaxLength: <code>64</code></li>
+</ul>
+<h4 id="cwpercentagediskused">CWPercentageDiskUsed</h4>
+<ul>
+<li>Default: <code>90</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch Percentage of storage consumed threshold</code></li>
+</ul>
+<h4 id="enablerackspaceticket">EnableRackspaceTicket</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether alarms will generate Rackspace tickets</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="numberofnodes">NumberOfNodes</h4>
+<ul>
+<li>Default: <code>1</code></li>
+<li>MinValue: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>If ClusterType is single-node, this parameter is ignored. If ClusterType is multi-node, NumberOfNodes must be &gt;= 2.</code></li>
+<li>MaxValue: <code>100</code></li>
+</ul>
+<h4 id="keyid">KeyId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The ID of the AWS Key Management Service (AWS KMS) key that you want to use to encrypt data in the cluster</code></li>
+</ul>
+<h4 id="clusterversion">ClusterVersion</h4>
+<ul>
+<li>Default: <code>1.0</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Redshift Engine Version</code></li>
+<li>AllowedValues: <code>['1.0']</code></li>
+</ul>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="clusterrolemanagedpolicyarns">ClusterRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the ClusterRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="backupretentionperiod">BackupRetentionPeriod</h4>
+<ul>
+<li>Description: <code>The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups</code></li>
+<li>Default: <code>1</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>35</code></li>
+<li>MinValue: <code>0</code></li>
+<li>ConstraintDescription: <code>must be between 0 and 35</code></li>
+</ul>
+<h4 id="dbname">DBName</h4>
+<ul>
+<li>Default: <code>myredshift</code></li>
+<li>AllowedPattern: <code>^(?=.{1,63}$)[a-z][a-z0-9_]*</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of initial Redshift database</code></li>
+<li>ConstraintDescription: <code>Must be lower-case, begin with a letter, contain alphanumeric characters or underscores, and have a maximum length of 63</code></li>
+</ul>
+<h4 id="preferredmaintenancewindow">PreferredMaintenanceWindow</h4>
+<ul>
+<li>Default: <code>Sun:05:00-Sun:07:00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The daily time range during which automated backups are created if automated backups are enabled</code></li>
+</ul>
+<h4 id="elasticip">ElasticIP</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Elastic IP (EIP) address for the cluster (must have publicly accessible enabled)</code></li>
+</ul>
+<h4 id="cwcputhreshold">CWCPUThreshold</h4>
+<ul>
+<li>Default: <code>90</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch CPUUtilization Threshold</code></li>
+</ul>
+<h4 id="clustertype">ClusterType</h4>
+<ul>
+<li>Default: <code>single-node</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Create a single-node or multi-node Redshift cluster</code></li>
+<li>AllowedValues: <code>['single-node', 'multi-node']</code></li>
+</ul>
+<h4 id="allowversionupgrade">AllowVersionUpgrade</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates that engine upgrades will be applied automatically to the Redshift cluster during the maintenance window</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="redshiftsnapshotidentifier">RedshiftSnapshotIdentifier</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of the snapshot from which to create a new cluster (optional)</code></li>
+</ul>
+<h4 id="availabilityzone">AvailabilityZone</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Availability zone in which to initially provision Redshift. OPTIONAL</code></li>
+</ul>
+<h4 id="storageencrypted">StorageEncrypted</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>ConstraintDescription: <code>Must be either True or False</code></li>
+<li>Description: <code>Specifies whether the Redshift cluster is encrypted</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h4 id="port">Port</h4>
+<ul>
+<li>Description: <code>The port number on which the database accepts connections</code></li>
+<li>Default: <code>5439</code></li>
+<li>ConstraintDescription: <code>Must be between 1150 and 65535.</code></li>
+<li>MaxValue: <code>65535</code></li>
+<li>MinValue: <code>1150</code></li>
+<li>Type: <code>Number</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>JDBCConnectionString</code></li>
+<li><code>DBPort</code></li>
+<li><code>RedshiftClusterIdentifier</code></li>
+<li><code>RedshiftAddress</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="cpualarmhigh">CPUAlarmHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${RedshiftCluster} CPU &gt; ${CWCPUThreshold}% for 5 minutes'}</code></li>
+<li>Metric: CPUUtilization</li>
+<li>Threshold: <code>{'Ref': 'CWCPUThreshold'}</code></li>
+<li>Actions: []</li>
+</ul>
+<h4 id="clusterhealthticket">ClusterHealthTicket</h4>
+<ul>
+<li>Description: Cluster has entered unhealthy state, creating ticket</li>
+<li>Metric: HealthStatus</li>
+<li>Threshold: 1</li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="freestoragespaceticket">FreeStorageSpaceTicket</h4>
+<ul>
+<li>Description: Consumed storage space has risen above threshold, sending email notification</li>
+<li>Metric: PercentageDiskSpaceUsed</li>
+<li>Threshold: <code>{'Ref': 'CWPercentageDiskUsed'}</code></li>
+<li>Actions: <code>{'Fn::If': ['RackspaceAlarmsEnabled', {'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-urgent'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

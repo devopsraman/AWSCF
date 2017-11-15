@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="rdspostgres-faws-template">RdsPostgres FAWS Template</h1>
+<p>rds_postgres.template - Creates the necessary resources for an RDS instance. Please be aware that this template will create resources for which you will be charged. ### Parameters</p>
+<h4 id="internalrecordname">InternalRecordName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Record Name for the new Resource Record in the Internal Hosted Zone</code></li>
+</ul>
+<h4 id="dbnameversion">DBNameVersion</h4>
+<ul>
+<li>Default: <code>v00</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>NOTE: This needs to increment on update with new snapshot</code></li>
+</ul>
+<h4 id="publiclyaccessible">PubliclyAccessible</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates whether the database instance is an Internet-facing instance.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="masterusername">MasterUsername</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of master user for the client DB instance.</code></li>
+<li>MinLength: <code>1</code></li>
+<li>AllowedPattern: <code>^[^\d][a-zA-Z0-9_]+?$</code></li>
+<li>MaxLength: <code>63</code></li>
+<li>ConstraintDescription: <code>Must be between 1 and 63 characters and begin with a letter.</code></li>
+</ul>
+<h4 id="notificationtopic">NotificationTopic</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SNS Topic ARN to notify if there are any alarms. (OPTIONAL)</code></li>
+</ul>
+<h4 id="vpcsecuritygroupids">VPCSecurityGroupIds</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>List&lt;AWS::EC2::SecurityGroup::Id&gt;</code></li>
+<li>Description: <code>Existing security groups being used by App ec2 instances. If no AppSG, enter the VPC Default.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="cwwriteiopslimit">CWWriteIopsLimit</h4>
+<ul>
+<li>Default: <code>100</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch Write IOPSLimit Threshold</code></li>
+</ul>
+<h4 id="rdsvolumetype">RDSVolumeType</h4>
+<ul>
+<li>Default: <code>gp2</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Select RDS Volume Type.</code></li>
+<li>AllowedValues: <code>['io1', 'standard', 'gp2']</code></li>
+</ul>
+<h4 id="engine">Engine</h4>
+<ul>
+<li>Default: <code>postgres</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Database Engine Type.</code></li>
+<li>AllowedValues: <code>['postgres']</code></li>
+</ul>
+<h4 id="preferredbackupwindow">PreferredBackupWindow</h4>
+<ul>
+<li>Default: <code>05:00-06:00</code></li>
+<li>AllowedPattern: <code>^[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2}$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The daily time range during which automated backups are created if automated backups are enabled.</code></li>
+<li>ConstraintDescription: <code>Must be in the format hh24:mi-hh24:mi</code></li>
+</ul>
+<h4 id="eventcategories">EventCategories</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A list of RDS event categories.  Submissions will be made to the provided NotificationTopic for each matching event. Acceptable values can be found with the CLI command 'aws rds describe-event-categories' (OPTIONAL)</code></li>
+</ul>
+<h4 id="majorengineversion">MajorEngineVersion</h4>
+<ul>
+<li>Default: <code>9.6</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Database Engine Major Version</code></li>
+<li>AllowedValues: <code>[u'9.4', u'9.5', u'9.6', u'9.3']</code></li>
+</ul>
+<h4 id="minorengineversion">MinorEngineVersion</h4>
+<ul>
+<li>Default: <code>9.6.5</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Database Engine Minor Version http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html</code></li>
+<li>AllowedValues: <code>[u'9.4.9', u'9.3.19', u'9.6.1', u'9.3.12', u'9.3.17', u'9.3.16', u'9.4.7', u'9.4.12', u'9.5.4', u'9.5.7', u'9.4.11', u'9.4.14', u'9.5.2', u'9.6.2', u'9.6.3', u'9.3.14', u'9.5.9', u'9.5.6', u'9.6.5']</code></li>
+</ul>
+<h4 id="autominorversionupgrade">AutoMinorVersionUpgrade</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="internalzonename">InternalZoneName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>TLD for Internal Hosted Zone</code></li>
+</ul>
+<h4 id="parametergroupfamily">ParameterGroupFamily</h4>
+<ul>
+<li>Default: <code>postgres9.6</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Parameter Group Family Name (ex. mysql5.7,sqlserver-se-12.0,postgres9.5,oracle-se-12.1,mariadb10.1)</code></li>
+<li>AllowedValues: <code>[u'postgres9.6', u'postgres9.5', u'postgres9.4', u'postgres9.3']</code></li>
+</ul>
+<h4 id="rdsvolumesize">RDSVolumeSize</h4>
+<ul>
+<li>Description: <code>Select RDS Volume Size in GB.</code></li>
+<li>Default: <code>10</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>6144</code></li>
+<li>MinValue: <code>5</code></li>
+<li>ConstraintDescription: <code>Must be between 5 and 6144</code></li>
+</ul>
+<h4 id="cwfreestoragespacelimit">CWFreeStorageSpaceLimit</h4>
+<ul>
+<li>Default: <code>1024000000</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch Free Storage Space Limit Threshold (Bytes)</code></li>
+</ul>
+<h4 id="cwreadiopslimit">CWReadIopsLimit</h4>
+<ul>
+<li>Default: <code>100</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch Read IOPSLimit Threshold</code></li>
+</ul>
+<h4 id="backupretentionperiod">BackupRetentionPeriod</h4>
+<ul>
+<li>Description: <code>The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups. Compass best practice is 30 or more days.</code></li>
+<li>Default: <code>35</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>35</code></li>
+<li>MinValue: <code>0</code></li>
+<li>ConstraintDescription: <code>Must be between 0 and 35.</code></li>
+</ul>
+<h4 id="dbname">DBName</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The meaning of this parameter differs according to the database engine you use.</code></li>
+<li>Default: <code>MyRDS</code></li>
+<li>MinLength: <code>0</code></li>
+<li>MaxLength: <code>63</code></li>
+<li>ConstraintDescription: <code>String length must be between 0 and 63.</code></li>
+</ul>
+<h4 id="preferredmaintenancewindow">PreferredMaintenanceWindow</h4>
+<ul>
+<li>Default: <code>Sun:07:00-Sun:08:00</code></li>
+<li>AllowedPattern: <code>^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):[0-9]{2}:[0-9]{2}-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):[0-9]{2}:[0-9]{2}$</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The daily time range during which automated backups are created if automated backups are enabled.</code></li>
+<li>ConstraintDescription: <code>Must be in the format ddd:hh24:mi-ddd:hh24:mi</code></li>
+</ul>
+<h4 id="multiaz">MultiAZ</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Create a multi-AZ RDS database instance</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="cwcputhreshold">CWCPUThreshold</h4>
+<ul>
+<li>Default: <code>60</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>CloudWatch CPUUtilization Threshold</code></li>
+</ul>
+<h4 id="rdssubnets">RDSSubnets</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>Subnets for RDS Instances</code></li>
+</ul>
+<h4 id="rdsvolumeiops">RDSVolumeIops</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>Number</code></li>
+<li>Description: <code>Iops value required for use. Typically 3 x Volume Size</code></li>
+</ul>
+<h4 id="existingsubnetgroup">ExistingSubnetGroup</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The existing DB subnet group to use for this instance. (OPTIONAL)</code></li>
+</ul>
+<h4 id="masteruserpassword">MasterUserPassword</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be between 1 and 128 characters and cannot contain '@', '&quot;', or '\/'.</code></li>
+<li>Description: <code>Password for the local administrator account. Must be at least 8 characters containing letters, numbers and symbols.</code></li>
+<li>MinLength: <code>8</code></li>
+<li>AllowedPattern: <code>^[\p{ASCII}&amp;&amp;[^@\s\/&quot;]]+$||^$</code></li>
+<li>NoEcho: <code>True</code></li>
+<li>MaxLength: <code>128</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="dbsnapshotname">DBSnapshotName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The name of a DB snapshot (optional).</code></li>
+</ul>
+<h4 id="storageencrypted">StorageEncrypted</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>ConstraintDescription: <code>Must be either True or False.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether the DB instance is encrypted.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="dbinstanceclass">DBInstanceClass</h4>
+<ul>
+<li>Default: <code>db.m3.xlarge</code></li>
+<li>ConstraintDescription: <code>Must select a valid database instance type.</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The database instance type.</code></li>
+<li>AllowedValues: <code>['db.t2.micro', 'db.t2.small', 'db.t2.medium', 'db.t2.large', 'db.r3.large', 'db.r3.xlarge', 'db.r3.2xlarge', 'db.r3.4xlarge', 'db.r3.8xlarge', 'db.m3.medium', 'db.m3.large', 'db.m3.xlarge', 'db.m3.2xlarge', 'db.m4.large', 'db.m4.xlarge', 'db.m4.2xlarge', 'db.m4.4xlarge', 'db.m4.10xlarge']</code></li>
+</ul>
+<h4 id="internalzoneid">InternalZoneId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The Route53 Internal Hosted Zone ID</code></li>
+</ul>
+<h4 id="port">Port</h4>
+<ul>
+<li>Description: <code>The port number on which the database accepts connections.</code></li>
+<li>Default: <code>5432</code></li>
+<li>Type: <code>Number</code></li>
+<li>MaxValue: <code>65535</code></li>
+<li>MinValue: <code>1150</code></li>
+<li>ConstraintDescription: <code>Must be between 1150 and 65535.</code></li>
+</ul>
+<h4 id="dbinstanceidentifier">DBInstanceIdentifier</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The DB instance identifier. This parameter is stored as a lowercase string. (optional)</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>JDBCConnectionString</code></li>
+<li><code>DBPort</code></li>
+<li><code>RDSEndpoint</code></li>
+<li><code>DBInstanceIdentifier</code></li>
+<li><code>DBAddress</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="freestoragespaceemail">FreeStorageSpaceEmail</h4>
+<ul>
+<li>Description: Free storage space has fallen below threshold, sending email notification.</li>
+<li>Metric: FreeStorageSpace</li>
+<li>Threshold: 3072000000</li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="writeiopshigh">WriteIOPSHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${RDSInstance} WriteIOPs &gt; ${CWWriteIopsLimit} for 5 minutes'}</code></li>
+<li>Metric: WriteIOPS</li>
+<li>Threshold: <code>{'Ref': 'CWWriteIopsLimit'}</code></li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="cpualarmhigh">CPUAlarmHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${RDSInstance} CPU &gt; ${CWCPUThreshold}% for 5 minutes'}</code></li>
+<li>Metric: CPUUtilization</li>
+<li>Threshold: <code>{'Ref': 'CWCPUThreshold'}</code></li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="readiopshigh">ReadIOPSHigh</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': 'Alarm if ${RDSInstance} ReadIOPs &gt; ${CWReadIopsLimit} for 5 minutes'}</code></li>
+<li>Metric: ReadIOPS</li>
+<li>Threshold: <code>{'Ref': 'CWReadIopsLimit'}</code></li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+<h4 id="freestoragespaceticket">FreeStorageSpaceTicket</h4>
+<ul>
+<li>Description: Free storage space has fallen below threshold, generating ticket.</li>
+<li>Metric: FreeStorageSpace</li>
+<li>Threshold: <code>{'Ref': 'CWFreeStorageSpaceLimit'}</code></li>
+<li>Actions: [&quot;<code>{'Fn::Sub': 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-urgent'}</code>&quot;, &quot;<code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code>&quot;]</li>
+</ul>
+</body>
+</html>

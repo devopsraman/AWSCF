@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="systemsmanagerservicerole-faws-template">SystemsManagerServiceRole FAWS Template</h1>
+<p>systems_manager_service_role.template - Infrastructure Template for Systems Manager Service Role ### Parameters</p>
+<h4 id="enableautomation">EnableAutomation</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether the Automation IAM role will be created.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h4 id="enablemaintenancewindow">EnableMaintenanceWindow</h4>
+<ul>
+<li>Default: <code>True</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Specifies whether the Maintenance Window IAM role will be created.</code></li>
+<li>AllowedValues: <code>['False', 'True']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>AutomationRoleARN</code></li>
+<li><code>MaintenanceWindowRoleName</code></li>
+<li><code>AutomationRoleName</code></li>
+<li><code>MaintenanceWindowRoleARN</code></li>
+<li><code>AutomationInstanceProfileName</code></li>
+<li><code>AutomationInstanceProfileARN</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

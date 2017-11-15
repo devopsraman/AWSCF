@@ -1,0 +1,585 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "ecs_cd_pipeline.template - Create a Continuous Deployment Pipeline for an ECS Service. Unsupported!!!!",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "Repository",
+            "OAuthToken",
+            "Branch",
+            "Organization"
+          ],
+          "Label": {
+            "default": "Github"
+          }
+        },
+        {
+          "Parameters": [
+            "ECSServiceParameterKey",
+            "ECSServiceParameterBucket",
+            "ECSServiceKey",
+            "ECSServiceStack",
+            "ECSServiceBucket"
+          ],
+          "Label": {
+            "default": "ECS Service"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "ECSServiceParameterBucket": {
+          "default": "ECS Service Parameters Bucket Name"
+        },
+        "Repository": {
+          "default": "Github Repository"
+        },
+        "ECSServiceKey": {
+          "default": "ECS Service CloudFormation Template Name"
+        },
+        "OAuthToken": {
+          "default": "Github OAuth Token"
+        },
+        "ECSServiceParameterKey": {
+          "default": "ECS Service Parameters File Name"
+        },
+        "Branch": {
+          "default": "Git Branch"
+        },
+        "Organization": {
+          "default": "Github Organization"
+        },
+        "ECSServiceStack": {
+          "default": "ECS Service Stack Name"
+        },
+        "ECSServiceBucket": {
+          "default": "ECS Service CloudFormation Template Bucket Name"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "ECSServiceParameterBucket": {
+      "Type": "String",
+      "Description": "Valid Bucket name housing the Service CloudFormation Parameters file."
+    },
+    "Repository": {
+      "Type": "String",
+      "Description": "Name of the Github Repository."
+    },
+    "CodePipelineRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the CodePipelineRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "ECSServiceKey": {
+      "Type": "String",
+      "Description": "Bucket Key for the ECS Service CloudFormation Template."
+    },
+    "OAuthToken": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Github OAuthToken with correct access to Repository."
+    },
+    "ECSServiceParameterKey": {
+      "Type": "String",
+      "Description": "Bucket Key for the Service Template Parameters file."
+    },
+    "CodeBuildRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "String",
+      "Description": "A comma delimited list of IAM policy ARNs for the CodeBuildRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "Branch": {
+      "Type": "String",
+      "Description": "Git branch to use as the source for this pipeline"
+    },
+    "Organization": {
+      "Type": "String",
+      "Description": "Name of Github organization the source repository belongs to."
+    },
+    "ECSServiceStack": {
+      "Type": "String",
+      "Description": "Name of the ECS Service Stack this pipeline deploys to."
+    },
+    "CloudFormationBuildRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of IAM policy ARNs for the CloudFormationBuildRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "ECSServiceBucket": {
+      "Type": "String",
+      "Description": "Valid Bucket name housing the Service CloudFormation Template for this service."
+    }
+  },
+  "Conditions": {
+    "CodeBuildRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "CodeBuildRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CodePipelineRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "CodePipelineRoleManagedPolicyArns"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "CloudFormationBuildRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "CloudFormationBuildRoleManagedPolicyArns"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "CloudFormationBuildRolePolicies": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "PipelineCFAccess",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "application-autoscaling:*",
+                "cloudformation:*",
+                "cloudwatch:*",
+                "ecs:*",
+                "ec2:*",
+                "ecr:*",
+                "iam:*",
+                "logs:*",
+                "s3:*",
+                "sns:*"
+              ],
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "CloudFormationBuildRole"
+          }
+        ]
+      }
+    },
+    "CloudFormationBuildRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::If": [
+            "CloudFormationBuildRolePoliciesSet",
+            {
+              "Ref": "CloudFormationBuildRoleManagedPolicyArns"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudformation.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CodePipelineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/AWSCodePipelineFullAccess",
+                  "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+                  "arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess",
+                  {
+                    "Fn::If": [
+                      "CodePipelineRolePoliciesSet",
+                      {
+                        "Ref": "CodePipelineRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CodePipelineRolePolicies": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "PipelineCFAccess",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "cloudformation:*"
+              ],
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "CodePipelineRole"
+          }
+        ]
+      }
+    },
+    "CodeBuildRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::Split": [
+            ",",
+            {
+              "Fn::Join": [
+                ",",
+                [
+                  "arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess",
+                  "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
+                  "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess",
+                  "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+                  "arn:aws:iam::aws:policy/AWSCodePipelineReadOnlyAccess",
+                  {
+                    "Fn::If": [
+                      "CodeBuildRolePoliciesSet",
+                      {
+                        "Ref": "CodeBuildRoleManagedPolicyArns"
+                      },
+                      {
+                        "Ref": "AWS::NoValue"
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ]
+      }
+    },
+    "ContainerBuildProject": {
+      "Type": "AWS::CodeBuild::Project",
+      "Properties": {
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "Image": "aws/codebuild/docker:1.12.1",
+          "Type": "LINUX_CONTAINER",
+          "EnvironmentVariables": [
+            {
+              "Name": "AWS_ACCOUNT_ID",
+              "Value": {
+                "Ref": "AWS::AccountId"
+              }
+            },
+            {
+              "Name": "ECS_SERVICE_BUCKET",
+              "Value": {
+                "Ref": "ECSServiceBucket"
+              }
+            },
+            {
+              "Name": "ECS_SERVICE_KEY",
+              "Value": {
+                "Ref": "ECSServiceKey"
+              }
+            },
+            {
+              "Name": "ECS_SERVICE_PARAMS_BUCKET",
+              "Value": {
+                "Ref": "ECSServiceParameterBucket"
+              }
+            },
+            {
+              "Name": "ECS_SERVICE_PARAMS_KEY",
+              "Value": {
+                "Ref": "ECSServiceParameterKey"
+              }
+            },
+            {
+              "Name": "REPOSITORY_NAME",
+              "Value": {
+                "Ref": "Repository"
+              }
+            },
+            {
+              "Name": "BRANCH",
+              "Value": {
+                "Ref": "Branch"
+              }
+            }
+          ]
+        },
+        "Source": {
+          "Type": "CODEPIPELINE"
+        },
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Name": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "Environment"
+              },
+              {
+                "Ref": "Organization"
+              },
+              {
+                "Ref": "Repository"
+              },
+              "Build"
+            ]
+          ]
+        },
+        "ServiceRole": {
+          "Ref": "CodeBuildRole"
+        }
+      }
+    },
+    "CodePipeline": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "Properties": {
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CodePipelineRole",
+            "Arn"
+          ]
+        },
+        "Stages": [
+          {
+            "Name": "SourceCheckout",
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Owner": "ThirdParty",
+                  "Category": "Source",
+                  "Version": "1",
+                  "Provider": "GitHub"
+                },
+                "Configuration": {
+                  "Owner": {
+                    "Ref": "Organization"
+                  },
+                  "Repo": {
+                    "Ref": "Repository"
+                  },
+                  "OAuthToken": {
+                    "Ref": "OAuthToken"
+                  },
+                  "Branch": {
+                    "Ref": "Branch"
+                  }
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "AppCode"
+                  }
+                ],
+                "RunOrder": 1,
+                "Name": "SourceCheckout"
+              }
+            ]
+          },
+          {
+            "Name": "ImageBuild",
+            "Actions": [
+              {
+                "InputArtifacts": [
+                  {
+                    "Name": "AppCode"
+                  }
+                ],
+                "RunOrder": 1,
+                "ActionTypeId": {
+                  "Owner": "AWS",
+                  "Category": "Build",
+                  "Version": "1",
+                  "Provider": "CodeBuild"
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "CFArtifact"
+                  }
+                ],
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "ContainerBuildProject"
+                  }
+                },
+                "Name": "CodeBuild"
+              }
+            ]
+          },
+          {
+            "Name": "ApplicationDeployment",
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Owner": "AWS",
+                  "Category": "Deploy",
+                  "Version": "1",
+                  "Provider": "CloudFormation"
+                },
+                "Configuration": {
+                  "ActionMode": "CREATE_UPDATE",
+                  "RoleArn": {
+                    "Fn::GetAtt": [
+                      "CloudFormationBuildRole",
+                      "Arn"
+                    ]
+                  },
+                  "Capabilities": "CAPABILITY_IAM",
+                  "StackName": {
+                    "Ref": "ECSServiceStack"
+                  },
+                  "TemplateConfiguration": "CFArtifact::cf-config.json",
+                  "TemplatePath": "CFArtifact::task-definition.template"
+                },
+                "RunOrder": 1,
+                "InputArtifacts": [
+                  {
+                    "Name": "CFArtifact"
+                  }
+                ],
+                "Name": "ContainerDeploy"
+              }
+            ]
+          }
+        ],
+        "ArtifactStore": {
+          "Type": "S3",
+          "Location": {
+            "Ref": "S3Bucket"
+          }
+        },
+        "Name": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "Environment"
+              },
+              {
+                "Ref": "Organization"
+              },
+              {
+                "Ref": "Repository"
+              },
+              "ECS-Pipeline"
+            ]
+          ]
+        }
+      }
+    }
+  }
+}

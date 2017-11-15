@@ -1,0 +1,746 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "redshift.template - AWS Redshift",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "RedshiftSubnets",
+            "VPCSecurityGroupIds"
+          ],
+          "Label": {
+            "default": "VPC Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "MasterUsername",
+            "MasterUserPasswords"
+          ],
+          "Label": {
+            "default": "Redshift Access Credentials"
+          }
+        },
+        {
+          "Parameters": [
+            "RedshiftInstanceClass",
+            "NumberOfNodes",
+            "ClusterVersion",
+            "DBName",
+            "ClusterType",
+            "AvailabilityZone",
+            "Port"
+          ],
+          "Label": {
+            "default": "Redshift Basic Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "PubliclyAccessible",
+            "KeyId",
+            "ElasticIP",
+            "StorageEncrypted"
+          ],
+          "Label": {
+            "default": "Redshift Advanced Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "CWPercentageDiskUsed",
+            "CWCPUThreshold"
+          ],
+          "Label": {
+            "default": "Monitoring"
+          }
+        },
+        {
+          "Parameters": [
+            "BackupRetentionPeriod",
+            "PreferredMaintenanceWindow",
+            "AllowVersionUpgrade",
+            "RedshiftSnapshotIdentifier"
+          ],
+          "Label": {
+            "default": "Backup / Maintenance"
+          }
+        },
+        {
+          "Parameters": [],
+          "Label": {
+            "default": "Internal Hosted Zone Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "InternalRecordName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Record Name for the new Resource Record in the Internal Hosted Zone"
+    },
+    "PubliclyAccessible": {
+      "Default": "False",
+      "ConstraintDescription": "Must be either True or False",
+      "Type": "String",
+      "Description": "Indicates whether the Redshift cluster is an Internet-facing cluster",
+      "AllowedValues": [
+        "True",
+        "False"
+      ]
+    },
+    "MasterUsername": {
+      "AllowedPattern": "^[^\\d][a-zA-Z0-9_]+?$",
+      "Type": "String",
+      "Description": "The name of master user for the Redshift instance",
+      "MaxLength": "64"
+    },
+    "RedshiftInstanceClass": {
+      "Default": "dc1.large",
+      "Type": "String",
+      "Description": "The compute and memory capacity of the nodes within the Redshift cluster",
+      "AllowedValues": [
+        "dc1.large",
+        "dc1.8xlarge",
+        "ds2.xlarge",
+        "ds2.8xlarge"
+      ]
+    },
+    "RedshiftSubnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for use with this Redshift cluster"
+    },
+    "VPCSecurityGroupIds": {
+      "Default": "",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "Existing security group being used by Redshift"
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "MasterUserPasswords": {
+      "AllowedPattern": "^[\\p{ASCII}&&[^@\\s\\/\"]]+$||^$",
+      "MinLength": "8",
+      "Type": "String",
+      "NoEcho": true,
+      "MaxLength": "64"
+    },
+    "CWPercentageDiskUsed": {
+      "Default": "90",
+      "Type": "Number",
+      "Description": "CloudWatch Percentage of storage consumed threshold"
+    },
+    "EnableRackspaceTicket": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Specifies whether alarms will generate Rackspace tickets",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "NumberOfNodes": {
+      "Default": "1",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "If ClusterType is single-node, this parameter is ignored. If ClusterType is multi-node, NumberOfNodes must be >= 2.",
+      "MaxValue": "100"
+    },
+    "KeyId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The ID of the AWS Key Management Service (AWS KMS) key that you want to use to encrypt data in the cluster"
+    },
+    "ClusterVersion": {
+      "Default": "1.0",
+      "Type": "String",
+      "Description": "Redshift Engine Version",
+      "AllowedValues": [
+        "1.0"
+      ]
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "ClusterRoleManagedPolicyArns": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of IAM policy ARNs for the ClusterRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console."
+    },
+    "BackupRetentionPeriod": {
+      "Description": "The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups",
+      "Default": "1",
+      "Type": "Number",
+      "MaxValue": "35",
+      "MinValue": "0",
+      "ConstraintDescription": "must be between 0 and 35"
+    },
+    "DBName": {
+      "Default": "myredshift",
+      "AllowedPattern": "^(?=.{1,63}$)[a-z][a-z0-9_]*",
+      "Type": "String",
+      "Description": "Name of initial Redshift database",
+      "ConstraintDescription": "Must be lower-case, begin with a letter, contain alphanumeric characters or underscores, and have a maximum length of 63"
+    },
+    "PreferredMaintenanceWindow": {
+      "Default": "Sun:05:00-Sun:07:00",
+      "Type": "String",
+      "Description": "The daily time range during which automated backups are created if automated backups are enabled"
+    },
+    "ElasticIP": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Elastic IP (EIP) address for the cluster (must have publicly accessible enabled)"
+    },
+    "CWCPUThreshold": {
+      "Default": "90",
+      "Type": "Number",
+      "Description": "CloudWatch CPUUtilization Threshold"
+    },
+    "ClusterType": {
+      "Default": "single-node",
+      "Type": "String",
+      "Description": "Create a single-node or multi-node Redshift cluster",
+      "AllowedValues": [
+        "single-node",
+        "multi-node"
+      ]
+    },
+    "AllowVersionUpgrade": {
+      "Default": "True",
+      "Type": "String",
+      "Description": "Indicates that engine upgrades will be applied automatically to the Redshift cluster during the maintenance window",
+      "AllowedValues": [
+        "True",
+        "False"
+      ]
+    },
+    "RedshiftSnapshotIdentifier": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name of the snapshot from which to create a new cluster (optional)"
+    },
+    "AvailabilityZone": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Availability zone in which to initially provision Redshift. OPTIONAL"
+    },
+    "StorageEncrypted": {
+      "Default": "False",
+      "Type": "String",
+      "ConstraintDescription": "Must be either True or False",
+      "Description": "Specifies whether the Redshift cluster is encrypted",
+      "AllowedValues": [
+        "True",
+        "False"
+      ]
+    },
+    "InternalZoneId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Route53 Internal Hosted Zone ID"
+    },
+    "Port": {
+      "Description": "The port number on which the database accepts connections",
+      "Default": "5439",
+      "ConstraintDescription": "Must be between 1150 and 65535.",
+      "MaxValue": "65535",
+      "MinValue": "1150",
+      "Type": "Number"
+    }
+  },
+  "Conditions": {
+    "RackspaceAlarmsEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableRackspaceTicket"
+        },
+        "True"
+      ]
+    },
+    "ClusterRolePoliciesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Ref": "ClusterRoleManagedPolicyArns"
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "elasticGiven": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "PubliclyAccessible"
+            },
+            "True"
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "ElasticIP"
+                },
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "isMultiNodeCluster": {
+      "Fn::Equals": [
+        {
+          "Ref": "ClusterType"
+        },
+        "multi-node"
+      ]
+    },
+    "isInternalHostedZoneIdProvided": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InternalZoneId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "useRedshiftSnapshot": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "RedshiftSnapshotIdentifier"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "keyDefined": {
+      "Fn::And": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "StorageEncrypted"
+            },
+            "True"
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "KeyId"
+                },
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "isEncrypted": {
+      "Fn::Equals": [
+        {
+          "Ref": "StorageEncrypted"
+        },
+        "True"
+      ]
+    },
+    "isAzGiven": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "AvailabilityZone"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "RedshiftSubnetGroup": {
+      "Type": "AWS::Redshift::ClusterSubnetGroup",
+      "Properties": {
+        "SubnetIds": {
+          "Ref": "RedshiftSubnets"
+        },
+        "Description": "Redshift Subnet Group"
+      }
+    },
+    "InternalRecordSetRedshift": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "Internal Record Set for ${InternalRecordName}"
+        },
+        "Name": {
+          "Fn::Sub": "${InternalRecordName}.${InternalZoneName}."
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "RedshiftCluster",
+              "Endpoint.Address"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "HostedZoneId": {
+          "Ref": "InternalZoneId"
+        },
+        "Type": "CNAME"
+      },
+      "Condition": "isInternalHostedZoneIdProvided"
+    },
+    "CPUAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Dimensions": [
+          {
+            "Name": "ClusterIdentifier",
+            "Value": {
+              "Ref": "RedshiftCluster"
+            }
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "Alarm if ${RedshiftCluster} CPU > ${CWCPUThreshold}% for 5 minutes"
+        },
+        "Namespace": "AWS/Redshift",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "CWCPUThreshold"
+        },
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "ClusterHealthTicket": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Dimensions": [
+          {
+            "Name": "ClusterIdentifier",
+            "Value": {
+              "Ref": "RedshiftCluster"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": "Cluster has entered unhealthy state, creating ticket",
+        "Namespace": "AWS/Redshift",
+        "Period": "60",
+        "ComparisonOperator": "LessThanThreshold",
+        "Statistic": "Average",
+        "Threshold": "1",
+        "OKActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-emergency"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "MetricName": "HealthStatus"
+      }
+    },
+    "RedshiftCluster": {
+      "DeletionPolicy": "Snapshot",
+      "Type": "AWS::Redshift::Cluster",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::If": [
+            "isAzGiven",
+            {
+              "Ref": "AvailabilityZone"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ClusterVersion": {
+          "Ref": "ClusterVersion"
+        },
+        "PubliclyAccessible": {
+          "Ref": "PubliclyAccessible"
+        },
+        "ElasticIp": {
+          "Fn::If": [
+            "elasticGiven",
+            {
+              "Ref": "ElasticIP"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "MasterUsername": {
+          "Ref": "MasterUsername"
+        },
+        "Encrypted": {
+          "Ref": "StorageEncrypted"
+        },
+        "SnapshotIdentifier": {
+          "Fn::If": [
+            "useRedshiftSnapshot",
+            {
+              "Ref": "RedshiftSnapshotIdentifier"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VpcSecurityGroupIds": {
+          "Ref": "VPCSecurityGroupIds"
+        },
+        "IamRoles": [
+          {
+            "Fn::GetAtt": [
+              "ClusterRole",
+              "Arn"
+            ]
+          }
+        ],
+        "ClusterType": {
+          "Ref": "ClusterType"
+        },
+        "AllowVersionUpgrade": {
+          "Ref": "AllowVersionUpgrade"
+        },
+        "KmsKeyId": {
+          "Fn::If": [
+            "keyDefined",
+            {
+              "Ref": "KeyId"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "MasterUserPassword": {
+          "Ref": "MasterUserPasswords"
+        },
+        "AutomatedSnapshotRetentionPeriod": {
+          "Ref": "BackupRetentionPeriod"
+        },
+        "PreferredMaintenanceWindow": {
+          "Ref": "PreferredMaintenanceWindow"
+        },
+        "NodeType": {
+          "Ref": "RedshiftInstanceClass"
+        },
+        "ClusterParameterGroupName": {
+          "Ref": "RedshiftParameterGroup"
+        },
+        "Port": {
+          "Ref": "Port"
+        },
+        "DBName": {
+          "Ref": "DBName"
+        },
+        "NumberOfNodes": {
+          "Fn::If": [
+            "isMultiNodeCluster",
+            {
+              "Ref": "NumberOfNodes"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ClusterSubnetGroupName": {
+          "Ref": "RedshiftSubnetGroup"
+        }
+      }
+    },
+    "FreeStorageSpaceTicket": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "30",
+        "Dimensions": [
+          {
+            "Name": "ClusterIdentifier",
+            "Value": {
+              "Ref": "RedshiftCluster"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-urgent"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": "Consumed storage space has risen above threshold, sending email notification",
+        "Namespace": "AWS/Redshift",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "CWPercentageDiskUsed"
+        },
+        "OKActions": [
+          {
+            "Fn::If": [
+              "RackspaceAlarmsEnabled",
+              {
+                "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:rackspace-support-urgent"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "Unit": "Percent",
+        "MetricName": "PercentageDiskSpaceUsed"
+      }
+    },
+    "ClusterRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": {
+          "Fn::If": [
+            "ClusterRolePoliciesSet",
+            {
+              "Ref": "ClusterRoleManagedPolicyArns"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "redshift.amazonaws.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RedshiftParameterGroup": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::Redshift::ClusterParameterGroup",
+      "Properties": {
+        "ParameterGroupFamily": {
+          "Fn::Sub": "redshift-${ClusterVersion}"
+        },
+        "Description": {
+          "Fn::Sub": "${Environment}-ParameterGroup"
+        },
+        "Parameters": [
+          {
+            "ParameterName": "enable_user_activity_logging",
+            "ParameterValue": "true"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "JDBCConnectionString": {
+      "Description": "JDBC connection string for cluster",
+      "Value": {
+        "Fn::Sub": "jdbc:redshift://${RedshiftCluster.Endpoint.Address}:${RedshiftCluster.Endpoint.Port}/${DBName}"
+      }
+    },
+    "DBPort": {
+      "Description": "Cluster endpoint port number",
+      "Value": {
+        "Fn::GetAtt": [
+          "RedshiftCluster",
+          "Endpoint.Port"
+        ]
+      }
+    },
+    "RedshiftClusterIdentifier": {
+      "Description": "Redshift cluster identifier",
+      "Value": {
+        "Ref": "RedshiftCluster"
+      }
+    },
+    "RedshiftAddress": {
+      "Description": "Address of database endpoint",
+      "Value": {
+        "Fn::GetAtt": [
+          "RedshiftCluster",
+          "Endpoint.Address"
+        ]
+      }
+    }
+  }
+}

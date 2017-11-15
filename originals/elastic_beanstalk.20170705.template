@@ -1,0 +1,495 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "elastic_beanstalk.template - AWS CloudFormation Sample Template ElasticBeanstalk_PHP_Sample: Configure and launch the AWS Elastic Beanstalk sample application. **WARNING** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "EbsVolumeSize": {
+          "default": "EBS Volume Size"
+        },
+        "ScalingMax": {
+          "default": "Maximum Instances"
+        },
+        "InstanceType": {
+          "default": "Instance Type"
+        },
+        "ScalingMin": {
+          "default": "Mininum Instances"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "ApplicationName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "(Optional) Specify the name of the Elastic Beanstalk Application. Must be unique on the account."
+    },
+    "DBSubnet": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for AWS RDS instance as part of application"
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID"
+    },
+    "ELBSubnet": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for Elastic Loadbalancer"
+    },
+    "EbsVolumeSize": {
+      "Default": "60",
+      "Type": "String",
+      "Description": "Select EBS Volume Size in GB."
+    },
+    "AppSubnet": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for Application"
+    },
+    "S3Bucket": {
+      "Default": "",
+      "Type": "String"
+    },
+    "S3Key": {
+      "Default": "",
+      "Type": "String"
+    },
+    "KeyName": {
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair.",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the AWS Elastic Beanstalk instance"
+    },
+    "ScalingMin": {
+      "Default": "1",
+      "AllowedPattern": "([0-9]+)",
+      "Type": "String",
+      "Description": "The minimum size of the Auto Scaling group.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "ScalingMax": {
+      "Default": "2",
+      "AllowedPattern": "([0-9]+)",
+      "Type": "String",
+      "Description": "The maximum size of the Auto Scaling group.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "SolutionStackName": {
+      "Type": "String",
+      "Description": "(Optional) Specify the name of the Elastic Beanstalk Application. Must be unique on the account."
+    },
+    "InstanceType": {
+      "Default": "t2.micro",
+      "Type": "String",
+      "ConstraintDescription": "Must be a valid EC2 instance type. Default is t2.micro",
+      "Description": "Select instance type",
+      "AllowedValues": [
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "t2.xlarge",
+        "t2.2xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m4.16xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "r4.large",
+        "r4.xlarge",
+        "r4.2xlarge",
+        "r4.4xlarge",
+        "r4.8xlarge",
+        "r4.16xlarge",
+        "x1.16xlarge",
+        "x1.32xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "i3.large",
+        "i3.xlarge",
+        "i3.2xlarge",
+        "i3.4xlarge",
+        "i3.8xlarge",
+        "i3.16xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "p2.xlarge",
+        "p2.8xlarge",
+        "p2.16xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "f1.2xlarge",
+        "f1.16xlarge"
+      ]
+    }
+  },
+  "Conditions": {
+    "SetApplicationBucket": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "S3Bucket"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "SetApplicationName": {
+      "Fn::Equals": [
+        {
+          "Ref": "ApplicationName"
+        },
+        ""
+      ]
+    },
+    "SetApplicationKey": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "S3Key"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "Region2Principal": {
+      "us-east-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-northeast-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-southeast-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "sa-east-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "ap-southeast-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "cn-north-1": {
+        "EC2Principal": "ec2.amazonaws.com.cn",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com.cn"
+      },
+      "us-west-2": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "us-west-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "eu-central-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      },
+      "eu-west-1": {
+        "EC2Principal": "ec2.amazonaws.com",
+        "OpsWorksPrincipal": "opsworks.amazonaws.com"
+      }
+    }
+  },
+  "Resources": {
+    "ApplicationVersion": {
+      "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "Application"
+        },
+        "SourceBundle": {
+          "S3Bucket": {
+            "Fn::If": [
+              "SetApplicationBucket",
+              {
+                "Ref": "S3Bucket"
+              },
+              {
+                "Fn::Join": [
+                  "",
+                  [
+                    "elasticbeanstalk-samples-",
+                    {
+                      "Ref": "AWS::Region"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "S3Key": {
+            "Fn::If": [
+              "SetApplicationKey",
+              {
+                "Ref": "S3Key"
+              },
+              "php-sample.zip"
+            ]
+          }
+        },
+        "Description": "Version 1.0"
+      }
+    },
+    "ConfigurationTemplate": {
+      "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "Application"
+        },
+        "OptionSettings": [
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "EC2KeyName",
+            "Value": {
+              "Ref": "KeyName"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "IamInstanceProfile",
+            "Value": {
+              "Ref": "WebServerInstanceProfile"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "InstanceType",
+            "Value": {
+              "Ref": "InstanceType"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:launchconfiguration",
+            "OptionName": "RootVolumeSize",
+            "Value": {
+              "Ref": "EbsVolumeSize"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MinSize",
+            "Value": {
+              "Ref": "ScalingMin"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:asg",
+            "OptionName": "MaxSize",
+            "Value": {
+              "Ref": "ScalingMax"
+            }
+          },
+          {
+            "Namespace": "aws:autoscaling:updatepolicy:rollingupdate",
+            "OptionName": "RollingUpdateEnabled",
+            "Value": "true"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:command",
+            "OptionName": "BatchSize",
+            "Value": "50"
+          },
+          {
+            "Namespace": "aws:elasticbeanstalk:command",
+            "OptionName": "BatchSizeType",
+            "Value": "Percentage"
+          },
+          {
+            "Namespace": "aws:ec2:vpc",
+            "OptionName": "VPCId",
+            "Value": {
+              "Ref": "VPCID"
+            }
+          },
+          {
+            "Namespace": "aws:ec2:vpc",
+            "OptionName": "Subnets",
+            "Value": {
+              "Fn::Join": [
+                ",",
+                {
+                  "Ref": "AppSubnet"
+                }
+              ]
+            }
+          },
+          {
+            "Namespace": "aws:ec2:vpc",
+            "OptionName": "ELBSubnets",
+            "Value": {
+              "Fn::Join": [
+                ",",
+                {
+                  "Ref": "ELBSubnet"
+                }
+              ]
+            }
+          },
+          {
+            "Namespace": "aws:ec2:vpc",
+            "OptionName": "DBSubnets",
+            "Value": {
+              "Fn::Join": [
+                ",",
+                {
+                  "Ref": "DBSubnet"
+                }
+              ]
+            }
+          }
+        ],
+        "SolutionStackName": {
+          "Ref": "SolutionStackName"
+        }
+      }
+    },
+    "Environment": {
+      "Type": "AWS::ElasticBeanstalk::Environment",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "Application"
+        },
+        "VersionLabel": {
+          "Ref": "ApplicationVersion"
+        },
+        "Description": "AWS Elastic Beanstalk Environment running an Application",
+        "TemplateName": {
+          "Ref": "ConfigurationTemplate"
+        }
+      }
+    },
+    "Application": {
+      "Type": "AWS::ElasticBeanstalk::Application",
+      "Properties": {
+        "ApplicationName": {
+          "Fn::If": [
+            "SetApplicationName",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "ApplicationName"
+            }
+          ]
+        },
+        "Description": "AWS Elastic Beanstalk Application"
+      }
+    },
+    "WebServerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  {
+                    "Fn::FindInMap": [
+                      "Region2Principal",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "EC2Principal"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "WebServerInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "WebServerRole"
+          }
+        ]
+      }
+    },
+    "WebServerRolePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "WebServerRole",
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "NotAction": "iam:*",
+              "Resource": [
+                "*"
+              ],
+              "Effect": "Allow"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "WebServerRole"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "URL": {
+      "Description": "URL of the AWS Elastic Beanstalk Environment",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "Environment",
+                "EndpointURL"
+              ]
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

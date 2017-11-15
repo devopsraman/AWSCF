@@ -1,0 +1,146 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security Group template for a Windows2012R2 auto scale group with a MicrosoftAD environment.",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": ["Development", "Integration", "PreProduction", "Production", "Staging", "Test"]
+    },
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "Select Virtual Private Cloud ID."
+    }
+  },
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "PublicRDPSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 3389, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 3389}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public RDP traffic."
+      }
+    },
+    "PrivateWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 80},
+          {"ToPort": 443, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicWebSecurityGroup"}, "FromPort": 443}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private WEB traffic from load balancer."
+      }
+    },
+    "MSSQLSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 1433, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 1433}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow MSSQL traffic."
+      }
+    },
+    "DomainSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"IpProtocol": "-1", "CidrIp": {"Fn::Join": ["", [{"Fn::Select": ["0", {"Ref": "dnsIpAddresses"}]}, "/32"]]}},
+          {"IpProtocol": "-1", "CidrIp": {"Fn::Join": ["", [{"Fn::Select": ["1", {"Ref": "dnsIpAddresses"}]}, "/32"]]}}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Enable inbound domain network access to EC2 instance."
+      }
+    },
+    "PublicWebSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {"ToPort": 80, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 80},
+          {"ToPort": 443, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": 443}
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow public WEB traffic."
+      }
+    },
+    "PrivateRDPSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [{"ToPort": 3389, "IpProtocol": "tcp", "SourceSecurityGroupId": {"Ref": "PublicRDPSecurityGroup"}, "FromPort": 3389}],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow private RDP traffic from load balancer."
+      }
+    }
+  },
+  "Outputs": {
+    "outputPublicRDPSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicRDPSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputDomainSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "DomainSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPrivateRDPSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrivateRDPSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputMSSQLSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "MSSQLSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "outputPublicWebSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PublicWebSecurityGroup",
+          "GroupId"
+        ]
+      }
+    }
+  }
+}

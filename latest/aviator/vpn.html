@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="vpn-faws-template">Vpn FAWS Template</h1>
+<p>vpn.template - VPN Setup Template. http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_VPN.html ### Parameters</p>
+<h4 id="staticroutes">StaticRoutes</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma separated list of internal subnets on the customer side. The subnets must be in valid CIDR notation(x.x.x.x/x). Ignored if Dynamic routing is used.</code></li>
+</ul>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>Select Virtual Private Cloud ID</code></li>
+</ul>
+<h4 id="vpnroutingtype">VPNRoutingType</h4>
+<ul>
+<li>Default: <code>Static</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Should Static or Dynamic routing be used for this VPN.</code></li>
+<li>AllowedValues: <code>['Static', 'Dynamic']</code></li>
+</ul>
+<h4 id="propagateroutesto">PropagateRoutesTo</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>CommaDelimitedList</code></li>
+<li>Description: <code>A comma separated list of route tables you would like to propagate the VPN Route to.</code></li>
+</ul>
+<h4 id="staticroutescount">StaticRoutesCount</h4>
+<ul>
+<li>Default: <code>0</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of CIDR ranges supplied in the StaticRoutes parameter.</code></li>
+<li>AllowedValues: <code>[0, 1, 2, 3, 4, 5]</code></li>
+</ul>
+<h4 id="customerip">CustomerIP</h4>
+<ul>
+<li>ConstraintDescription: <code>Must be a valid CIDR range of the form x.x.x.x</code></li>
+<li>Description: <code>The IP address of the Customer Endpoint</code></li>
+<li>Default: <code>0.0.0.0</code></li>
+<li>MinLength: <code>7</code></li>
+<li>AllowedPattern: <code>^([0-9]+\.){3}[0-9]+</code></li>
+<li>MaxLength: <code>18</code></li>
+<li>Type: <code>String</code></li>
+</ul>
+<h4 id="existingcgwid">ExistingCGWId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Leave blank unless you already have an existing CGW attached in the VPC you're creating this VPN Connection in.</code></li>
+</ul>
+<h4 id="notificationtopic">NotificationTopic</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>SNS Topic ARN to notify if there are any alarms. OPTIONAL</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="existingvgwid">ExistingVGWId</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Leave blank unless you already have an existing VGW attached in the VPC you're creating this VPN Connection in.</code></li>
+</ul>
+<h4 id="vpnevaluations">VpnEvaluations</h4>
+<ul>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Default: <code>10</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The number of periods over which data is compared to the specified threshold.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h4 id="vpnperiod">VpnPeriod</h4>
+<ul>
+<li>AllowedPattern: <code>([0-9]+)</code></li>
+<li>Default: <code>60</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Time the specified statistic is applied. Must be in seconds that is also a multiple of 60.</code></li>
+<li>ConstraintDescription: <code>Must be a valid integer.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>VirtualPrivateGatewayId</code></li>
+<li><code>CustomerGatewayId</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+<h4 id="vpnstatus">VPNStatus</h4>
+<ul>
+<li>Description: <code>{'Fn::Sub': '${AWS::StackName} -VPN connection state.'}</code></li>
+<li>Metric: TunnelState</li>
+<li>Threshold: 0</li>
+<li>Actions: <code>{'Fn::If': ['isNotification', {'Ref': 'NotificationTopic'}, {'Ref': 'AWS::NoValue'}]}</code></li>
+</ul>
+</body>
+</html>

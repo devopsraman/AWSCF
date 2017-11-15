@@ -1,0 +1,827 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "ALB_ListenerCertificate.template - ALB ListenerCertificate template.",
+  "Parameters": {
+    "ListenerSNICertificate01": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 01.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate03": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 03.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate02": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 02.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate05": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 05.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate04": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 04.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate07": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 07.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate06": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 06.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate09": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 09.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate08": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 08.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate21": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 21.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate20": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 20.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate25": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 25.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate24": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 24.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate23": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 23.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate22": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 22.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerArn": {
+      "Default": "",
+      "AllowedPattern": "^$|^arn:aws:elasticloadbalancing:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:listener/app/.+/[0-9a-z\\-]+/[0-9a-z\\-]+$",
+      "Type": "String",
+      "Description": "The Amazon Resource Name (ARN) of the listener where the certificates should be applied.",
+      "ConstraintDescription": "Must be a valid ELBv2 Listener"
+    },
+    "ListenerSNICertificate18": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 18.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate19": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 19.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate16": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 16.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate17": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 17.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate14": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 14.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate15": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 15.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate12": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 12.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate13": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 13.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate10": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 10.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    },
+    "ListenerSNICertificate11": {
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]+:server-certificate/.+$|^arn:aws:acm:(us|eu|ap|sa|ca)-(east|west|north|south|southeast|northeast|central)-[1-9]:[0-9]+:certificate/.+$",
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon Resource Names (ARNs) of SNI certificate 11.  (OPTIONAL)",
+      "ConstraintDescription": "Must be a valid ACM or IAM certificate ARN"
+    }
+  },
+  "Conditions": {
+    "EnableSNI24": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate24"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI25": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate25"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI22": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate22"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI23": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate23"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI20": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate20"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI21": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate21"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI9": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate09"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI8": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate08"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI7": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate07"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI6": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate06"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI5": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate05"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI4": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate04"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI3": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate03"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI2": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate02"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI1": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate01"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI17": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate17"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI16": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate16"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI15": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate15"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI14": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate14"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI13": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate13"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI12": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate12"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI11": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate11"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI10": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate10"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI19": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate19"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableSNI18": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ListenerSNICertificate18"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "ELBv2ListenerCertificate": {
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerCertificate",
+      "Properties": {
+        "Certificates": [
+          {
+            "Fn::If": [
+              "EnableSNI1",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate01"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI2",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate02"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI3",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate03"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI4",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate04"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI5",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate05"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI6",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate06"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI7",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate07"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI8",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate08"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI9",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate09"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI10",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate10"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI11",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate11"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI12",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate12"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI13",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate13"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI14",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate14"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI15",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate15"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI16",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate16"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI17",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate17"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI18",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate18"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI19",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate19"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI20",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate20"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI21",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate21"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI22",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate22"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI23",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate23"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI24",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate24"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "EnableSNI25",
+              {
+                "CertificateArn": {
+                  "Ref": "ListenerSNICertificate25"
+                }
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "ListenerArn": {
+          "Ref": "ListenerArn"
+        }
+      }
+    }
+  }
+}

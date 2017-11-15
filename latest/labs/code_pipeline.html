@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="codepipeline-faws-template">CodePipeline FAWS Template</h1>
+<p>code_pipeline.template - Create a Continuous Deployment Pipeline Skeleton. Read the docs: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/continuous-delivery-codepipeline.html ### Parameters</p>
+<h4 id="repository">Repository</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of the Github Repository.</code></li>
+</ul>
+<h4 id="codepipelinerolemanagedpolicyarns">CodePipelineRoleManagedPolicyArns</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A comma delimited list of IAM policy ARNs for the CodePipelineRole IAM role.  IAM ARNs can be found within the Policies section of the AWS IAM console.</code></li>
+</ul>
+<h4 id="oauthtoken">OAuthToken</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>NoEcho: <code>True</code></li>
+<li>Description: <code>Github OAuthToken with correct access to Repository.</code></li>
+</ul>
+<h4 id="environment">Environment</h4>
+<ul>
+<li>Default: <code>Development</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Application environment for which this network is being created. e.g. Development/Production.</code></li>
+<li>AllowedValues: <code>['Development', 'Integration', 'PreProduction', 'Production', 'Staging', 'Test']</code></li>
+</ul>
+<h4 id="branch">Branch</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Git branch to use as the source for this pipeline</code></li>
+</ul>
+<h4 id="notificationtopic">NotificationTopic</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Full ARN of notification topic.</code></li>
+</ul>
+<h4 id="organization">Organization</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Name of Github organization the source repository belongs to.</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>

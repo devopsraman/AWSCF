@@ -1,0 +1,275 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "sqs.template - Creates the necessary SQS Queue. Please be aware that this template will create resources for which you will be charged.",
+  "Parameters": {
+    "SQSQueueName": {
+      "MinLength": "3",
+      "Type": "String",
+      "Description": "REQUIRED. The name of the SQS queue.",
+      "ConstraintDescription": "Must a string of at least 3 characters."
+    },
+    "RedrivePolicy": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "OPTIONAL. Indicates whether this queue uses a dead letter queue.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "InternalRecordName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Record Name for the new Resource Record in the Internal Hosted Zone"
+    },
+    "RoleARN": {
+      "AllowedPattern": "^arn:aws:iam::[0-9]+:role/.+$",
+      "ConstraintDescription": "Must match the pattern arn:aws:iam::[0-9]+:role/.+",
+      "Type": "String",
+      "Description": "REQUIRED. The EC2 Instance Role allowed to talk with the SQS queue."
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "ContentBasedDeduplication": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "OPTIONAL. For First-In-First-Out (FIFO) queues, specifies whether to enable content-based deduplication.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "FifoQueue": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "OPTIONAL. Indicates whether this queue is a FIFO queue.",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "InternalZoneId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Route53 Internal Hosted Zone ID"
+    }
+  },
+  "Conditions": {
+    "isInternalHostedZoneIdProvided": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InternalZoneId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isRedrivePolicy": {
+      "Fn::Equals": [
+        {
+          "Ref": "RedrivePolicy"
+        },
+        "True"
+      ]
+    },
+    "isFiFo": {
+      "Fn::Equals": [
+        {
+          "Ref": "FifoQueue"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "DeadLetterQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "ContentBasedDeduplication": {
+          "Fn::If": [
+            "isFiFo",
+            {
+              "Ref": "ContentBasedDeduplication"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VisibilityTimeout": 30,
+        "MaximumMessageSize": 262144,
+        "ReceiveMessageWaitTimeSeconds": 10,
+        "DelaySeconds": 0,
+        "FifoQueue": {
+          "Fn::If": [
+            "isFiFo",
+            "true",
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "MessageRetentionPeriod": 1209600,
+        "QueueName": {
+          "Fn::If": [
+            "isFiFo",
+            {
+              "Fn::Sub": "${SQSQueueName}-DLQ.fifo"
+            },
+            {
+              "Fn::Sub": "${SQSQueueName}-DLQ"
+            }
+          ]
+        }
+      },
+      "Condition": "isRedrivePolicy"
+    },
+    "SQSPolicy": {
+      "Type": "AWS::SQS::QueuePolicy",
+      "Properties": {
+        "Queues": [
+          {
+            "Ref": "SQSQueue"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sqs:SendMessage",
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage"
+              ],
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "SQSQueue",
+                    "Arn"
+                  ]
+                }
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": [
+                  {
+                    "Ref": "RoleARN"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "InternalRecordSQS": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "Internal Record Set for ${InternalRecordName}"
+        },
+        "Name": {
+          "Fn::Sub": "${InternalRecordName}.${InternalZoneName}."
+        },
+        "ResourceRecords": [
+          {
+            "Ref": "SQSQueue"
+          }
+        ],
+        "TTL": "300",
+        "HostedZoneId": {
+          "Ref": "InternalZoneId"
+        },
+        "Type": "CNAME"
+      },
+      "Condition": "isInternalHostedZoneIdProvided"
+    },
+    "SQSQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "RedrivePolicy": {
+          "Fn::If": [
+            "isRedrivePolicy",
+            {
+              "maxReceiveCount": 3,
+              "deadLetterTargetArn": {
+                "Fn::GetAtt": [
+                  "DeadLetterQueue",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ContentBasedDeduplication": {
+          "Fn::If": [
+            "isFiFo",
+            {
+              "Ref": "ContentBasedDeduplication"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "VisibilityTimeout": 30,
+        "MaximumMessageSize": 262144,
+        "ReceiveMessageWaitTimeSeconds": 10,
+        "DelaySeconds": 0,
+        "FifoQueue": {
+          "Fn::If": [
+            "isFiFo",
+            "true",
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "MessageRetentionPeriod": 1209600,
+        "QueueName": {
+          "Fn::If": [
+            "isFiFo",
+            {
+              "Fn::Sub": "${SQSQueueName}.fifo"
+            },
+            {
+              "Ref": "SQSQueueName"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "SQSQueueName": {
+      "Description": "The name of the SQS Queue",
+      "Value": {
+        "Ref": "SQSQueueName"
+      }
+    },
+    "SQSQueueARN": {
+      "Description": "ARN of the source queue",
+      "Value": {
+        "Fn::GetAtt": [
+          "SQSQueue",
+          "Arn"
+        ]
+      }
+    },
+    "SQSQueueURL": {
+      "Description": "URL of the source queue",
+      "Value": {
+        "Ref": "SQSQueue"
+      }
+    }
+  }
+}

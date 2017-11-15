@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="microsoftad-faws-template">MicrosoftAd FAWS Template</h1>
+<p>microsoft_ad.template - Template for AWS Microsoft AD resource. ### Parameters</p>
+<h4 id="password">Password</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>NoEcho: <code>True</code></li>
+<li>Description: <code>The password for the default administrative user, Admin.</code></li>
+</ul>
+<h4 id="name">Name</h4>
+<ul>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The fully qualified name for the Microsoft Active Directory in AWS, such as corp.example.com. The name doesn't need to be publicly resolvable; it will resolve inside your VPC only.</code></li>
+</ul>
+<h4 id="subnetids">SubnetIds</h4>
+<ul>
+<li>Type: <code>List&lt;AWS::EC2::Subnet::Id&gt;</code></li>
+<li>Description: <code>A list of at least two subnet IDs for the directory servers. Each subnet must be in different Availability Zones (AZs). AWS Directory Service creates a directory server and a DNS server in each subnet.</code></li>
+</ul>
+<h4 id="vpcid">VPCID</h4>
+<ul>
+<li>Type: <code>AWS::EC2::VPC::Id</code></li>
+<li>Description: <code>The VPC ID in which to create the Microsoft Active Directory server.</code></li>
+</ul>
+<h4 id="enablesso">EnableSso</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>Whether to enable single sign-on for a Microsoft Active Directory in AWS. Single sign-on allows users in your directory to access certain AWS services from a computer joined to the directory without having to enter their credentials separately. If you don't specify a value, AWS CloudFormation disables single sign-on by default.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h4 id="shortname">ShortName</h4>
+<ul>
+<li>Default: ``</li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>The NetBIOS name for your domain, such as CORP. If you don't specify a value, AWS Directory Service uses the first part of your directory DNS server name. For example, if your directory DNS server name is corp.example.com, AWS Directory Service specifies CORP for the NetBIOS name.</code></li>
+</ul>
+<h4 id="createalias">CreateAlias</h4>
+<ul>
+<li>Default: <code>False</code></li>
+<li>Type: <code>String</code></li>
+<li>Description: <code>A unique alias to assign to the Microsoft Active Directory in AWS. AWS Directory Service uses the alias to construct the access URL for the directory, such as http://alias.awsapps.com. By default, AWS CloudFormation does not create an alias.</code></li>
+<li>AllowedValues: <code>['True', 'False']</code></li>
+</ul>
+<h3 id="outputs">Outputs</h3>
+<ul>
+<li><code>directoryId</code></li>
+<li><code>dnsIpAddresses</code></li>
+<li><code>directoryName</code></li>
+</ul>
+<h3 id="alarms">Alarms</h3>
+</body>
+</html>
